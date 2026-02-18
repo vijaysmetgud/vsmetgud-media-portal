@@ -2,8 +2,29 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title> VSMETGUD MEDIA PORTAL ></title>
+    <title>VSMETGUD MEDIA PORTAL</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .viewer-container {
+            margin-top: 30px;
+            display: none;
+            background: #111;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 800px;
+            border-radius: 10px;
+            background: #fff;
+        }
+    </style>
 </head>
 <body>
 
@@ -27,10 +48,81 @@
     </div>
 </section>
 
+<!-- Video Viewer -->
+<div id="videoViewerContainer" class="viewer-container">
+    <h2 style="color:white;">Now Playing Video</h2>
+    <video id="videoPlayer" controls autoplay>
+        <source id="videoSource" src="">
+        Your browser does not support video.
+    </video>
+</div>
+
+<!-- PDF Viewer -->
+<div id="pdfViewerContainer" class="viewer-container">
+    <h2 style="color:white;">Viewing PDF</h2>
+    <iframe id="pdfViewer"></iframe>
+</div>
+
 <footer>
     <p>© 2026 Vsmetgud Media Portal | DevOps Architecture</p>
 </footer>
 
-<script src="js/app.js"></script>
+<script>
+function loadCategory(folder) {
+    if(folder === '') {
+        window.location.href = "/media/";
+    } else {
+        window.location.href = "/media/" + folder + "/";
+    }
+}
+
+document.addEventListener("click", function(e) {
+
+    if(e.target.tagName === "A") {
+
+        let href = e.target.getAttribute("href");
+
+        if(!href) return;
+
+        // VIDEO FILES
+        if(href.match(/\.(mp4|avi|flv|mov|webm)$/i)) {
+
+            e.preventDefault();
+
+            const videoContainer = document.getElementById("videoViewerContainer");
+            const pdfContainer = document.getElementById("pdfViewerContainer");
+
+            pdfContainer.style.display = "none";
+
+            const videoSource = document.getElementById("videoSource");
+            const videoPlayer = document.getElementById("videoPlayer");
+
+            videoSource.src = href;
+            videoPlayer.load();
+
+            videoContainer.style.display = "block";
+            videoContainer.scrollIntoView({ behavior: "smooth" });
+        }
+
+        // PDF FILES
+        if(href.match(/\.pdf$/i)) {
+
+            e.preventDefault();
+
+            const videoContainer = document.getElementById("videoViewerContainer");
+            const pdfContainer = document.getElementById("pdfViewerContainer");
+
+            videoContainer.style.display = "none";
+
+            const pdfViewer = document.getElementById("pdfViewer");
+            pdfViewer.src = href;
+
+            pdfContainer.style.display = "block";
+            pdfContainer.scrollIntoView({ behavior: "smooth" });
+        }
+    }
+});
+</script>
+
 </body>
 </html>
