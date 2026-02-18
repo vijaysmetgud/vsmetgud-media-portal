@@ -13,7 +13,7 @@ service:
 persistence:
   enabled: true
   mountPath: /usr/share/nginx/html/media
-  hostPath: /mnt/media    
+  hostPath: /media/sf_e-drive  
 
 ingress:
   enabled: false
