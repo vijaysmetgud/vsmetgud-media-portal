@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>VSMETGUD MEDIA PORTAL</title>
     <link rel="stylesheet" href="css/style.css">
+
     <style>
         .viewer-container {
             margin-top: 30px;
@@ -34,11 +35,10 @@
 </header>
 
 <nav>
+    <!-- MUST match exact folder names inside /media -->
     <button onclick="loadCategory('')">View All Files</button>
-    <button onclick="loadCategory('VIDEO SONGS')">Videos</button>
+    <button onclick="loadCategory('VIDEO_SONGS_TEST')">Videos</button>
     <button onclick="loadCategory('1.E-BOOKS--------------------------')">Books</button>
-    <button onclick="loadCategory('PYTHON-PRACTICE')">Code</button>
-    <button onclick="loadCategory('Downloads-----------')">Downloads</button>
 </nav>
 
 <section id="content">
@@ -52,7 +52,7 @@
 <div id="videoViewerContainer" class="viewer-container">
     <h2 style="color:white;">Now Playing Video</h2>
     <video id="videoPlayer" controls autoplay>
-        <source id="videoSource" src="">
+        <source id="videoSource">
         Your browser does not support video.
     </video>
 </div>
@@ -68,60 +68,83 @@
 </footer>
 
 <script>
+
+/* =========================
+   CATEGORY NAVIGATION
+========================= */
+
 function loadCategory(folder) {
-    if(folder === '') {
-        window.location.href = "/";
+
+    if (folder === '') {
+        window.location.href = "/media/";
     } else {
-        window.location.href = "/" + folder + "/";
+        window.location.href = "/media/" + folder + "/";
     }
 }
 
+
+/* =========================
+   VIDEO & PDF INTERCEPTOR
+========================= */
+
 document.addEventListener("click", function(e) {
 
-    if(e.target.tagName === "A") {
+    if (e.target.tagName !== "A") return;
 
-        let href = e.target.getAttribute("href");
+    let href = e.target.getAttribute("href");
+    if (!href || href === "../") return;
 
-        if(!href) return;
+    // Build full correct URL
+    let fullUrl;
 
-        // VIDEO FILES
-        if(href.match(/\.(mp4|avi|flv|mov|webm)$/i)) {
+    if (href.startsWith("/")) {
+        fullUrl = href;
+    } else {
+        fullUrl = window.location.pathname + href;
+    }
 
-            e.preventDefault();
+    // Normalize double slashes
+    fullUrl = fullUrl.replace(/\/+/g, "/");
 
-            const videoContainer = document.getElementById("videoViewerContainer");
-            const pdfContainer = document.getElementById("pdfViewerContainer");
+    /* ===== VIDEO ===== */
+    if (href.match(/\.(mp4|avi|mov|webm|flv)$/i)) {
 
-            pdfContainer.style.display = "none";
+        e.preventDefault();
 
-            const videoSource = document.getElementById("videoSource");
-            const videoPlayer = document.getElementById("videoPlayer");
+        const videoContainer = document.getElementById("videoViewerContainer");
+        const pdfContainer = document.getElementById("pdfViewerContainer");
 
-            videoSource.src = href;
-            videoPlayer.load();
+        pdfContainer.style.display = "none";
 
-            videoContainer.style.display = "block";
-            videoContainer.scrollIntoView({ behavior: "smooth" });
-        }
+        const videoSource = document.getElementById("videoSource");
+        const videoPlayer = document.getElementById("videoPlayer");
 
-        // PDF FILES
-        if(href.match(/\.pdf$/i)) {
+        videoSource.src = fullUrl;
+        videoPlayer.load();
 
-            e.preventDefault();
+        videoContainer.style.display = "block";
+        videoContainer.scrollIntoView({ behavior: "smooth" });
 
-            const videoContainer = document.getElementById("videoViewerContainer");
-            const pdfContainer = document.getElementById("pdfViewerContainer");
+    }
 
-            videoContainer.style.display = "none";
+    /* ===== PDF ===== */
+    else if (href.match(/\.pdf$/i)) {
 
-            const pdfViewer = document.getElementById("pdfViewer");
-            pdfViewer.src = href;
+        e.preventDefault();
 
-            pdfContainer.style.display = "block";
-            pdfContainer.scrollIntoView({ behavior: "smooth" });
-        }
+        const videoContainer = document.getElementById("videoViewerContainer");
+        const pdfContainer = document.getElementById("pdfViewerContainer");
+
+        videoContainer.style.display = "none";
+
+        const pdfViewer = document.getElementById("pdfViewer");
+        pdfViewer.src = fullUrl;
+
+        pdfContainer.style.display = "block";
+        pdfContainer.scrollIntoView({ behavior: "smooth" });
     }
 });
+
 </script>
 
 </body>
