@@ -1,7 +1,9 @@
 function loadCategory(folder) {
     const content = document.getElementById("content");
 
-    let path = folder ? `/${folder}/` : "/";
+    // let path = folder ? `/${folder}/` : "/";
+    let path = folder ? `/media/${folder}/` : "/media/";
+
 
     content.innerHTML = `
         <h2>Browsing: ${folder || "All Files"}</h2>
