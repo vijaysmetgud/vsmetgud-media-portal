@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
+
 env:
   IMAGE_NAME: vsmetgud/media-portal
   IMAGE_TAG: ${{ github.sha }}
