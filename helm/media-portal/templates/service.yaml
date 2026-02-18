@@ -1,6 +1,12 @@
-type: {{ .Values.service.type }}
-
-ports:
-  - port: {{ .Values.service.port }}
-    targetPort: 80
-    nodePort: {{ .Values.service.nodePort }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: media-portal
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: media-portal
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 80
+      nodePort: {{ .Values.service.nodePort }}

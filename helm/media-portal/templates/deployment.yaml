@@ -1,16 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "media-portal.fullname" . }}
+  name: media-portal
+  labels:
+    app: media-portal
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "media-portal.name" . }}
+      app: media-portal
   template:
     metadata:
       labels:
-        app: {{ include "media-portal.name" . }}
+        app: media-portal
     spec:
       nodeSelector:
         {{- toYaml .Values.nodeSelector | nindent 8 }}
@@ -21,7 +23,6 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 80
-
           volumeMounts:
             - name: media-storage
               mountPath: {{ .Values.persistence.mountPath }}
