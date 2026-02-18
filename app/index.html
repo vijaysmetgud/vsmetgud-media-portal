@@ -6,26 +6,114 @@
     <link rel="stylesheet" href="css/style.css">
 
     <style>
-        .viewer-container {
-            margin-top: 30px;
-            display: none;
-            background: #111;
-            padding: 20px;
-            border-radius: 10px;
-        }
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+    }
 
-        video {
-            width: 100%;
-            border-radius: 10px;
-        }
+    header {
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        padding: 40px 20px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
 
-        iframe {
-            width: 100%;
-            height: 800px;
-            border-radius: 10px;
-            background: #fff;
-        }
-    </style>
+    header h1 {
+        margin: 0;
+        font-size: 36px;
+        letter-spacing: 2px;
+        color: #38bdf8;
+    }
+
+    header p {
+        margin-top: 10px;
+        color: #94a3b8;
+        font-size: 14px;
+        letter-spacing: 1px;
+    }
+
+    nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        padding: 25px;
+        background: #111827;
+        box-shadow: inset 0 -1px 0 rgba(255,255,255,0.05);
+    }
+
+    nav button {
+        padding: 12px 22px;
+        border: none;
+        border-radius: 30px;
+        font-size: 14px;
+        cursor: pointer;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(37,99,235,0.4);
+    }
+
+    nav button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(37,99,235,0.7);
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+
+    section {
+        padding: 40px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .welcome {
+        background: #1e293b;
+        padding: 40px;
+        border-radius: 15px;
+        width: 80%;
+        max-width: 800px;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        transition: transform 0.3s ease;
+    }
+
+    .welcome:hover {
+        transform: scale(1.02);
+    }
+
+    .viewer-container {
+        margin: 40px auto;
+        display: none;
+        background: #1e293b;
+        padding: 25px;
+        border-radius: 15px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    }
+
+    video {
+        width: 100%;
+        border-radius: 12px;
+    }
+
+    iframe {
+        width: 100%;
+        height: 800px;
+        border-radius: 12px;
+        background: white;
+    }
+
+    footer {
+        text-align: center;
+        padding: 20px;
+        background: #0f172a;
+        color: #94a3b8;
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+</style>
+
 </head>
 <body>
 
@@ -36,29 +124,52 @@
 
 <nav>
 
-    <button onclick="loadCategory('')">VIEW ALL FILES</button>
+    <button class="nav-btn" onclick="loadCategory('')">
+        VIEW ALL FILES
+    </button>
 
-    <button onclick="loadCategory('VIDEO SONGS')">VIDEO-SONGS</button>
+    <button class="nav-btn" onclick="loadCategory('VIDEO_SONGS_TEST')">
+        VIDEO-SONGS
+    </button>
 
-    <button onclick="loadCategory('1.E-BOOKS--------------------------')">BOOKS</button>
+    <button class="nav-btn" onclick="loadCategory('1.E-BOOKS--------------------------')">
+        BOOKS
+    </button>
 
-    <button onclick="loadCategory('AUDIOS---')">AUDIOS</button>
+    <button class="nav-btn" onclick="loadCategory('AUDIOS---')">
+        AUDIOS
+    </button>
 
-    <button onclick="loadCategory('PHOTOS-delete it')">PHOTOS</button>
+    <button class="nav-btn" onclick="loadCategory('PHOTOS-delete it')">
+        PHOTOS
+    </button>
 
-    <button onclick="loadCategory('YOUTUBE VIDEOS-DEVOPS----------------------')">DEVOPS-VIDEOS</button>
+    <button class="nav-btn" onclick="loadCategory('YOUTUBE VIDEOS-DEVOPS----------------------')">
+        DEVOPS-VIDEOS
+    </button>
 
-    <button onclick="loadCategory('PYTHON-PRACTICE')">PYTHON-PRACTICE-CODES</button>
+    <button class="nav-btn" onclick="loadCategory('PYTHON-PRACTICE')">
+        PYTHON-PRACTICE-CODES
+    </button>
 
-    <button onclick="loadCategory('GEN-AI DEC 2025')">GEN-AI</button>
+    <button class="nav-btn" onclick="loadCategory('GEN-AI DEC 2025')">
+        GEN-AI
+    </button>
 
-    <button onclick="loadCategory('1.SCREEN RECORDER- ONLINECLASS VIDEOS-----')">DEVOPS-SCREENRECORDINGS</button>
+    <button class="nav-btn" onclick="loadCategory('1.SCREEN RECORDER- ONLINECLASS VIDEOS-----')">
+        DEVOPS-SCREENRECORDINGS
+    </button>
 
-    <button onclick="loadCategory('3.QT online class recordings----------------')">QT RECORDINGS</button>
+    <button class="nav-btn" onclick="loadCategory('3.QT online class recordings----------------')">
+        QT RECORDINGS
+    </button>
 
-    <button onclick="loadCategory('EBOOKS-DOWNLOAD-LINKEDIN')">EBOOKS-DOWNLOAD-LINKEDIN</button>
+    <button class="nav-btn" onclick="loadCategory('EBOOKS-DOWNLOAD-LINKEDIN')">
+        EBOOKS-DOWNLOAD-LINKEDIN
+    </button>
 
 </nav>
+
 
 <section id="content">
     <div class="welcome">
@@ -101,6 +212,24 @@ function loadCategory(folder) {
 }
 
 /* =========================
+   ACTIVE BUTTON EFFECT
+========================= */
+
+const buttons = document.querySelectorAll(".nav-btn");
+
+buttons.forEach(btn => {
+    btn.addEventListener("click", function() {
+
+        buttons.forEach(b => {
+            b.style.background = "linear-gradient(135deg,#2563eb,#1d4ed8)";
+        });
+
+        this.style.background = "linear-gradient(135deg,#22c55e,#16a34a)";
+    });
+});
+
+
+/* =========================
    VIDEO & PDF INTERCEPTOR
 ========================= */
 
@@ -111,7 +240,6 @@ document.addEventListener("click", function(e) {
     let href = e.target.getAttribute("href");
     if (!href || href === "../") return;
 
-    // Build full correct URL
     let fullUrl;
 
     if (href.startsWith("/")) {
@@ -120,7 +248,6 @@ document.addEventListener("click", function(e) {
         fullUrl = window.location.pathname + href;
     }
 
-    // Normalize double slashes
     fullUrl = fullUrl.replace(/\/+/g, "/");
 
     /* ===== VIDEO ===== */
@@ -141,7 +268,6 @@ document.addEventListener("click", function(e) {
 
         videoContainer.style.display = "block";
         videoContainer.scrollIntoView({ behavior: "smooth" });
-
     }
 
     /* ===== PDF ===== */
@@ -160,6 +286,7 @@ document.addEventListener("click", function(e) {
         pdfContainer.style.display = "block";
         pdfContainer.scrollIntoView({ behavior: "smooth" });
     }
+
 });
 
 </script>
