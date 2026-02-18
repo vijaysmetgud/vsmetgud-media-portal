@@ -31,14 +31,31 @@
 
 <header>
     <h1>VSMETGUD MEDIA PORTAL</h1>
-    <p>Professional Media Access Platform</p>
+    <p>PROFESSIONAL MEDIA ACCESS PLATFORM</p>
 </header>
 
 <nav>
-    <!-- MUST match exact folder names inside /media -->
+
     <button onclick="loadCategory('')">View All Files</button>
-    <button onclick="loadCategory('VIDEO_SONGS_TEST')">Videos</button>
+
+    <button onclick="loadCategory('VIDEO SONGS')">Video Songs</button>
+
     <button onclick="loadCategory('1.E-BOOKS--------------------------')">Books</button>
+
+    <button onclick="loadCategory('AJAY ONLINE CLASS VIDEOS')">Audios</button>
+
+    <button onclick="loadCategory('assets')">Photos</button>
+
+    <button onclick="loadCategory('YOUTUBE VIDEOS-DEVOPS----------------------')">DevOps Videos</button>
+
+    <button onclick="loadCategory('PYTHON-PRACTICE')">Python Practice</button>
+
+    <button onclick="loadCategory('1.SCREEN RECORDER- ONLINECLASS VIDEOS-----')">Screen Recordings</button>
+
+    <button onclick="loadCategory('3.QT online class recordings----------------')">QT Recordings</button>
+
+    <button onclick="loadCategory('Downloads-----------')">Downloads</button>
+
 </nav>
 
 <section id="content">
@@ -74,14 +91,12 @@
 ========================= */
 
 function loadCategory(folder) {
-
     if (folder === '') {
         window.location.href = "/media/";
     } else {
-        window.location.href = "/media/" + folder + "/";
+        window.location.href = "/media/" + encodeURIComponent(folder) + "/";
     }
 }
-
 
 /* =========================
    VIDEO & PDF INTERCEPTOR
