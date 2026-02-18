@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: vsmetgud/media-portal
-  tag: latest
+  tag: "451509a22d24a1d652e1f1fb89dd44ffe2b9075a"
   pullPolicy: IfNotPresent
 
 service:
