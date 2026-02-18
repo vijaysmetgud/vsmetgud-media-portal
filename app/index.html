@@ -1,121 +1,193 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>VSMETGUD MEDIA PORTAL</title>
-    <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<title>VSMETGUD MEDIA PORTAL</title>
 
-    <style>
-    body {
-        margin: 0;
-        font-family: 'Segoe UI', sans-serif;
-        background: #0f172a;
-        color: #e2e8f0;
-    }
+<style>
 
-    header {
-        background: linear-gradient(135deg, #1e293b, #0f172a);
-        padding: 40px 20px;
-        text-align: center;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    }
+/* =============================
+   ANIMATED DARK BACKGROUND
+============================= */
 
-    header h1 {
-        margin: 0;
-        font-size: 36px;
-        letter-spacing: 2px;
-        color: #38bdf8;
-    }
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(-45deg, #0f172a, #111827, #1e293b, #0f172a);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color: #e2e8f0;
+    overflow-x: hidden;
+}
 
-    header p {
-        margin-top: 10px;
-        color: #94a3b8;
-        font-size: 14px;
-        letter-spacing: 1px;
-    }
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
 
-    nav {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 15px;
-        padding: 25px;
-        background: #111827;
-        box-shadow: inset 0 -1px 0 rgba(255,255,255,0.05);
-    }
+/* =============================
+   FLOATING GLOW BLOBS
+============================= */
 
-    nav button {
-        padding: 12px 22px;
-        border: none;
-        border-radius: 30px;
-        font-size: 14px;
-        cursor: pointer;
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        color: white;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(37,99,235,0.4);
-    }
+.bg-animations {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    overflow: hidden;
+}
 
-    nav button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(37,99,235,0.7);
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-    }
+.blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.25;
+    animation: float 20s infinite alternate ease-in-out;
+}
 
-    section {
-        padding: 40px;
-        display: flex;
-        justify-content: center;
-    }
+.blob1 {
+    width: 500px;
+    height: 500px;
+    background: #3b82f6;
+    top: -100px;
+    left: -100px;
+}
 
-    .welcome {
-        background: #1e293b;
-        padding: 40px;
-        border-radius: 15px;
-        width: 80%;
-        max-width: 800px;
-        text-align: center;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-        transition: transform 0.3s ease;
-    }
+.blob2 {
+    width: 600px;
+    height: 600px;
+    background: #22c55e;
+    bottom: -150px;
+    right: -150px;
+}
 
-    .welcome:hover {
-        transform: scale(1.02);
-    }
+@keyframes float {
+    from { transform: translateY(0px); }
+    to { transform: translateY(-60px); }
+}
 
-    .viewer-container {
-        margin: 40px auto;
-        display: none;
-        background: #1e293b;
-        padding: 25px;
-        border-radius: 15px;
-        width: 90%;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.7);
-    }
+/* =============================
+   HEADER
+============================= */
 
-    video {
-        width: 100%;
-        border-radius: 12px;
-    }
+header {
+    text-align: center;
+    padding: 50px 20px;
+}
 
-    iframe {
-        width: 100%;
-        height: 800px;
-        border-radius: 12px;
-        background: white;
-    }
+header h1 {
+    font-size: 40px;
+    letter-spacing: 3px;
+    background: linear-gradient(90deg,#38bdf8,#22c55e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
-    footer {
-        text-align: center;
-        padding: 20px;
-        background: #0f172a;
-        color: #94a3b8;
-        border-top: 1px solid rgba(255,255,255,0.05);
-    }
+header p {
+    color: #94a3b8;
+    letter-spacing: 2px;
+}
+
+/* =============================
+   NAVIGATION
+============================= */
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    padding: 25px;
+}
+
+.nav-btn {
+    padding: 12px 22px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    background: linear-gradient(135deg,#2563eb,#1d4ed8);
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(37,99,235,0.4);
+}
+
+.nav-btn:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 35px rgba(37,99,235,0.8);
+}
+
+/* =============================
+   CONTENT CARD
+============================= */
+
+section {
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.welcome {
+    backdrop-filter: blur(20px);
+    background: rgba(30,41,59,0.6);
+    padding: 40px;
+    border-radius: 20px;
+    width: 80%;
+    max-width: 800px;
+    text-align: center;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+    transition: 0.4s;
+}
+
+.welcome:hover {
+    transform: translateY(-10px);
+}
+
+/* =============================
+   VIEWER CONTAINERS
+============================= */
+
+.viewer-container {
+    margin: 40px auto;
+    display: none;
+    backdrop-filter: blur(20px);
+    background: rgba(30,41,59,0.7);
+    padding: 25px;
+    border-radius: 20px;
+    width: 90%;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.7);
+}
+
+video {
+    width: 100%;
+    border-radius: 15px;
+}
+
+iframe {
+    width: 100%;
+    height: 800px;
+    border-radius: 15px;
+    background: white;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #94a3b8;
+}
+
 </style>
-
 </head>
+
 <body>
+
+<!-- Animated Background -->
+<div class="bg-animations">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+</div>
 
 <header>
     <h1>VSMETGUD MEDIA PORTAL</h1>
@@ -123,53 +195,12 @@
 </header>
 
 <nav>
-
-    <button class="nav-btn" onclick="loadCategory('')">
-        VIEW ALL FILES
-    </button>
-
-    <button class="nav-btn" onclick="loadCategory('VIDEO_SONGS')">
-        VIDEO-SONGS
-    </button>
-
-    <button class="nav-btn" onclick="loadCategory('1.E-BOOKS--------------------------')">
-        BOOKS
-    </button>
-
-    <button class="nav-btn" onclick="loadCategory('AUDIOS---')">
-        AUDIOS
-    </button>
-
-    <button class="nav-btn" onclick="loadCategory('PHOTOS-delete it')">
-        PHOTOS
-    </button>
-
-    <button class="nav-btn" onclick="loadCategory('YOUTUBE VIDEOS-DEVOPS----------------------')">
-        DEVOPS-VIDEOS
-    </button>
-
-    <button class="nav-btn" onclick="loadCategory('PYTHON-PRACTICE')">
-        PYTHON-PRACTICE-CODES
-    </button>
-
-    <button class="nav-btn" onclick="loadCategory('GEN-AI DEC 2025')">
-        GEN-AI
-    </button>
-
-    <button class="nav-btn" onclick="loadCategory('1.SCREEN RECORDER- ONLINECLASS VIDEOS-----')">
-        DEVOPS-SCREENRECORDINGS
-    </button>
-
-    <button class="nav-btn" onclick="loadCategory('3.QT online class recordings----------------')">
-        QT RECORDINGS
-    </button>
-
-    <button class="nav-btn" onclick="loadCategory('EBOOKS-DOWNLOAD-LINKEDIN')">
-        EBOOKS-DOWNLOAD-LINKEDIN
-    </button>
-
+    <button class="nav-btn" onclick="loadCategory('')">VIEW ALL FILES</button>
+    <button class="nav-btn" onclick="loadCategory('VIDEO_SONGS')">VIDEO-SONGS</button>
+    <button class="nav-btn" onclick="loadCategory('1.E-BOOKS--------------------------')">BOOKS</button>
+    <button class="nav-btn" onclick="loadCategory('AUDIOS---')">AUDIOS</button>
+    <button class="nav-btn" onclick="loadCategory('YOUTUBE VIDEOS-DEVOPS----------------------')">DEVOPS-VIDEOS</button>
 </nav>
-
 
 <section id="content">
     <div class="welcome">
@@ -178,30 +209,23 @@
     </div>
 </section>
 
-<!-- Video Viewer -->
 <div id="videoViewerContainer" class="viewer-container">
-    <h2 style="color:white;">Now Playing Video</h2>
+    <h2>Now Playing Video</h2>
     <video id="videoPlayer" controls autoplay>
         <source id="videoSource">
-        Your browser does not support video.
     </video>
 </div>
 
-<!-- PDF Viewer -->
 <div id="pdfViewerContainer" class="viewer-container">
-    <h2 style="color:white;">Viewing PDF</h2>
+    <h2>Viewing PDF</h2>
     <iframe id="pdfViewer"></iframe>
 </div>
 
 <footer>
-    <p>© 2026 Vsmetgud Media Portal | DevOps Architecture</p>
+    © 2026 Vsmetgud Media Portal | DevOps Architecture
 </footer>
 
 <script>
-
-/* =========================
-   CATEGORY NAVIGATION
-========================= */
 
 function loadCategory(folder) {
     if (folder === '') {
@@ -211,27 +235,13 @@ function loadCategory(folder) {
     }
 }
 
-/* =========================
-   ACTIVE BUTTON EFFECT
-========================= */
-
 const buttons = document.querySelectorAll(".nav-btn");
-
 buttons.forEach(btn => {
     btn.addEventListener("click", function() {
-
-        buttons.forEach(b => {
-            b.style.background = "linear-gradient(135deg,#2563eb,#1d4ed8)";
-        });
-
+        buttons.forEach(b => b.style.background = "linear-gradient(135deg,#2563eb,#1d4ed8)");
         this.style.background = "linear-gradient(135deg,#22c55e,#16a34a)";
     });
 });
-
-
-/* =========================
-   VIDEO & PDF INTERCEPTOR
-========================= */
 
 document.addEventListener("click", function(e) {
 
@@ -240,53 +250,23 @@ document.addEventListener("click", function(e) {
     let href = e.target.getAttribute("href");
     if (!href || href === "../") return;
 
-    let fullUrl;
-
-    if (href.startsWith("/")) {
-        fullUrl = href;
-    } else {
-        fullUrl = window.location.pathname + href;
-    }
-
+    let fullUrl = href.startsWith("/") ? href : window.location.pathname + href;
     fullUrl = fullUrl.replace(/\/+/g, "/");
 
-    /* ===== VIDEO ===== */
     if (href.match(/\.(mp4|avi|mov|webm|flv)$/i)) {
-
         e.preventDefault();
-
-        const videoContainer = document.getElementById("videoViewerContainer");
-        const pdfContainer = document.getElementById("pdfViewerContainer");
-
-        pdfContainer.style.display = "none";
-
-        const videoSource = document.getElementById("videoSource");
-        const videoPlayer = document.getElementById("videoPlayer");
-
-        videoSource.src = fullUrl;
-        videoPlayer.load();
-
-        videoContainer.style.display = "block";
-        videoContainer.scrollIntoView({ behavior: "smooth" });
+        document.getElementById("videoSource").src = fullUrl;
+        document.getElementById("videoPlayer").load();
+        document.getElementById("videoViewerContainer").style.display = "block";
+        document.getElementById("pdfViewerContainer").style.display = "none";
     }
 
-    /* ===== PDF ===== */
     else if (href.match(/\.pdf$/i)) {
-
         e.preventDefault();
-
-        const videoContainer = document.getElementById("videoViewerContainer");
-        const pdfContainer = document.getElementById("pdfViewerContainer");
-
-        videoContainer.style.display = "none";
-
-        const pdfViewer = document.getElementById("pdfViewer");
-        pdfViewer.src = fullUrl;
-
-        pdfContainer.style.display = "block";
-        pdfContainer.scrollIntoView({ behavior: "smooth" });
+        document.getElementById("pdfViewer").src = fullUrl;
+        document.getElementById("pdfViewerContainer").style.display = "block";
+        document.getElementById("videoViewerContainer").style.display = "none";
     }
-
 });
 
 </script>
