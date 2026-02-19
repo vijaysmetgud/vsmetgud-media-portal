@@ -29,12 +29,13 @@ body {
 
 header {
     text-align:center;
-    padding-top:140px;
+    padding-top:120px;
     padding-bottom:40px;
+    margin-left:280px;   /* prevents overlap with metrics */
 }
 
 header h1 {
-    font-size:60px;
+    font-size:70px;
     font-weight:700;
     background:linear-gradient(90deg,#38bdf8,#22c55e);
     -webkit-background-clip:text;
@@ -56,6 +57,7 @@ header p {
     gap:15px;
     padding:20px;
     margin-bottom:40px;
+    margin-left:280px;  /* avoid metrics overlap */
 }
 
 .nav-btn {
@@ -81,11 +83,12 @@ header p {
     left:20px;
     top:200px;
     width:240px;
-    background:rgba(30,41,59,0.85);
+    background:rgba(30,41,59,0.9);
     backdrop-filter:blur(15px);
     padding:25px;
     border-radius:20px;
     box-shadow:0 15px 50px rgba(0,0,0,0.6);
+    z-index:100;
 }
 
 .metric {
@@ -103,13 +106,6 @@ header p {
     color:#22c55e;
 }
 
-/* ================= DASHBOARD CENTER ================= */
-
-.dashboard {
-    margin-left:300px;
-    text-align:center;
-}
-
 /* ================= VIEWER ================= */
 
 .viewer-container {
@@ -120,6 +116,7 @@ header p {
     background:rgba(30,41,59,0.7);
     padding:20px;
     border-radius:20px;
+    margin-left:280px;
 }
 
 video, iframe {
@@ -140,12 +137,16 @@ iframe { height:600px; background:white; }
     border-radius:15px;
     box-shadow:0 10px 40px rgba(0,0,0,0.7);
     overflow:hidden;
+    transition:0.3s;
 }
 
 .chatbot-header {
     background:#2563eb;
     padding:10px;
     color:white;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
 
 .chatbot-body {
@@ -173,24 +174,18 @@ iframe { height:600px; background:white; }
     cursor:pointer;
 }
 
-/* ================= LOGIN MODAL ================= */
-
-.modal {
-    display:none;
+/* Floating reopen button */
+.chat-toggle {
     position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.8);
-    justify-content:center;
-    align-items:center;
-}
-
-.modal-content {
-    background:#1e293b;
-    padding:30px;
-    border-radius:15px;
+    bottom:20px;
+    right:20px;
+    background:#2563eb;
+    color:white;
+    padding:12px 18px;
+    border-radius:50px;
+    cursor:pointer;
+    display:none;
+    box-shadow:0 5px 20px rgba(0,0,0,0.6);
 }
 
 </style>
@@ -200,17 +195,14 @@ iframe { height:600px; background:white; }
 
 <div id="particles-js"></div>
 
-<!-- ================= HERO ================= -->
-
+<!-- HERO -->
 <header>
 <h1>WELCOME</h1>
 <p>VSMETGUD MEDIA PORTAL - DevOps Powered Platform</p>
 </header>
 
-<!-- ================= CENTER BUTTONS ================= -->
-
+<!-- CENTER BUTTONS -->
 <div class="navbar">
-
 <button class="nav-btn" onclick="loadCategory('')">VIEW ALL FILES</button>
 <button class="nav-btn" onclick="loadCategory('VIDEO SONGS')">VIDEO-SONGS</button>
 <button class="nav-btn" onclick="loadCategory('ShackPDFs')">BOOKS</button>
@@ -223,11 +215,9 @@ iframe { height:600px; background:white; }
 <button class="nav-btn" onclick="loadCategory('3.QT online class recordings----------------')">QT RECORDINGS</button>
 <button class="nav-btn" onclick="loadCategory('EBOOKS-DOWNLOAD-LINKEDIN')">LINKEDIN EBOOKS</button>
 <button class="nav-btn" onclick="openLogin()">LOGIN</button>
-
 </div>
 
-<!-- ================= LEFT METRICS ================= -->
-
+<!-- METRICS -->
 <div class="metrics">
 <div class="metric">
 <h3>CPU Usage</h3>
@@ -250,8 +240,7 @@ iframe { height:600px; background:white; }
 </div>
 </div>
 
-<!-- ================= VIEWERS ================= -->
-
+<!-- VIEWERS -->
 <div id="videoViewerContainer" class="viewer-container">
 <h2>Now Playing Video</h2>
 <video id="videoPlayer" controls autoplay>
@@ -264,10 +253,12 @@ iframe { height:600px; background:white; }
 <iframe id="pdfViewer"></iframe>
 </div>
 
-<!-- ================= CHATBOT ================= -->
-
-<div class="chatbot">
-<div class="chatbot-header">DevOps AI Assistant</div>
+<!-- CHATBOT -->
+<div class="chatbot" id="chatbox">
+<div class="chatbot-header">
+<span>DevOps AI Assistant</span>
+<span style="cursor:pointer;" onclick="toggleChat()">➖</span>
+</div>
 <div class="chatbot-body" id="chatBody"></div>
 <div class="chatbot-input">
 <input id="chatInput" placeholder="Ask something...">
@@ -275,34 +266,24 @@ iframe { height:600px; background:white; }
 </div>
 </div>
 
-<!-- ================= LOGIN MODAL ================= -->
-
-<div class="modal" id="loginModal">
-<div class="modal-content">
-<h3>Login</h3>
-<input type="text" placeholder="Username"><br><br>
-<input type="password" placeholder="Password"><br><br>
-<button onclick="closeLogin()">Login</button>
-</div>
-</div>
+<div class="chat-toggle" id="chatToggle" onclick="toggleChat()">🤖</div>
 
 <script>
 
+/* CATEGORY */
 function loadCategory(folder){
 if(folder===''){ window.location.href="/media/"; }
 else{ window.location.href="/media/"+encodeURIComponent(folder)+"/"; }
 }
 
-/* METRIC AUTO UPDATE */
+/* METRICS AUTO UPDATE */
 setInterval(()=>{
 document.getElementById("cpu").innerText=Math.floor(Math.random()*40+30)+"%";
 document.getElementById("memory").innerText=Math.floor(Math.random()*30+50)+"%";
 document.getElementById("pods").innerText=Math.floor(Math.random()*5+3);
 },3000);
 
-function openLogin(){ document.getElementById("loginModal").style.display="flex"; }
-function closeLogin(){ document.getElementById("loginModal").style.display="none"; }
-
+/* CHATBOT */
 function sendMessage(){
 let input=document.getElementById("chatInput");
 let body=document.getElementById("chatBody");
@@ -312,6 +293,20 @@ input.value="";
 body.scrollTop=body.scrollHeight;
 }
 
+function toggleChat(){
+let box=document.getElementById("chatbox");
+let toggle=document.getElementById("chatToggle");
+
+if(box.style.display==="none"){
+box.style.display="block";
+toggle.style.display="none";
+}else{
+box.style.display="none";
+toggle.style.display="block";
+}
+}
+
+/* PARTICLES */
 particlesJS("particles-js",{
 particles:{
 number:{value:60},
