@@ -2,247 +2,215 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>VSMETGUD DEVOPS PORTAL</title>
+<title>VSMETGUD ENTERPRISE MEDIA PORTAL</title>
 
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 
 <style>
 
-/* ============================= */
-/* GLOBAL DARK ANIMATED BACKGROUND */
-/* ============================= */
+/* ================= GLOBAL BACKGROUND ================= */
 
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(-45deg,#0f172a,#111827,#1e293b,#0f172a);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
-    color: #e2e8f0;
-    scroll-behavior: smooth;
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:linear-gradient(-45deg,#0f172a,#111827,#1e293b,#0f172a);
+    background-size:400% 400%;
+    animation:gradientBG 15s ease infinite;
+    color:#e2e8f0;
+    scroll-behavior:smooth;
 }
 
-@keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+@keyframes gradientBG{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
 }
 
-#particles-js {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    z-index: -2;
+#particles-js{
+    position:fixed;
+    width:100%;
+    height:100%;
+    z-index:-2;
 }
 
-/* ============================= */
-/* GLASS NAVBAR */
-/* ============================= */
+/* ================= NAVBAR ================= */
 
-.navbar {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    padding: 15px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    backdrop-filter: blur(15px);
-    background: rgba(0,0,0,0.3);
-    z-index: 1000;
-    transition: 0.3s;
+.navbar{
+    position:fixed;
+    top:0;
+    width:100%;
+    padding:15px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    backdrop-filter:blur(15px);
+    background:rgba(0,0,0,0.4);
+    z-index:1000;
 }
 
-.navbar.scrolled {
-    background: rgba(0,0,0,0.6);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+.logo{
+    font-weight:bold;
+    letter-spacing:2px;
+    font-size:18px;
 }
 
-.logo {
-    font-weight: bold;
-    letter-spacing: 2px;
-    font-size: 18px;
+.nav-links a{
+    margin:0 15px;
+    text-decoration:none;
+    color:#cbd5e1;
+    transition:.3s;
 }
 
-.nav-links a {
-    margin: 0 15px;
-    text-decoration: none;
-    color: #cbd5e1;
-    transition: 0.3s;
+.nav-links a:hover{
+    color:#ec4899;
 }
 
-.nav-links a:hover {
-    color: #ec4899;
+/* ================= HERO ================= */
+
+.hero{
+    margin-top:120px;
+    text-align:center;
+    padding:80px 20px;
 }
 
-.login-btn {
-    padding: 8px 18px;
-    border-radius: 20px;
-    border: none;
-    background: linear-gradient(135deg,#7c3aed,#ec4899);
-    color: white;
-    cursor: pointer;
+.hero h1{
+    font-size:48px;
+    background:linear-gradient(90deg,#ec4899,#7c3aed);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
 }
 
-/* ============================= */
-/* HERO SECTION */
-/* ============================= */
-
-.hero {
-    margin-top: 120px;
-    text-align: center;
-    padding: 80px 20px;
+.hero p{
+    color:#94a3b8;
 }
 
-.hero h1 {
-    font-size: 48px;
-    background: linear-gradient(90deg,#ec4899,#7c3aed);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+/* ================= DASHBOARD ================= */
+
+.stats{
+    display:flex;
+    justify-content:center;
+    gap:30px;
+    margin:60px;
+    flex-wrap:wrap;
 }
 
-.hero p {
-    color: #94a3b8;
+.stat-card{
+    backdrop-filter:blur(15px);
+    background:rgba(255,255,255,0.05);
+    padding:40px;
+    border-radius:20px;
+    width:220px;
+    text-align:center;
+    transition:.4s;
 }
 
-/* ============================= */
-/* STATS DASHBOARD */
-/* ============================= */
-
-.stats {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin: 60px;
-    flex-wrap: wrap;
+.stat-card:hover{
+    transform:translateY(-10px);
+    box-shadow:0 10px 40px rgba(0,0,0,0.6);
 }
 
-.stat-card {
-    backdrop-filter: blur(15px);
-    background: rgba(255,255,255,0.05);
-    padding: 40px;
-    border-radius: 20px;
-    width: 220px;
-    text-align: center;
-    transition: 0.4s;
+.stat-card h2{
+    font-size:40px;
+    background:linear-gradient(90deg,#22c55e,#7c3aed);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
 }
 
-.stat-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+/* ================= MEDIA NAV SECTION ================= */
+
+.media-section{
+    text-align:center;
+    padding:50px 20px;
 }
 
-.stat-card h2 {
-    font-size: 40px;
-    background: linear-gradient(90deg,#22c55e,#7c3aed);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+.media-section h2{
+    margin-bottom:30px;
+    font-size:30px;
 }
 
-/* ============================= */
-/* LOGIN MODAL */
-/* ============================= */
-
-.modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    justify-content: center;
-    align-items: center;
+.media-buttons{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:15px;
 }
 
-.modal-content {
-    backdrop-filter: blur(20px);
-    background: rgba(255,255,255,0.05);
-    padding: 40px;
-    border-radius: 20px;
-    width: 300px;
-    text-align: center;
+.media-btn{
+    padding:12px 22px;
+    border:none;
+    border-radius:30px;
+    cursor:pointer;
+    background:linear-gradient(135deg,#2563eb,#1d4ed8);
+    color:white;
+    transition:.3s;
+    box-shadow:0 4px 20px rgba(37,99,235,0.4);
 }
 
-.modal-content input {
-    width: 100%;
-    margin: 10px 0;
-    padding: 10px;
-    border-radius: 10px;
-    border: none;
+.media-btn:hover{
+    transform:translateY(-5px) scale(1.05);
+    box-shadow:0 10px 35px rgba(37,99,235,0.8);
 }
 
-.modal-content button {
-    padding: 10px;
-    width: 100%;
-    border-radius: 20px;
-    border: none;
-    background: linear-gradient(135deg,#7c3aed,#ec4899);
-    color: white;
+/* ================= FOOTER ================= */
+
+footer{
+    text-align:center;
+    padding:40px;
+    color:#94a3b8;
 }
 
-/* ============================= */
-/* AI CHATBOT */
-/* ============================= */
+/* ================= CHATBOT ================= */
 
-.chatbot {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 320px;
-    background: rgba(0,0,0,0.8);
-    border-radius: 15px;
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
+.chat-toggle{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:linear-gradient(135deg,#7c3aed,#ec4899);
+    border-radius:50%;
+    padding:15px;
+    cursor:pointer;
 }
 
-.chat-header {
-    background: linear-gradient(135deg,#7c3aed,#ec4899);
-    padding: 10px;
-    text-align: center;
-    font-weight: bold;
+.chatbot{
+    position:fixed;
+    bottom:80px;
+    right:20px;
+    width:300px;
+    background:rgba(0,0,0,0.9);
+    border-radius:15px;
+    display:none;
+    flex-direction:column;
+    overflow:hidden;
 }
 
-.chat-messages {
-    padding: 10px;
-    height: 250px;
-    overflow-y: auto;
-    font-size: 14px;
+.chat-header{
+    background:linear-gradient(135deg,#7c3aed,#ec4899);
+    padding:10px;
+    text-align:center;
 }
 
-.chat-input {
-    display: flex;
+.chat-messages{
+    padding:10px;
+    height:200px;
+    overflow-y:auto;
+    font-size:14px;
 }
 
-.chat-input input {
-    flex: 1;
-    padding: 8px;
-    border: none;
+.chat-input{
+    display:flex;
 }
 
-.chat-input button {
-    padding: 8px;
-    border: none;
-    background: #7c3aed;
-    color: white;
+.chat-input input{
+    flex:1;
+    padding:8px;
+    border:none;
 }
 
-.chat-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: linear-gradient(135deg,#7c3aed,#ec4899);
-    border-radius: 50%;
-    padding: 15px;
-    cursor: pointer;
-}
-
-/* ============================= */
-/* FOOTER */
-/* ============================= */
-
-footer {
-    text-align: center;
-    padding: 40px;
-    color: #94a3b8;
+.chat-input button{
+    padding:8px;
+    border:none;
+    background:#7c3aed;
+    color:white;
 }
 
 </style>
@@ -252,13 +220,12 @@ footer {
 
 <div id="particles-js"></div>
 
-<div class="navbar" id="navbar">
+<div class="navbar">
     <div class="logo">VSMETGUD DEVOPS</div>
     <div class="nav-links">
         <a href="#hero">Home</a>
-        <a href="#stats">Dashboard</a>
-        <a href="#stats">Monitoring</a>
-        <button class="login-btn" onclick="openLogin()">Login</button>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#media">Media</a>
     </div>
 </div>
 
@@ -267,7 +234,7 @@ footer {
     <p>Kubernetes | CI/CD | Monitoring | Automation</p>
 </section>
 
-<section class="stats" id="stats">
+<section class="stats" id="dashboard">
     <div class="stat-card">
         <h2 id="deployments">0</h2>
         <p>Deployments</p>
@@ -282,21 +249,40 @@ footer {
     </div>
 </section>
 
+<!-- ===== MEDIA BUTTONS SECTION ===== -->
+
+<section class="media-section" id="media">
+    <h2>📁 Media Categories</h2>
+
+    <div class="media-buttons">
+
+        <button class="media-btn" onclick="loadCategory('')">VIEW ALL FILES</button>
+
+        <button class="media-btn" onclick="loadCategory('VIDEO SONGS')">VIDEO-SONGS</button>
+
+        <button class="media-btn" onclick="loadCategory('1.E-BOOKS--------------------------')">BOOKS</button>
+
+        <button class="media-btn" onclick="loadCategory('YOUTUBE VIDEOS-DEVOPS----------------------')">DEVOPS VIDEOS</button>
+
+        <button class="media-btn" onclick="loadCategory('PYTHON-PRACTICE')">PYTHON CODES</button>
+
+        <button class="media-btn" onclick="loadCategory('GEN-AI DEC 2025')">GEN-AI</button>
+
+        <button class="media-btn" onclick="loadCategory('1.SCREEN RECORDER- ONLINECLASS VIDEOS-----')">SCREEN RECORDINGS</button>
+
+        <button class="media-btn" onclick="loadCategory('3.QT online class recordings----------------')">QT RECORDINGS</button>
+
+        <button class="media-btn" onclick="loadCategory('EBOOKS-DOWNLOAD-LINKEDIN')">LINKEDIN EBOOKS</button>
+
+    </div>
+</section>
+
 <footer>
-© 2026 Vsmetgud DevOps Platform
+© 2026 Vsmetgud Enterprise DevOps Platform
 </footer>
 
-<!-- LOGIN MODAL -->
-<div class="modal" id="loginModal">
-  <div class="modal-content">
-    <h2>Login</h2>
-    <input type="text" placeholder="Username">
-    <input type="password" placeholder="Password">
-    <button onclick="closeLogin()">Login</button>
-  </div>
-</div>
+<!-- ===== CHATBOT ===== -->
 
-<!-- CHATBOT -->
 <div class="chat-toggle" onclick="toggleChat()">💬</div>
 
 <div class="chatbot" id="chatbot">
@@ -310,66 +296,60 @@ footer {
 
 <script>
 
-/* NAVBAR SCROLL EFFECT */
-window.addEventListener("scroll", function() {
-    document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 50);
-});
+/* MEDIA NAVIGATION */
+function loadCategory(folder){
+    if(folder===''){
+        window.location.href="/media/";
+    } else {
+        window.location.href="/media/"+encodeURIComponent(folder)+"/";
+    }
+}
 
 /* COUNTER ANIMATION */
-function animateCounter(id, end) {
-    let current = 0;
-    let interval = setInterval(() => {
-        current += 1;
-        document.getElementById(id).textContent = current;
-        if(current >= end) clearInterval(interval);
-    }, 20);
+function animateCounter(id,end){
+    let current=0;
+    let interval=setInterval(()=>{
+        current++;
+        document.getElementById(id).textContent=current;
+        if(current>=end) clearInterval(interval);
+    },20);
 }
 
-animateCounter("deployments", 120);
-animateCounter("pipelines", 45);
-animateCounter("clusters", 8);
+animateCounter("deployments",120);
+animateCounter("pipelines",45);
+animateCounter("clusters",8);
 
-/* LOGIN */
-function openLogin() {
-    document.getElementById("loginModal").style.display = "flex";
-}
-function closeLogin() {
-    document.getElementById("loginModal").style.display = "none";
-}
-
-/* CHATBOT SIMPLE AI */
-function toggleChat() {
-    const chat = document.getElementById("chatbot");
-    chat.style.display = chat.style.display === "flex" ? "none" : "flex";
-    chat.style.flexDirection = "column";
+/* CHATBOT */
+function toggleChat(){
+    const chat=document.getElementById("chatbot");
+    chat.style.display=chat.style.display==="flex"?"none":"flex";
+    chat.style.flexDirection="column";
 }
 
-function sendMessage() {
-    const input = document.getElementById("chatInput");
-    const messages = document.getElementById("chatMessages");
-
-    const userMsg = input.value;
+function sendMessage(){
+    const input=document.getElementById("chatInput");
+    const messages=document.getElementById("chatMessages");
+    const userMsg=input.value;
     if(!userMsg) return;
 
-    messages.innerHTML += `<div><b>You:</b> ${userMsg}</div>`;
+    messages.innerHTML+=`<div><b>You:</b> ${userMsg}</div>`;
 
-    let reply = "I'm your DevOps assistant. Ask about Kubernetes, CI/CD or Monitoring.";
-    if(userMsg.toLowerCase().includes("kubernetes")) reply = "Kubernetes manages container orchestration.";
-    if(userMsg.toLowerCase().includes("pipeline")) reply = "CI/CD pipelines automate build, test and deploy.";
-    if(userMsg.toLowerCase().includes("monitor")) reply = "Use Prometheus + Grafana for monitoring.";
+    let reply="I am your DevOps assistant.";
+    if(userMsg.toLowerCase().includes("kubernetes")) reply="Kubernetes manages containers.";
+    if(userMsg.toLowerCase().includes("pipeline")) reply="CI/CD automates build & deploy.";
 
-    messages.innerHTML += `<div style="color:#22c55e;"><b>AI:</b> ${reply}</div>`;
-    input.value = "";
+    messages.innerHTML+=`<div style="color:#22c55e;"><b>AI:</b> ${reply}</div>`;
+    input.value="";
 }
 
 /* PARTICLES */
-particlesJS("particles-js", {
-  particles: {
-    number: { value: 80 },
-    color: { value: "#ffffff" },
-    size: { value: 2 },
-    line_linked: { enable: true },
-    move: { speed: 1 }
+particlesJS("particles-js",{
+  particles:{
+    number:{value:80},
+    color:{value:"#ffffff"},
+    size:{value:2},
+    line_linked:{enable:true},
+    move:{speed:1}
   }
 });
 
