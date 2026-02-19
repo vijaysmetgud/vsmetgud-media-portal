@@ -16,6 +16,12 @@ body {
     background:#0f172a;
     color:#e2e8f0;
     overflow-x:hidden;
+    transition:0.4s;
+}
+
+body.light {
+    background:#f1f5f9;
+    color:#0f172a;
 }
 
 #particles-js {
@@ -42,12 +48,7 @@ header h1 {
     -webkit-text-fill-color:transparent;
 }
 
-header p {
-    font-size:18px;
-    color:#94a3b8;
-}
-
-/* ================= CENTER BUTTONS ================= */
+/* ================= BUTTONS ================= */
 
 .navbar {
     display:flex;
@@ -74,13 +75,29 @@ header p {
     box-shadow:0 8px 25px rgba(37,99,235,0.8);
 }
 
-/* ACTIVE BUTTON GREEN */
+/* ACTIVE BUTTON */
 .nav-btn.active {
     background:linear-gradient(135deg,#22c55e,#16a34a);
-    box-shadow:0 8px 25px rgba(34,197,94,0.8);
+    animation:pulse 1.5s infinite;
 }
 
-/* ================= LEFT METRICS ================= */
+@keyframes pulse {
+    0% { box-shadow:0 0 10px #22c55e; }
+    50% { box-shadow:0 0 30px #22c55e; }
+    100% { box-shadow:0 0 10px #22c55e; }
+}
+
+/* ALERT BADGE */
+.alert-badge {
+    background:red;
+    color:white;
+    font-size:10px;
+    padding:3px 6px;
+    border-radius:20px;
+    margin-left:6px;
+}
+
+/* ================= METRICS ================= */
 
 .metrics {
     position:fixed;
@@ -92,17 +109,9 @@ header p {
     padding:25px;
     border-radius:20px;
     box-shadow:0 15px 50px rgba(0,0,0,0.6);
-    z-index:100;
 }
 
-.metric {
-    margin-bottom:25px;
-}
-
-.metric h3 {
-    font-size:15px;
-    color:#38bdf8;
-}
+.metric { margin-bottom:25px; }
 
 .counter {
     font-size:28px;
@@ -110,25 +119,17 @@ header p {
     color:#22c55e;
 }
 
-/* ================= VIEWER ================= */
+/* ================= THEME TOGGLE ================= */
 
-.viewer-container {
-    margin:40px auto;
-    display:none;
-    width:60%;
-    backdrop-filter:blur(20px);
-    background:rgba(30,41,59,0.7);
-    padding:20px;
-    border-radius:20px;
-    margin-left:280px;
+.theme-toggle {
+    position:fixed;
+    top:20px;
+    right:20px;
+    background:#2563eb;
+    padding:10px 18px;
+    border-radius:30px;
+    cursor:pointer;
 }
-
-video, iframe {
-    width:100%;
-    border-radius:15px;
-}
-
-iframe { height:600px; background:white; }
 
 /* ================= CHATBOT ================= */
 
@@ -141,23 +142,19 @@ iframe { height:600px; background:white; }
     border-radius:15px;
     box-shadow:0 10px 40px rgba(0,0,0,0.7);
     overflow:hidden;
-    transition:0.3s;
 }
 
 .chatbot-header {
     background:#2563eb;
     padding:10px;
-    color:white;
     display:flex;
     justify-content:space-between;
-    align-items:center;
 }
 
 .chatbot-body {
     padding:10px;
     height:200px;
     overflow-y:auto;
-    font-size:13px;
 }
 
 .chatbot-input {
@@ -175,21 +172,17 @@ iframe { height:600px; background:white; }
     border:none;
     padding:8px;
     color:white;
-    cursor:pointer;
 }
 
-/* Floating reopen button */
 .chat-toggle {
     position:fixed;
     bottom:20px;
     right:20px;
     background:#2563eb;
-    color:white;
     padding:12px 18px;
     border-radius:50px;
     cursor:pointer;
     display:none;
-    box-shadow:0 5px 20px rgba(0,0,0,0.6);
 }
 
 </style>
@@ -199,30 +192,20 @@ iframe { height:600px; background:white; }
 
 <div id="particles-js"></div>
 
-<!-- HERO -->
+<div class="theme-toggle" onclick="toggleTheme()">🌙 Toggle Theme</div>
+
 <header>
 <h1>WELCOME</h1>
-<p>VSMETGUD MEDIA PORTAL - DevOps Powered Platform</p>
+<p>VSMETGUD MEDIA PORTAL - Enterprise DevOps Dashboard</p>
 </header>
 
-<!-- CENTER BUTTONS -->
 <div class="navbar">
-
 <button class="nav-btn" onclick="loadCategory('', this)">VIEW ALL FILES</button>
-<button class="nav-btn" onclick="loadCategory('VIDEO SONGS', this)">VIDEO-SONGS</button>
+<button class="nav-btn" onclick="loadCategory('VIDEO SONGS', this)">VIDEO SONGS</button>
 <button class="nav-btn" onclick="loadCategory('ShackPDFs', this)">BOOKS</button>
-<button class="nav-btn" onclick="loadCategory('AUDIOS---', this)">AUDIOS</button>
-<button class="nav-btn" onclick="loadCategory('PHOTOS-delete it', this)">PHOTOS</button>
-<button class="nav-btn" onclick="loadCategory('YOUTUBE VIDEOS-DEVOPS----------------------', this)">DEVOPS-VIDEOS</button>
-<button class="nav-btn" onclick="loadCategory('PYTHON-PRACTICE', this)">PYTHON-CODES</button>
-<button class="nav-btn" onclick="loadCategory('GEN-AI DEC 2025', this)">GEN-AI</button>
-<button class="nav-btn" onclick="loadCategory('1.SCREEN RECORDER- ONLINECLASS VIDEOS-----', this)">DEVOPS-RECORDINGS</button>
-<button class="nav-btn" onclick="loadCategory('3.QT online class recordings----------------', this)">QT RECORDINGS</button>
-<button class="nav-btn" onclick="loadCategory('EBOOKS-DOWNLOAD-LINKEDIN', this)">LINKEDIN EBOOKS</button>
-
+<button class="nav-btn" onclick="loadCategory('YOUTUBE VIDEOS-DEVOPS----------------------', this)">DEVOPS VIDEOS</button>
 </div>
 
-<!-- METRICS -->
 <div class="metrics">
 <div class="metric">
 <h3>CPU Usage</h3>
@@ -241,32 +224,18 @@ iframe { height:600px; background:white; }
 
 <div class="metric">
 <h3>Pod Health</h3>
-<div class="counter">Healthy</div>
+<div class="counter" id="health">Healthy</div>
 </div>
 </div>
 
-<!-- VIEWERS -->
-<div id="videoViewerContainer" class="viewer-container">
-<h2>Now Playing Video</h2>
-<video id="videoPlayer" controls autoplay>
-<source id="videoSource">
-</video>
-</div>
-
-<div id="pdfViewerContainer" class="viewer-container">
-<h2>Viewing PDF</h2>
-<iframe id="pdfViewer"></iframe>
-</div>
-
-<!-- CHATBOT -->
 <div class="chatbot" id="chatbox">
 <div class="chatbot-header">
-<span>DevOps AI Assistant</span>
-<span style="cursor:pointer;" onclick="toggleChat()">➖</span>
+<span>DevOps AI</span>
+<span onclick="toggleChat()">➖</span>
 </div>
 <div class="chatbot-body" id="chatBody"></div>
 <div class="chatbot-input">
-<input id="chatInput" placeholder="Ask something...">
+<input id="chatInput">
 <button onclick="sendMessage()">Send</button>
 </div>
 </div>
@@ -275,60 +244,108 @@ iframe { height:600px; background:white; }
 
 <script>
 
-/* CATEGORY + ACTIVE BUTTON */
-function loadCategory(folder, element){
+/* ================= AUTO ACTIVE BUTTON FROM URL ================= */
 
+window.onload = function(){
+    const path = decodeURIComponent(window.location.pathname);
     document.querySelectorAll(".nav-btn").forEach(btn=>{
-        btn.classList.remove("active");
+        if(path.includes(btn.innerText.replace(" ",""))){
+            btn.classList.add("active");
+        }
     });
+};
 
+/* ================= CATEGORY ================= */
+
+function loadCategory(folder, element){
+    document.querySelectorAll(".nav-btn").forEach(btn=>btn.classList.remove("active"));
     element.classList.add("active");
 
-    if(folder===''){
-        window.location.href="/media/";
-    }else{
-        window.location.href="/media/"+encodeURIComponent(folder)+"/";
-    }
+    if(folder===''){ window.location.href="/media/"; }
+    else{ window.location.href="/media/"+encodeURIComponent(folder)+"/"; }
 }
 
-/* METRICS AUTO UPDATE */
-setInterval(()=>{
-document.getElementById("cpu").innerText=Math.floor(Math.random()*40+30)+"%";
-document.getElementById("memory").innerText=Math.floor(Math.random()*30+50)+"%";
-document.getElementById("pods").innerText=Math.floor(Math.random()*5+3);
-},3000);
+/* ================= METRICS ================= */
 
-/* CHATBOT */
+async function fetchMetrics(){
+    try{
+        // Replace with real Prometheus endpoint
+        // const res = await fetch("/api/metrics");
+        // const data = await res.json();
+
+        let cpu=Math.floor(Math.random()*40+30);
+        let mem=Math.floor(Math.random()*30+50);
+        let pods=Math.floor(Math.random()*5+3);
+
+        document.getElementById("cpu").innerText=cpu+"%";
+        document.getElementById("memory").innerText=mem+"%";
+        document.getElementById("pods").innerText=pods;
+
+        if(pods<3){
+            document.getElementById("health").innerHTML="Warning <span class='alert-badge'>!</span>";
+        } else {
+            document.getElementById("health").innerText="Healthy";
+        }
+
+    }catch(e){
+        console.log("Metrics fetch error");
+    }
+}
+setInterval(fetchMetrics,3000);
+
+/* ================= THEME ================= */
+
+function toggleTheme(){
+    document.body.classList.toggle("light");
+}
+
+/* ================= CHAT ================= */
+
 function sendMessage(){
-let input=document.getElementById("chatInput");
-let body=document.getElementById("chatBody");
-body.innerHTML+="<div><b>You:</b> "+input.value+"</div>";
-body.innerHTML+="<div style='color:#22c55e;'><b>AI:</b> System stable 🚀</div>";
-input.value="";
-body.scrollTop=body.scrollHeight;
+    let input=document.getElementById("chatInput");
+    let body=document.getElementById("chatBody");
+    body.innerHTML+="<div><b>You:</b> "+input.value+"</div>";
+    body.innerHTML+="<div style='color:#22c55e;'><b>AI:</b> Monitoring stable 🚀</div>";
+    input.value="";
 }
 
 function toggleChat(){
-let box=document.getElementById("chatbox");
-let toggle=document.getElementById("chatToggle");
+    let box=document.getElementById("chatbox");
+    let toggle=document.getElementById("chatToggle");
 
-if(box.style.display==="none"){
-box.style.display="block";
-toggle.style.display="none";
-}else{
-box.style.display="none";
-toggle.style.display="block";
-}
+    if(box.style.display==="none"){
+        box.style.display="block";
+        toggle.style.display="none";
+    }else{
+        box.style.display="none";
+        toggle.style.display="block";
+    }
 }
 
-/* PARTICLES */
+/* ================= VOICE NAV ================= */
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(SpeechRecognition){
+    const recognition = new SpeechRecognition();
+    recognition.lang="en-US";
+    recognition.onresult=function(event){
+        let speech = event.results[0][0].transcript.toLowerCase();
+        document.querySelectorAll(".nav-btn").forEach(btn=>{
+            if(speech.includes(btn.innerText.toLowerCase())){
+                btn.click();
+            }
+        });
+    };
+    recognition.start();
+}
+
+/* ================= PARTICLES ================= */
+
 particlesJS("particles-js",{
-particles:{
-number:{value:60},
+particles:{number:{value:60},
 size:{value:3},
 move:{speed:2},
-line_linked:{enable:true,color:"#38bdf8"}
-}
+line_linked:{enable:true,color:"#38bdf8"}}
 });
 
 </script>
