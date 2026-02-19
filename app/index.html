@@ -244,54 +244,68 @@ header h1 {
 
 <script>
 
-/* ================= AUTO ACTIVE BUTTON FROM URL ================= */
-
-window.onload = function(){
-    const path = decodeURIComponent(window.location.pathname);
-    document.querySelectorAll(".nav-btn").forEach(btn=>{
-        if(path.includes(btn.innerText.replace(" ",""))){
-            btn.classList.add("active");
-        }
-    });
-};
-
-/* ================= CATEGORY ================= */
+/* ================= CATEGORY + ACTIVE BUTTON ================= */
 
 function loadCategory(folder, element){
-    document.querySelectorAll(".nav-btn").forEach(btn=>btn.classList.remove("active"));
+
+    // remove active from all
+    document.querySelectorAll(".nav-btn")
+        .forEach(btn => btn.classList.remove("active"));
+
+    // add active to clicked
     element.classList.add("active");
 
-    if(folder===''){ window.location.href="/media/"; }
-    else{ window.location.href="/media/"+encodeURIComponent(folder)+"/"; }
+    // store active button
+    localStorage.setItem("activeFolder", folder);
+
+    // navigate
+    if(folder === ''){
+        window.location.href = "/media/";
+    } else {
+        window.location.href = "/media/" + encodeURIComponent(folder) + "/";
+    }
 }
+
+/* ================= RESTORE ACTIVE AFTER RELOAD ================= */
+
+window.addEventListener("DOMContentLoaded", function(){
+
+    const savedFolder = localStorage.getItem("activeFolder");
+
+    if(savedFolder !== null){
+        document.querySelectorAll(".nav-btn").forEach(btn => {
+            if(btn.getAttribute("onclick").includes(savedFolder)){
+                btn.classList.add("active");
+            }
+        });
+    }
+
+});
+
 
 /* ================= METRICS ================= */
 
-async function fetchMetrics(){
-    try{
-        // Replace with real Prometheus endpoint
-        // const res = await fetch("/api/metrics");
-        // const data = await res.json();
+function fetchMetrics(){
 
-        let cpu=Math.floor(Math.random()*40+30);
-        let mem=Math.floor(Math.random()*30+50);
-        let pods=Math.floor(Math.random()*5+3);
+    let cpu = Math.floor(Math.random()*40+30);
+    let mem = Math.floor(Math.random()*30+50);
+    let pods = Math.floor(Math.random()*5+3);
 
-        document.getElementById("cpu").innerText=cpu+"%";
-        document.getElementById("memory").innerText=mem+"%";
-        document.getElementById("pods").innerText=pods;
+    document.getElementById("cpu").innerText = cpu + "%";
+    document.getElementById("memory").innerText = mem + "%";
+    document.getElementById("pods").innerText = pods;
 
-        if(pods<3){
-            document.getElementById("health").innerHTML="Warning <span class='alert-badge'>!</span>";
-        } else {
-            document.getElementById("health").innerText="Healthy";
-        }
-
-    }catch(e){
-        console.log("Metrics fetch error");
+    if(pods < 3){
+        document.getElementById("health").innerHTML =
+            "Warning <span class='alert-badge'>!</span>";
+    } else {
+        document.getElementById("health").innerText = "Healthy";
     }
 }
-setInterval(fetchMetrics,3000);
+
+setInterval(fetchMetrics, 3000);
+fetchMetrics();
+
 
 /* ================= THEME ================= */
 
@@ -299,56 +313,74 @@ function toggleTheme(){
     document.body.classList.toggle("light");
 }
 
+
 /* ================= CHAT ================= */
 
 function sendMessage(){
-    let input=document.getElementById("chatInput");
-    let body=document.getElementById("chatBody");
-    body.innerHTML+="<div><b>You:</b> "+input.value+"</div>";
-    body.innerHTML+="<div style='color:#22c55e;'><b>AI:</b> Monitoring stable 🚀</div>";
+    let input = document.getElementById("chatInput");
+    let body = document.getElementById("chatBody");
+
+    body.innerHTML += "<div><b>You:</b> "+input.value+"</div>";
+    body.innerHTML += "<div style='color:#22c55e;'><b>AI:</b> Monitoring stable 🚀</div>";
+
     input.value="";
+    body.scrollTop = body.scrollHeight;
 }
+
+
+/* ================= CHAT TOGGLE ================= */
 
 function toggleChat(){
-    let box=document.getElementById("chatbox");
-    let toggle=document.getElementById("chatToggle");
+    let box = document.getElementById("chatbox");
+    let toggle = document.getElementById("chatToggle");
 
-    if(box.style.display==="none"){
-        box.style.display="block";
-        toggle.style.display="none";
-    }else{
-        box.style.display="none";
-        toggle.style.display="block";
+    if(box.style.display === "none"){
+        box.style.display = "block";
+        toggle.style.display = "none";
+    } else {
+        box.style.display = "none";
+        toggle.style.display = "block";
     }
 }
+
 
 /* ================= VOICE NAV ================= */
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
 if(SpeechRecognition){
+
     const recognition = new SpeechRecognition();
     recognition.lang="en-US";
-    recognition.onresult=function(event){
+
+    recognition.onresult = function(event){
         let speech = event.results[0][0].transcript.toLowerCase();
+
         document.querySelectorAll(".nav-btn").forEach(btn=>{
             if(speech.includes(btn.innerText.toLowerCase())){
                 btn.click();
             }
         });
     };
-    recognition.start();
+
+    // DO NOT auto start repeatedly
+    // recognition.start();  ← removed (was causing random behaviour)
 }
+
 
 /* ================= PARTICLES ================= */
 
 particlesJS("particles-js",{
-particles:{number:{value:60},
-size:{value:3},
-move:{speed:2},
-line_linked:{enable:true,color:"#38bdf8"}}
+    particles:{
+        number:{value:60},
+        size:{value:3},
+        move:{speed:2},
+        line_linked:{enable:true,color:"#38bdf8"}
+    }
 });
 
 </script>
+
 
 </body>
 </html>
