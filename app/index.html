@@ -25,13 +25,13 @@ body {
     z-index:-2;
 }
 
-/* ================= HERO HEADER ================= */
+/* ================= HERO ================= */
 
 header {
     text-align:center;
     padding-top:120px;
     padding-bottom:40px;
-    margin-left:280px;   /* prevents overlap with metrics */
+    margin-left:280px;
 }
 
 header h1 {
@@ -45,10 +45,9 @@ header h1 {
 header p {
     font-size:18px;
     color:#94a3b8;
-    margin-top:15px;
 }
 
-/* ================= CENTER BUTTON SECTION ================= */
+/* ================= CENTER BUTTONS ================= */
 
 .navbar {
     display:flex;
@@ -56,8 +55,7 @@ header p {
     justify-content:center;
     gap:15px;
     padding:20px;
-    margin-bottom:40px;
-    margin-left:280px;  /* avoid metrics overlap */
+    margin-left:280px;
 }
 
 .nav-btn {
@@ -76,7 +74,13 @@ header p {
     box-shadow:0 8px 25px rgba(37,99,235,0.8);
 }
 
-/* ================= LEFT METRICS PANEL ================= */
+/* ACTIVE BUTTON GREEN */
+.nav-btn.active {
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    box-shadow:0 8px 25px rgba(34,197,94,0.8);
+}
+
+/* ================= LEFT METRICS ================= */
 
 .metrics {
     position:fixed;
@@ -203,18 +207,19 @@ iframe { height:600px; background:white; }
 
 <!-- CENTER BUTTONS -->
 <div class="navbar">
-<button class="nav-btn" onclick="loadCategory('')">VIEW ALL FILES</button>
-<button class="nav-btn" onclick="loadCategory('VIDEO SONGS')">VIDEO-SONGS</button>
-<button class="nav-btn" onclick="loadCategory('ShackPDFs')">BOOKS</button>
-<button class="nav-btn" onclick="loadCategory('AUDIOS---')">AUDIOS</button>
-<button class="nav-btn" onclick="loadCategory('PHOTOS-delete it')">PHOTOS</button>
-<button class="nav-btn" onclick="loadCategory('YOUTUBE VIDEOS-DEVOPS----------------------')">DEVOPS-VIDEOS</button>
-<button class="nav-btn" onclick="loadCategory('PYTHON-PRACTICE')">PYTHON-CODES</button>
-<button class="nav-btn" onclick="loadCategory('GEN-AI DEC 2025')">GEN-AI</button>
-<button class="nav-btn" onclick="loadCategory('1.SCREEN RECORDER- ONLINECLASS VIDEOS-----')">DEVOPS-RECORDINGS</button>
-<button class="nav-btn" onclick="loadCategory('3.QT online class recordings----------------')">QT RECORDINGS</button>
-<button class="nav-btn" onclick="loadCategory('EBOOKS-DOWNLOAD-LINKEDIN')">LINKEDIN EBOOKS</button>
-<button class="nav-btn" onclick="openLogin()">LOGIN</button>
+
+<button class="nav-btn" onclick="loadCategory('', this)">VIEW ALL FILES</button>
+<button class="nav-btn" onclick="loadCategory('VIDEO SONGS', this)">VIDEO-SONGS</button>
+<button class="nav-btn" onclick="loadCategory('ShackPDFs', this)">BOOKS</button>
+<button class="nav-btn" onclick="loadCategory('AUDIOS---', this)">AUDIOS</button>
+<button class="nav-btn" onclick="loadCategory('PHOTOS-delete it', this)">PHOTOS</button>
+<button class="nav-btn" onclick="loadCategory('YOUTUBE VIDEOS-DEVOPS----------------------', this)">DEVOPS-VIDEOS</button>
+<button class="nav-btn" onclick="loadCategory('PYTHON-PRACTICE', this)">PYTHON-CODES</button>
+<button class="nav-btn" onclick="loadCategory('GEN-AI DEC 2025', this)">GEN-AI</button>
+<button class="nav-btn" onclick="loadCategory('1.SCREEN RECORDER- ONLINECLASS VIDEOS-----', this)">DEVOPS-RECORDINGS</button>
+<button class="nav-btn" onclick="loadCategory('3.QT online class recordings----------------', this)">QT RECORDINGS</button>
+<button class="nav-btn" onclick="loadCategory('EBOOKS-DOWNLOAD-LINKEDIN', this)">LINKEDIN EBOOKS</button>
+
 </div>
 
 <!-- METRICS -->
@@ -270,10 +275,20 @@ iframe { height:600px; background:white; }
 
 <script>
 
-/* CATEGORY */
-function loadCategory(folder){
-if(folder===''){ window.location.href="/media/"; }
-else{ window.location.href="/media/"+encodeURIComponent(folder)+"/"; }
+/* CATEGORY + ACTIVE BUTTON */
+function loadCategory(folder, element){
+
+    document.querySelectorAll(".nav-btn").forEach(btn=>{
+        btn.classList.remove("active");
+    });
+
+    element.classList.add("active");
+
+    if(folder===''){
+        window.location.href="/media/";
+    }else{
+        window.location.href="/media/"+encodeURIComponent(folder)+"/";
+    }
 }
 
 /* METRICS AUTO UPDATE */
