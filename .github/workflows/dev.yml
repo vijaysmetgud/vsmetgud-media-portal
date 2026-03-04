@@ -20,13 +20,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Generate media index automatically
       - name: Generate media index
         run: |
-          cd app
-          find media -type f | sed 's|media/||' > media-index.json
-          echo "Media index created"
-          cat media-index.json | head
+          mkdir -p app
+          find app/media -type f | sed 's|app/media/||' > app/media-index.json  
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
