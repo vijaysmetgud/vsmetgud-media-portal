@@ -277,8 +277,9 @@ LINKEDIN EBOOKS
 </div>
 <div class="chatbot-body" id="chatBody"></div>
 <div class="chatbot-input">
-<input id="chatInput">
+<input id="chatInput" placeholder="Ask for any file...">
 <button onclick="sendMessage()">Send</button>
+<button onclick="startVoice()">🎤</button>
 </div>
 </div>
 
@@ -291,17 +292,20 @@ LINKEDIN EBOOKS
 let allFiles = [];
 
 async function loadFiles(){
+
     try{
-        const response = await fetch("http://VM-IP:PORT/media-index.json");
+        const response = await fetch("/media-index.json");
         allFiles = await response.json();
-        console.log("Files loaded:", allFiles);
+        console.log("Files indexed:", allFiles.length);
     }
     catch(e){
-        console.log("File index not found");
+        console.log("media-index.json not found");
     }
+
 }
 
 loadFiles();
+
 
 /* ================= SMART FILE SEARCH ================= */
 
@@ -314,13 +318,11 @@ function findBestFile(query){
 
     allFiles.forEach(file=>{
 
+        let name = file.toLowerCase();
         let score = 0;
 
-        let words = query.split(" ");
-        let name = file.toLowerCase();
-
-        words.forEach(w=>{
-            if(name.includes(w)){
+        query.split(" ").forEach(word=>{
+            if(name.includes(word)){
                 score++;
             }
         });
@@ -335,7 +337,8 @@ function findBestFile(query){
     return bestFile;
 }
 
-/* ================= SPEAK ================= */
+
+/* ================= SPEECH ================= */
 
 function speak(text){
 
@@ -343,55 +346,121 @@ function speak(text){
     speech.lang="en-US";
 
     window.speechSynthesis.speak(speech);
+
 }
+
 
 /* ================= OPEN FILE ================= */
 
 function openFile(file){
 
     if(!file){
-        speak("I could not find the file");
+        speak("File not found");
         return;
     }
 
     speak("Opening " + file);
 
-    window.location.href = "/media/" + file;
+    window.open("/media/" + file, "_blank");
+
 }
 
-/* ================= CATEGORY ================= */
 
-function loadCategory(folder, element){
+/* ================= CHAT ================= */
 
-    document.querySelectorAll(".nav-btn")
-        .forEach(btn => btn.classList.remove("active"));
+function sendMessage(){
 
-    element.classList.add("active");
+    let input = document.getElementById("chatInput").value;
+    let body = document.getElementById("chatBody");
 
-    localStorage.setItem("activeFolder", folder);
+    body.innerHTML += "<div><b>You:</b> "+input+"</div>";
 
-    if(folder === ''){
-        window.location.href = "/media/";
-    } else {
-        window.location.href = "/media/" + encodeURIComponent(folder) + "/";
+    let file = findBestFile(input);
+
+    if(file){
+
+        body.innerHTML += "<div style='color:#22c55e'><b>AI:</b> Opening "+file+"</div>";
+        openFile(file);
+
     }
+    else{
+
+        body.innerHTML += "<div style='color:red'><b>AI:</b> File not found</div>";
+        speak("File not found");
+
+    }
+
+    document.getElementById("chatInput").value="";
+    body.scrollTop = body.scrollHeight;
+
 }
 
-/* ================= RESTORE ACTIVE ================= */
 
-window.addEventListener("DOMContentLoaded", function(){
+/* ================= ENTER KEY ================= */
 
-    const savedFolder = localStorage.getItem("activeFolder");
+document.getElementById("chatInput").addEventListener("keypress", function(e){
 
-    if(savedFolder !== null){
-        document.querySelectorAll(".nav-btn").forEach(btn => {
-            if(btn.getAttribute("onclick").includes(savedFolder)){
-                btn.classList.add("active");
-            }
-        });
+    if(e.key === "Enter"){
+        sendMessage();
     }
 
 });
+
+
+/* ================= VOICE RECOGNITION ================= */
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+let recognition;
+
+if(SpeechRecognition){
+
+    recognition = new SpeechRecognition();
+
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = function(){
+        console.log("Voice listening...");
+    };
+
+    recognition.onresult = function(event){
+
+        let speech = event.results[0][0].transcript;
+
+        console.log("Voice:", speech);
+
+        document.getElementById("chatBody").innerHTML +=
+            "<div><b>You (voice):</b> "+speech+"</div>";
+
+        let file = findBestFile(speech);
+
+        openFile(file);
+
+    };
+
+    recognition.onerror = function(event){
+        console.log("Voice error:", event.error);
+    };
+
+}
+
+
+/* ================= START VOICE ================= */
+
+function startVoice(){
+
+    if(recognition){
+
+        recognition.start();
+
+        speak("Listening");
+
+    }
+
+}
+
 
 /* ================= METRICS ================= */
 
@@ -406,99 +475,16 @@ function fetchMetrics(){
     document.getElementById("pods").innerText = pods;
 
     if(pods < 3){
-        document.getElementById("health").innerHTML =
-            "Warning <span class='alert-badge'>!</span>";
+        document.getElementById("health").innerText = "Warning";
     } else {
         document.getElementById("health").innerText = "Healthy";
     }
+
 }
 
 setInterval(fetchMetrics, 3000);
 fetchMetrics();
 
-/* ================= THEME ================= */
-
-function toggleTheme(){
-    document.body.classList.toggle("light");
-}
-
-/* ================= CHAT ================= */
-
-function sendMessage(){
-
-    let input = document.getElementById("chatInput").value;
-    let body = document.getElementById("chatBody");
-
-    body.innerHTML += "<div><b>You:</b> "+input+"</div>";
-
-    let file = findBestFile(input);
-
-    if(file){
-        body.innerHTML += "<div style='color:#22c55e;'><b>AI:</b> Opening "+file+"</div>";
-        openFile(file);
-    }
-    else{
-        body.innerHTML += "<div style='color:red;'><b>AI:</b> File not found</div>";
-    }
-
-    document.getElementById("chatInput").value="";
-    body.scrollTop = body.scrollHeight;
-
-}
-
-/* ================= CHAT TOGGLE ================= */
-
-function toggleChat(){
-
-    let box = document.getElementById("chatbox");
-    let toggle = document.getElementById("chatToggle");
-
-    if(box.style.display === "none"){
-        box.style.display = "block";
-        toggle.style.display = "none";
-    } else {
-        box.style.display = "none";
-        toggle.style.display = "block";
-    }
-
-}
-
-/* ================= VOICE ASSISTANT ================= */
-
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-let recognition;
-
-if(SpeechRecognition){
-
-    recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-
-    recognition.onresult = function(event){
-
-        let speech = event.results[0][0].transcript;
-
-        document.getElementById("chatBody").innerHTML +=
-            "<div><b>You (voice):</b> "+speech+"</div>";
-
-        let file = findBestFile(speech);
-
-        openFile(file);
-
-    };
-
-}
-
-/* ================= START VOICE ================= */
-
-function startVoice(){
-
-    if(recognition){
-        recognition.start();
-        speak("Voice assistant activated");
-    }
-
-}
 
 /* ================= PARTICLES ================= */
 
@@ -512,7 +498,6 @@ particlesJS("particles-js",{
 });
 
 </script>
-
 
 </body>
 </html>
