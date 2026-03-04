@@ -286,21 +286,90 @@ LINKEDIN EBOOKS
 
 <script>
 
-/* ================= CATEGORY + ACTIVE BUTTON ================= */
+/* ================= FILE INDEX ================= */
+
+let allFiles = [];
+
+async function loadFiles(){
+    try{
+        const response = await fetch("http://VM-IP:PORT/media-index.json");
+        allFiles = await response.json();
+        console.log("Files loaded:", allFiles);
+    }
+    catch(e){
+        console.log("File index not found");
+    }
+}
+
+loadFiles();
+
+/* ================= SMART FILE SEARCH ================= */
+
+function findBestFile(query){
+
+    query = query.toLowerCase();
+
+    let bestScore = 0;
+    let bestFile = null;
+
+    allFiles.forEach(file=>{
+
+        let score = 0;
+
+        let words = query.split(" ");
+        let name = file.toLowerCase();
+
+        words.forEach(w=>{
+            if(name.includes(w)){
+                score++;
+            }
+        });
+
+        if(score > bestScore){
+            bestScore = score;
+            bestFile = file;
+        }
+
+    });
+
+    return bestFile;
+}
+
+/* ================= SPEAK ================= */
+
+function speak(text){
+
+    const speech = new SpeechSynthesisUtterance(text);
+    speech.lang="en-US";
+
+    window.speechSynthesis.speak(speech);
+}
+
+/* ================= OPEN FILE ================= */
+
+function openFile(file){
+
+    if(!file){
+        speak("I could not find the file");
+        return;
+    }
+
+    speak("Opening " + file);
+
+    window.location.href = "/media/" + file;
+}
+
+/* ================= CATEGORY ================= */
 
 function loadCategory(folder, element){
 
-    // remove active from all
     document.querySelectorAll(".nav-btn")
         .forEach(btn => btn.classList.remove("active"));
 
-    // add active to clicked
     element.classList.add("active");
 
-    // store active button
     localStorage.setItem("activeFolder", folder);
 
-    // navigate
     if(folder === ''){
         window.location.href = "/media/";
     } else {
@@ -308,7 +377,7 @@ function loadCategory(folder, element){
     }
 }
 
-/* ================= RESTORE ACTIVE AFTER RELOAD ================= */
+/* ================= RESTORE ACTIVE ================= */
 
 window.addEventListener("DOMContentLoaded", function(){
 
@@ -323,7 +392,6 @@ window.addEventListener("DOMContentLoaded", function(){
     }
 
 });
-
 
 /* ================= METRICS ================= */
 
@@ -348,31 +416,40 @@ function fetchMetrics(){
 setInterval(fetchMetrics, 3000);
 fetchMetrics();
 
-
 /* ================= THEME ================= */
 
 function toggleTheme(){
     document.body.classList.toggle("light");
 }
 
-
 /* ================= CHAT ================= */
 
 function sendMessage(){
-    let input = document.getElementById("chatInput");
+
+    let input = document.getElementById("chatInput").value;
     let body = document.getElementById("chatBody");
 
-    body.innerHTML += "<div><b>You:</b> "+input.value+"</div>";
-    body.innerHTML += "<div style='color:#22c55e;'><b>AI:</b> Monitoring stable 🚀</div>";
+    body.innerHTML += "<div><b>You:</b> "+input+"</div>";
 
-    input.value="";
+    let file = findBestFile(input);
+
+    if(file){
+        body.innerHTML += "<div style='color:#22c55e;'><b>AI:</b> Opening "+file+"</div>";
+        openFile(file);
+    }
+    else{
+        body.innerHTML += "<div style='color:red;'><b>AI:</b> File not found</div>";
+    }
+
+    document.getElementById("chatInput").value="";
     body.scrollTop = body.scrollHeight;
-}
 
+}
 
 /* ================= CHAT TOGGLE ================= */
 
 function toggleChat(){
+
     let box = document.getElementById("chatbox");
     let toggle = document.getElementById("chatToggle");
 
@@ -383,32 +460,45 @@ function toggleChat(){
         box.style.display = "none";
         toggle.style.display = "block";
     }
+
 }
 
-
-/* ================= VOICE NAV ================= */
+/* ================= VOICE ASSISTANT ================= */
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+let recognition;
+
 if(SpeechRecognition){
 
-    const recognition = new SpeechRecognition();
-    recognition.lang="en-US";
+    recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
 
     recognition.onresult = function(event){
-        let speech = event.results[0][0].transcript.toLowerCase();
 
-        document.querySelectorAll(".nav-btn").forEach(btn=>{
-            if(speech.includes(btn.innerText.toLowerCase())){
-                btn.click();
-            }
-        });
+        let speech = event.results[0][0].transcript;
+
+        document.getElementById("chatBody").innerHTML +=
+            "<div><b>You (voice):</b> "+speech+"</div>";
+
+        let file = findBestFile(speech);
+
+        openFile(file);
+
     };
 
-    // DO NOT auto start repeatedly
-    // recognition.start();  ← removed (was causing random behaviour)
 }
 
+/* ================= START VOICE ================= */
+
+function startVoice(){
+
+    if(recognition){
+        recognition.start();
+        speak("Voice assistant activated");
+    }
+
+}
 
 /* ================= PARTICLES ================= */
 

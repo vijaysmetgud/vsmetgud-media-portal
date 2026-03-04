@@ -55,7 +55,7 @@ jobs:
 
       - name: Commit and Push Values Update
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config user.name "vijay"
+          git config user.email "vsmetgud@gmail.com"
           git commit -am "chore: update image tag to $IMAGE_TAG"
           git push
