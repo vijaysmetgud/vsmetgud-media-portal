@@ -8,14 +8,13 @@ function loadCategory(folder) {
         <iframe id="dirFrame"
             src="${basePath}"
             width="100%"
-            height="400px"
-            style="border:1px solid #ccc; border-radius:8px;">
+            height="400"
+            style="border:1px solid #ccc;border-radius:8px;">
         </iframe>
 
         <div id="playerArea" style="margin-top:20px;"></div>
     `;
 
-    // Wait for iframe to load
     const frame = document.getElementById("dirFrame");
 
     frame.onload = function () {
@@ -30,6 +29,7 @@ function loadCategory(folder) {
             if (!href || href === "../") continue;
 
             link.onclick = function (e) {
+
                 e.preventDefault();
 
                 const fileUrl = basePath + href;
@@ -37,43 +37,38 @@ function loadCategory(folder) {
 
                 const player = document.getElementById("playerArea");
 
-                // 🎬 VIDEO
                 if (lower.endsWith(".mp4") || lower.endsWith(".webm")) {
 
                     player.innerHTML = `
-                        <video 
-                            width="100%" 
-                            height="500"
-                            controls 
-                            autoplay 
-                            style="border-radius:10px;">
-                            <source src="${fileUrl}" type="video/mp4">
-                            Your browser does not support video.
+                        <video width="100%" height="500" controls autoplay>
+                            <source src="${fileUrl}">
                         </video>
                     `;
 
-                }
-                // 📕 PDF
+                } 
                 else if (lower.endsWith(".pdf")) {
 
                     player.innerHTML = `
-                        <iframe 
-                            src="${fileUrl}" 
-                            width="100%" 
-                            height="600px"
-                            style="border-radius:10px;">
-                        </iframe>
+                        <iframe src="${fileUrl}" width="100%" height="600"></iframe>
                     `;
-                }
-                // 📁 Folder
+
+                } 
                 else if (!lower.includes(".")) {
-                    loadCategory(folder ? `${folder}/${href.replace("/", "")}` : href.replace("/", ""));
-                }
+
+                    const nextFolder = href.replace(/\/$/, "");
+                    loadCategory(folder ? `${folder}/${nextFolder}` : nextFolder);
+
+                } 
                 else {
-                    // Other files → open normally
+
                     window.open(fileUrl, "_blank");
+
                 }
-            }
+
+            };
+
         }
-    }
+
+    };
+
 }
