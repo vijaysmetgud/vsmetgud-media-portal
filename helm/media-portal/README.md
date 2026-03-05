@@ -31,10 +31,14 @@ Created tunnel media-portal with id 4f615c1f-bbd8-4265-a837-617a30e3fb87
 
    10 TO ACCESS DOMAIN RUN this below command on K8S CLUSTER
     
-In the Master node go inside helm/mediaportal and execute below commands:
+In the Master node go inside helm/mediaportal  and execute below commands:
 
     helm upgrade media-portal .
     
     kubectl rollout restart deployment media-portal
+
+    k get pods -A
+
+    k delete pods --all -A
 
     cloudflared tunnel run media-portal
