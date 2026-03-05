@@ -245,8 +245,15 @@ QT RECORDINGS
 LINKEDIN EBOOKS
 </button>
 
+</div>    
+    
+<div id="fileContainer" style="
+    margin-left:280px;
+    padding:20px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:15px;">
 </div>
-
 
 <div class="metrics">
 <div class="metric">
@@ -294,9 +301,15 @@ let allFiles = [];
 async function loadFiles(){
 
     try{
+
         const response = await fetch("/media-index.json");
+
         allFiles = await response.json();
+
         console.log("Files indexed:", allFiles.length);
+
+        renderFiles(allFiles);
+
     }
     catch(e){
         console.log("media-index.json not found");
@@ -304,7 +317,71 @@ async function loadFiles(){
 
 }
 
-loadFiles();
+window.addEventListener("DOMContentLoaded", loadFiles);
+
+/* ================= DISPLAY FILES ================= */
+
+function renderFiles(files){
+
+    const container = document.getElementById("fileContainer");
+
+    container.innerHTML = "";
+
+    if(files.length === 0){
+        container.innerHTML = "<p>No files found</p>";
+        return;
+    }
+
+    files.forEach(file => {
+
+        const card = document.createElement("div");
+
+        card.style.background="#1e293b";
+        card.style.padding="15px";
+        card.style.borderRadius="10px";
+        card.style.cursor="pointer";
+        card.onmouseover = () => card.style.background="#334155";
+        card.onmouseout = () => card.style.background="#1e293b";
+
+        card.innerHTML = `
+            <div style="font-size:13px;word-break:break-word">
+                ${file}
+            </div>
+        `;
+
+        card.onclick = () => {
+            window.open("/media/" + encodeURIComponent(file), "_blank");
+        };
+
+        container.appendChild(card);
+
+    });
+
+}
+
+/* ================= CATEGORY FILTER ================= */
+
+function loadCategory(folder, element){
+
+    document.querySelectorAll(".nav-btn")
+        .forEach(btn => btn.classList.remove("active"));
+
+    element.classList.add("active");
+
+    let filtered;
+
+    if(folder === ""){
+        filtered = allFiles;
+    }
+    else{
+        filtered = allFiles.filter(file =>
+            file.startsWith(folder + "/")
+        );
+    }
+
+    renderFiles(filtered);
+
+}
 
 
 /* ================= SMART FILE SEARCH ================= */
@@ -361,7 +438,7 @@ function openFile(file){
 
     speak("Opening " + file);
 
-    window.open("/media/" + file, "_blank");
+    window.open("/media/" + encodeURIComponent(file), "_blank");
 
 }
 
