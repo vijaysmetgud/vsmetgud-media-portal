@@ -50,16 +50,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
-
-      - name: Update Helm values.yaml with new image tag
-        run: |
-          sed -i "s/tag: .*/tag: \"$IMAGE_TAG\"/" helm/media-portal/values.yaml
-
       - name: Commit and Push Values Update
         run: |
           git config user.name "vijay"
           git config user.email "vsmetgud@gmail.com"
-          git commit -am "chore: update image tag to $IMAGE_TAG"
-          git push
+
+          git pull --rebase origin main
+
+          git commit -am "chore: update image tag to $IMAGE_TAG" || echo "No changes"
+
+          git push origin main
