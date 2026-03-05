@@ -1,0 +1,9 @@
+grafana:
+  service:
+    nodePort: 32536
+    type: NodePort
+  defaultDashboardsEnabled: false
+prometheus:
+  service:
+    nodePort: 32115
+    type: NodePort
