@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
+    paths-ignore:
+      - 'helm/media-portal/values.yaml'
 
 permissions:
   contents: write
@@ -47,25 +48,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Update Helm values.yaml
         run: |
           sed -i "s/tag: .*/tag: \"$IMAGE_TAG\"/" helm/media-portal/values.yaml
 
       - name: Commit and Push Values Update
-        - name: Commit and Push Values Update
-          run: |
-            git config user.name "vijay"
-            git config user.email "vsmetgud@gmail.com"
+        run: |
+          git config user.name "vijay"
+          git config user.email "vsmetgud@gmail.com"
 
-            git fetch origin
-            git checkout main
-            git pull origin main --rebase
+          git pull origin main --rebase
 
-            git add helm/media-portal/values.yaml
-            git commit -m "chore: update image tag to $IMAGE_TAG" || echo "No changes"
+          git add helm/media-portal/values.yaml
+          git commit -m "chore: update image tag to $IMAGE_TAG" || echo "No changes"
 
-            git push origin main
+          git push origin main
