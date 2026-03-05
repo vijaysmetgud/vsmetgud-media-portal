@@ -307,6 +307,7 @@ async function loadFiles(){
         allFiles = await response.json();
 
         console.log("Files indexed:", allFiles.length);
+        console.log(allFiles.slice(0,10));
 
         renderFiles(allFiles);
 
@@ -374,15 +375,17 @@ function loadCategory(folder, element){
         filtered = allFiles;
     }
     else{
-        filtered = allFiles.filter(file =>
-            file.startsWith(folder + "/")
+
+        filtered = allFiles.filter(file => 
+            file.includes(folder + "/") ||
+            file.startsWith(folder)
         );
+
     }
 
     renderFiles(filtered);
 
 }
-
 
 /* ================= SMART FILE SEARCH ================= */
 
