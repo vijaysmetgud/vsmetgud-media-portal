@@ -82,14 +82,15 @@ function loadCategory(folder) {
 
 /* ================= CLOCK ================= */
 
-/* ================= CLOCK FIX ================= */
-
-function startClock() {
+setTimeout(() => {
 
     function updateClock() {
         const clockElement = document.getElementById("clock");
 
-        if (!clockElement) return;
+        if (!clockElement) {
+            console.log("Clock not found");
+            return;
+        }
 
         const now = new Date();
 
@@ -102,7 +103,5 @@ function startClock() {
 
     updateClock();
     setInterval(updateClock, 1000);
-}
 
-/* FORCE RUN after page fully loads */
-window.onload = startClock;
+}, 1000); // delay ensures everything loads first
