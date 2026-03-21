@@ -1,6 +1,7 @@
 function loadCategory(folder) {
 
     const content = document.getElementById("content");
+    if (!content) return;
     const basePath = folder ? `/media/${folder}/` : `/media/`;
 
     content.innerHTML = `
@@ -97,5 +98,4 @@ window.addEventListener("DOMContentLoaded", () => {
 
     setInterval(updateClock, 1000);
     updateClock();
-
 });
