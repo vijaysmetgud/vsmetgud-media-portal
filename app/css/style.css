@@ -207,7 +207,7 @@ nav, .welcome, .chatbot {
     border-radius: 14px;
 }
 
-/* #clock {
+#clock {
     position: fixed;
     top: 20px;
     right: 150px;
@@ -223,13 +223,13 @@ nav, .welcome, .chatbot {
     backdrop-filter: blur(10px);
 
     z-index: 99999;
-} */
-
-#clock {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  color: white;
-  font-size: 18px;
-  z-index: 9999;
 }
+
+/* #clock {
+  position: fixed;   /* important */
+  bottom: 20px;      /* since yours is bottom-left */
+  left: 20px;
+  z-index: 99999;    /* very high */
+  color: white;
+  font-size: 16px;
+} */
