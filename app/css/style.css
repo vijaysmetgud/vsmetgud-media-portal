@@ -147,11 +147,13 @@ body.light footer {
     color: #000;
 }
 
-/* ================= HOVER EFFECT ================= */
+/* ================= HOVER GLOW EFFECT=========== */
 
 nav:hover, .welcome:hover, .chatbot:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(37,99,235,0.25);
+    box-shadow:
+        0 12px 35px rgba(148,163,184,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.08);
     transition: 0.3s;
 }
 
@@ -165,11 +167,23 @@ nav, .welcome, .chatbot {
     box-shadow: 0 8px 30px rgba(0,0,0,0.35);
 }
 
-/* ================= LIGHT MODE GLASS ================= */
+/* ================= GREY GLASS (DARK MODE) ================= */
 
-body.light nav,
-body.light .welcome,
-body.light .chatbot {
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(0,0,0,0.08);
+nav, .welcome, .chatbot {
+    background: linear-gradient(
+        135deg,
+        rgba(148,163,184,0.10),  /* soft grey */
+        rgba(148,163,184,0.04)
+    );
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    border: 1px solid rgba(148,163,184,0.15);
+
+    box-shadow:
+        0 8px 30px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+
+    border-radius: 14px;
 }
