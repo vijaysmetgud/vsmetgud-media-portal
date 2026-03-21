@@ -82,15 +82,14 @@ function loadCategory(folder) {
 
 /* ================= CLOCK ================= */
 
-document.addEventListener("DOMContentLoaded", () => {
+/* ================= CLOCK FIX ================= */
+
+function startClock() {
 
     function updateClock() {
         const clockElement = document.getElementById("clock");
 
-        if (!clockElement) {
-            console.log("Clock element NOT found");
-            return;
-        }
+        if (!clockElement) return;
 
         const now = new Date();
 
@@ -103,5 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateClock();
     setInterval(updateClock, 1000);
+}
 
-});
+/* FORCE RUN after page fully loads */
+window.onload = startClock;
