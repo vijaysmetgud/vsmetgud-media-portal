@@ -207,31 +207,14 @@ nav, .welcome, .chatbot {
     border-radius: 14px;
 }
 
-/* #clock {
-    position: fixed;
-    top: 20px;
-    right: 150px;
-
-    font-size: 16px;
-    font-weight: bold;
-    color: #ffffff;
-
-    background: rgba(15, 23, 42, 0.85);
-    padding: 8px 14px;
-    border-radius: 20px;
-
-    backdrop-filter: blur(10px);
-
-    z-index: 99999;
-} */
-
 #clock {
   position: fixed;
-  top: 10px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 99999;
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
+
+  color: #00ffcc;
+  font-size: 32px;
+  font-weight: 300;
 }

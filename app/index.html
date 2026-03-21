@@ -225,6 +225,30 @@ body {
 
 <div id="particles-js"></div>
 
+</script>
+
+<div id="clock"></div>
+
+<script>
+function updateClock() {
+    const clockElement = document.getElementById('clock');
+    if (clockElement) {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+
+        clockElement.innerText = `${hours}:${minutes}:${seconds}`;
+    }
+}
+
+// run immediately
+updateClock();
+
+// run every second
+setInterval(updateClock, 1000);
+</script>
+
 <div class="theme-toggle" onclick="toggleTheme()">🌙 Toggle Theme</div>
 
 <header>
@@ -668,28 +692,5 @@ particlesJS("particles-js",{
     }
 });
 
-</script>
-
-<div id="clock"></div>
-
-<script>
-function updateClock() {
-    const clockElement = document.getElementById('clock');
-    if (clockElement) {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-
-        clockElement.innerText = `${hours}:${minutes}:${seconds}`;
-    }
-}
-
-// run immediately
-updateClock();
-
-// run every second
-setInterval(updateClock, 1000);
-</script>
 </body>
 </html>
