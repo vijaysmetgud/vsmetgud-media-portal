@@ -1,14 +1,24 @@
-/* GLOBAL */
+/* ================= GLOBAL ================= */
+
+* {
+    box-sizing: border-box;
+}
 
 body {
     font-family: 'Segoe UI', sans-serif;
-    background: #f4f6f9;
+    background: #0f172a;
+    color: #e2e8f0;
     margin: 0;
     padding: 0;
+    transition: 0.3s;
 }
 
+body.light {
+    background: #f4f6f9;
+    color: #0f172a;
+}
 
-/* HEADER */
+/* ================= HEADER ================= */
 
 header {
     background: linear-gradient(90deg, #1e3c72, #2a5298);
@@ -17,40 +27,32 @@ header {
     text-align: center;
 }
 
-header h1 {
-    margin: 0;
-}
-
-
-/* NAVIGATION BUTTONS */
+/* ================= NAVIGATION ================= */
 
 nav {
-    background: #ffffff;
     padding: 20px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 nav button {
-    background: #007bff;
+    background: linear-gradient(135deg,#2563eb,#1d4ed8);
     border: none;
     padding: 12px 20px;
     color: white;
     margin: 6px;
     cursor: pointer;
     border-radius: 8px;
-    font-weight: 500;
     font-size: 14px;
     transition: all 0.25s ease;
 }
 
 nav button:hover {
-    background: #0056b3;
     transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37,99,235,0.6);
 }
 
-
-/* MAIN CONTENT */
+/* ================= CONTENT ================= */
 
 #content {
     padding: 25px;
@@ -58,27 +60,24 @@ nav button:hover {
     margin: auto;
 }
 
-
-/* WELCOME CARD */
+/* ================= CARD ================= */
 
 .welcome {
-    background: white;
     padding: 40px;
     border-radius: 10px;
     text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-
-/* CHATBOT (BELOW BUTTONS) */
+/* ================= CHATBOT ================= */
 
 .chatbot {
     width: 450px;
     margin: 40px auto;
-    background: #1e293b;
     border-radius: 10px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
     overflow: hidden;
+    transition: 0.3s;
 }
 
 .chatbot-header {
@@ -117,13 +116,60 @@ nav button:hover {
     cursor: pointer;
 }
 
-
-/* FOOTER */
+/* ================= FOOTER ================= */
 
 footer {
     text-align: center;
     padding: 18px;
-    background: #222;
+    background: #020617;
     color: white;
     margin-top: 40px;
+}
+
+/* ================= LIGHT MODE ================= */
+
+body.light nav button {
+    background: linear-gradient(135deg,#3b82f6,#2563eb);
+}
+
+body.light .chatbot-body {
+    background: #f1f5f9;
+    color: #000;
+}
+
+body.light .chatbot-input input {
+    background: #e2e8f0;
+    color: #000;
+}
+
+body.light footer {
+    background: #e5e7eb;
+    color: #000;
+}
+
+/* ================= HOVER EFFECT ================= */
+
+nav:hover, .welcome:hover, .chatbot:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(37,99,235,0.25);
+    transition: 0.3s;
+}
+
+/* ================= GLASS EFFECT ================= */
+
+nav, .welcome, .chatbot {
+    background: rgba(30, 41, 59, 0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+}
+
+/* ================= LIGHT MODE GLASS ================= */
+
+body.light nav,
+body.light .welcome,
+body.light .chatbot {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0,0,0,0.08);
 }

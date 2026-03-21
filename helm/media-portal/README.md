@@ -2,6 +2,13 @@ This Portal is for accessing my files like pdfs, videos, audios etc on local lap
 
 HELLO VIJAY METGUD
 
+
+In Master node
+
+ sudo  cp -r /media/sf_e-drive/AUDIOS--- /mnt/media/AUDIOS---
+sudo chown -R 101:101 /mnt/media
+sudo chmod -R 755 /mnt/media
+
 Command to copy files from local to worker VMs:
 sudo cp -r /media/sf_e-drive/ /mnt/media/
 sudo chown -R 101:101 /mnt/media

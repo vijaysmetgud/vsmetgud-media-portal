@@ -286,7 +286,7 @@ LINKEDIN EBOOKS
 <div class="chatbot" id="chatbox">
 <div class="chatbot-header">
 <span>DevOps AI</span>
-<span onclick="toggleChat()">➖</span>
+<span style="cursor:pointer" onclick="toggleChat()">➖</span>
 </div>
 <div class="chatbot-body" id="chatBody"></div>
 <div class="chatbot-input">
@@ -484,15 +484,62 @@ function sendMessage(){
 
 /* ================= ENTER KEY ================= */
 
-document.getElementById("chatInput").addEventListener("keypress", function(e){
+window.addEventListener("DOMContentLoaded", () => {
 
-    if(e.key === "Enter"){
-        sendMessage();
+    const input = document.getElementById("chatInput");
+
+    if (input) {
+        input.addEventListener("keypress", function(e){
+            if(e.key === "Enter"){
+                sendMessage();
+            }
+        });
     }
 
 });
 
+/* ================= CHAT TOGGLE ================= */
 
+let chatOpen = true;
+
+function toggleChat() {
+
+    const chatbox = document.getElementById("chatbox");
+    const toggleBtn = document.getElementById("chatToggle");
+
+    if (chatOpen) {
+        chatbox.style.display = "none";
+        toggleBtn.style.display = "block";
+    } else {
+        chatbox.style.display = "block";
+        toggleBtn.style.display = "none";
+    }
+
+    chatOpen = !chatOpen;
+}
+
+/* ================= THEME TOGGLE ================= */
+
+function toggleTheme() {
+
+    document.body.classList.toggle("light");
+
+    // Save preference
+    if (document.body.classList.contains("light")) {
+        localStorage.setItem("theme", "light");
+    } else {
+        localStorage.setItem("theme", "dark");
+    }
+}
+
+/* Load saved theme */
+window.addEventListener("DOMContentLoaded", () => {
+    const savedTheme = localStorage.getItem("theme");
+
+    if (savedTheme === "light") {
+        document.body.classList.add("light");
+    }
+});
 /* ================= VOICE RECOGNITION ================= */
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
