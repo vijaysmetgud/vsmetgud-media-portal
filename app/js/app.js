@@ -81,33 +81,53 @@ function loadCategory(folder) {
 }
 
 /* ================= CLOCK ================= */
-document.addEventListener("DOMContentLoaded", function () {
+// document.addEventListener("DOMContentLoaded", function () {
 
-    function updateClock() {
-        const clock = document.getElementById("clock");
+//     function updateClock() {
+//         const clock = document.getElementById("clock");
 
-        if (!clock) {
-            console.log("Clock element missing");
-            return;
-        }
+//         if (!clock) {
+//             console.log("Clock element missing");
+//             return;
+//         }
 
-        const now = new Date();
+//         const now = new Date();
 
-        let hours = now.getHours();
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
+//         let hours = now.getHours();
+//         const minutes = String(now.getMinutes()).padStart(2, '0');
+//         const seconds = String(now.getSeconds()).padStart(2, '0');
 
-        const ampm = hours >= 12 ? 'PM' : 'AM';
+//         const ampm = hours >= 12 ? 'PM' : 'AM';
 
-        hours = hours % 12;
-        hours = hours ? hours : 12;
+//         hours = hours % 12;
+//         hours = hours ? hours : 12;
 
-        clock.innerText = `${hours}:${minutes}:${seconds} ${ampm}`;
-    }
+//         clock.innerText = `${hours}:${minutes}:${seconds} ${ampm}`;
+//     }
 
-    updateClock();
-    setInterval(updateClock, 1000);
+//     updateClock();
+//     setInterval(updateClock, 1000);
 
-    console.log("Clock running ✅");
+//     console.log("Clock running ✅");
 
-});
+// });
+
+function updateClock() {
+    const clockElement = document.getElementById('clock');
+
+    if (!clockElement) return; // safe check
+
+    const now = new Date();
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    clockElement.textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+// Run immediately
+updateClock();
+
+// Run every second
+setInterval(updateClock, 1000);
