@@ -57,6 +57,18 @@ header h1 {
     padding: 15px;
     margin-top: -10px;
 }
+#fileContainer {
+    padding:20px;
+    margin-top:10px;
+
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:15px;
+}
+
+#content {
+    padding:20px;
+}
 
 .nav-btn {
     padding:12px 22px;
@@ -116,7 +128,14 @@ header h1 {
 /* ================= MAIN CONTENT SPACING ================= */
 
 body {
-    padding-left: 260px;   /* match sidebar width + gap */
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:#0f172a;
+    color:#e2e8f0;
+    overflow-x:hidden;
+    transition:0.4s;
+
+    padding-left:260px; /* keep only here */
 }
 
 /* ================= METRIC ITEMS ================= */
@@ -260,8 +279,6 @@ LINKEDIN EBOOKS
 </button>
 
 </div>    
-
-/* ================= FILE CONTAINER ================= */
     
 <div id="fileContainer" style="
     margin-left:280px;
