@@ -38,20 +38,15 @@ header {
     padding-top: 30px;   /* reduced */
     padding-bottom: 10px;
     margin-left: 280px;
+    margin-top: 10px;
 }
 
 header h1 {
     font-size:70px;
     font-weight:700;
-    margin: 10px 0;   /* ✅ ADD THIS */
-
     background:linear-gradient(90deg,#38bdf8,#22c55e);
     -webkit-background-clip:text;
     -webkit-text-fill-color:transparent;
-}
-
-header p {
-    margin: 5px 0;
 }
 
 /* ================= BUTTONS ================= */
@@ -265,6 +260,14 @@ LINKEDIN EBOOKS
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 15px;
 }
+    
+<div id="fileContainer" style="
+    margin-left:280px;
+    padding:20px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:15px;">
+</div>
 
 <div id="content" style="
     margin-left:280px;
@@ -354,8 +357,8 @@ function renderFiles(files){
 
         const card = document.createElement("div");
 
-        card.style.background = "#1e293b";
-        card.style.color = "#ffffff";   // ✅ ADD THIS
+        card.style.background="#1e293b";
+        card.style.color = "#ffffff";
         card.style.padding="15px";
         card.style.borderRadius="10px";
         card.style.cursor="pointer";
@@ -363,10 +366,10 @@ function renderFiles(files){
         card.onmouseout = () => card.style.background="#1e293b";
 
         card.innerHTML = `
-            <div style="font-size:13px;word-break:break-word;color:#ffffff;">
+            <div style="font-size:13px;word-break:break-word">
                 ${file}
             </div>
-        `;        
+        `;
 
         card.onclick = () => {
             window.open("/media/" + encodeURIComponent(file), "_blank");
