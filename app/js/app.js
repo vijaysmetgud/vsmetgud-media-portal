@@ -77,3 +77,25 @@ function loadCategory(folder) {
         }
     }
 }
+
+/* ================= CLOCK ================= */
+
+window.addEventListener("DOMContentLoaded", () => {
+
+    function updateClock() {
+        const now = new Date();
+
+        const time = now.toLocaleTimeString('en-IN', {
+            hour12: true
+        });
+
+        const clock = document.getElementById("clock");
+        if (clock) {
+            clock.innerText = time;
+        }
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+});

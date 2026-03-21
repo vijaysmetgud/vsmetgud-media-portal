@@ -33,7 +33,7 @@ nav {
     padding: 20px;
     text-align: center;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}a
+}
 
 nav button {
     background: linear-gradient(135deg,#2563eb,#1d4ed8);
@@ -72,7 +72,6 @@ nav button:hover {
 /* ================= FILE CARDS TEXT FIX ================= */
 
 #fileContainer {
-    margin-left: 280px;
     padding: 20px;
     margin-top: 5px;
 
@@ -206,4 +205,18 @@ nav, .welcome, .chatbot {
         inset 0 1px 0 rgba(255,255,255,0.05);
 
     border-radius: 14px;
+}
+
+.clock {
+    z-index: 10;
+    position: fixed;
+    top: 20px;
+    right: 180px;   /* adjust near toggle */
+    font-size: 16px;
+    font-weight: bold;
+    color: #38bdf8;
+    background: rgba(30,41,59,0.6);
+    padding: 8px 14px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
 }
