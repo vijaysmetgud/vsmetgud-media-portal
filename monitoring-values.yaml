@@ -1,0 +1,39 @@
+grafana:
+  defaultDashboardsEnabled: false
+
+  service:
+    type: NodePort
+    nodePort: 32536
+
+  sidecar:
+    dashboards:
+      enabled: false
+    datasources:
+      enabled: false   # 🔥 THIS IS MISSING
+
+prometheus:
+  service:
+    type: NodePort
+    nodePort: 32115
+
+  prometheusSpec:
+    retention: 3d
+    resources:
+      requests:
+        memory: 400Mi
+        cpu: 200m
+      limits:
+        memory: 600Mi
+        cpu: 500m
+
+alertmanager:
+  enabled: false
+
+kubeControllerManager:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeEtcd:
+  enabled: false
