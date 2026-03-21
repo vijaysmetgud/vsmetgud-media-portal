@@ -226,10 +226,12 @@ nav, .welcome, .chatbot {
 } */
 
 #clock {
-  position: fixed;   /* important */
-  bottom: 20px;      /* since yours is bottom-left */
-  left: 20px;
-  z-index: 99999;    /* very high */
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
   color: white;
-  font-size: 16px;
+  font-size: 20px;
+  font-weight: bold;
 }
