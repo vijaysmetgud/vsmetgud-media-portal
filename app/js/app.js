@@ -1,17 +1,4 @@
 console.log("APP JS LOADED");
-function updateClock() {
-    const clockElement = document.getElementById("clock");
-    if (!clockElement) return;
-
-    const now = new Date();
-
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
-
-    clockElement.innerText = `${hours}:${minutes}:${seconds}`;
-}
-
 function loadCategory(folder) {
 
     const content = document.getElementById("content");
@@ -93,31 +80,28 @@ function loadCategory(folder) {
     }
 }
 
-// /* ================= CLOCK ================= */
+/* ================= CLOCK ================= */
 
-// setTimeout(() => {
+setTimeout(() => {
 
-//     function updateClock() {
-//         const clockElement = document.getElementById("clock");
+    function updateClock() {
+        const clockElement = document.getElementById("clock");
 
-//         if (!clockElement) {
-//             console.log("Clock not found");
-//             return;
-//         }
+        if (!clockElement) {
+            console.log("Clock not found");
+            return;
+        }
 
-//         const now = new Date();
+        const now = new Date();
 
-//         const hours = String(now.getHours()).padStart(2, "0");
-//         const minutes = String(now.getMinutes()).padStart(2, "0");
-//         const seconds = String(now.getSeconds()).padStart(2, "0");
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        const seconds = String(now.getSeconds()).padStart(2, "0");
 
-//         clockElement.innerText = `${hours}:${minutes}:${seconds}`;
-//     }
+        clockElement.innerText = `${hours}:${minutes}:${seconds}`;
+    }
 
-//     updateClock();
-//     setInterval(updateClock, 1000);
+    updateClock();
+    setInterval(updateClock, 2000);
 
-// }, 1000); // delay ensures everything loads first
-
-setInterval(updateClock, 1000);
-updateClock();
+}, 1000); // delay ensures everything loads first
