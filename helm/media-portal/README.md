@@ -40,7 +40,36 @@ ON MASTERNODE ----> helm/mediaportal ----> and execute below commands:
     k get pods -A
 
     k delete pods --all -A
+---------------------------------------------------------------------
+    cloudflared tunnel run media
 
-    cloudflared tunnel run media-portal
+    Verify Tunnel Route :  Run this to confirm DNS routing:
+
+    cloudflared tunnel list
+    cloudflared tunnel info media
+
+    sudo nano /etc/sysctl.conf
+
+    ADD:
+         net.core.rmem_max = 7500000
+         net.core.wmem_max = 7500000
+   
+   Apply:
+   
+    sudo sysctl -p     
+-----------------------------------------------------------------------------
+
+9️⃣ Important Next Step
+
+Right now you are running tunnel manually.
+
+Better run it as system service so it auto starts after reboot.
+
+sudo cloudflared service install
+sudo systemctl start cloudflared
+sudo systemctl enable cloudflared
+------------------------------------------------------------------------------------
+
+    devops
 
 
