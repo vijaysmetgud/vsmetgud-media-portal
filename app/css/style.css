@@ -226,7 +226,10 @@ nav, .welcome, .chatbot {
 } */
 
 #clock {
-  position: relative;
-  z-index: 1;
-  left: 0;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-size: 18px;
+  z-index: 9999;
 }
