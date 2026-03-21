@@ -221,7 +221,7 @@ nav, .welcome, .chatbot {
     z-index: 9999;
 } */
 
-#clock {
+/* #clock {
     position: fixed;
     top: 80px;
     right: 20px;
@@ -230,4 +230,17 @@ nav, .welcome, .chatbot {
     padding: 10px;
     font-size: 18px;
     z-index: 99999;
+} */
+
+#clock {
+    position: fixed;
+    top: 60px;        /* moved down */
+    right: 20px;      /* align with toggle */
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffffff;
+    background: rgba(0,0,0,0.7);
+    padding: 10px 16px;
+    border-radius: 10px;
+    z-index: 99999;   /* VERY IMPORTANT */
 }
