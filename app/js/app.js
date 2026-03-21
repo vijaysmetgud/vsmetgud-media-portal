@@ -1,3 +1,4 @@
+console.log("APP JS LOADED");
 function loadCategory(folder) {
 
     const content = document.getElementById("content");
