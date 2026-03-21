@@ -33,7 +33,7 @@ nav {
     padding: 20px;
     text-align: center;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
+}a
 
 nav button {
     background: linear-gradient(135deg,#2563eb,#1d4ed8);
@@ -67,6 +67,16 @@ nav button:hover {
     border-radius: 10px;
     text-align: center;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* ================= FILE CARDS TEXT FIX ================= */
+
+#fileContainer div {
+    color: #ffffff;
+}
+
+#fileContainer div:hover {
+    color: #ffffff;
 }
 
 /* ================= CHATBOT ================= */
