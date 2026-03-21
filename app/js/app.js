@@ -82,21 +82,22 @@ function loadCategory(folder) {
 
 /* ================= CLOCK ================= */
 
-window.addEventListener("DOMContentLoaded", () => {
+function updateClock() {
+    const clock = document.getElementById("clock");
 
-    function updateClock() {
-        const now = new Date();
-
-        const time = now.toLocaleTimeString('en-IN', {
-            hour12: true
-        });
-
-        const clock = document.getElementById("clock");
-        if (clock) {
-            clock.innerText = time;
-        }
+    if (!clock) {
+        console.log("Clock element missing");
+        return;
     }
 
-    setInterval(updateClock, 1000);
-    updateClock();
-});
+    const now = new Date();
+    clock.innerText = now.toLocaleTimeString();
+}
+
+// Run immediately
+updateClock();
+
+// Run every second
+setInterval(updateClock, 1000);
+
+console.log("Clock started ✅");
