@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: vsmetgud/media-portal
-  tag: "b1d49bea5e610f7177775e74a864e822c497dc68"
+  tag: "latest"
   pullPolicy: IfNotPresent
 
 service:
@@ -18,7 +18,7 @@ persistence:
 ingress:
   enabled: false
   className: nginx
-  host: vsmetgud.buzz
+  host: vsmetgud.online
 
 resources:
   limits:
