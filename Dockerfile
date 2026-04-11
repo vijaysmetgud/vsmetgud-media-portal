@@ -1,9 +1,12 @@
-FROM nginx:stable-alpine
+FROM node:20-alpine
 
-COPY app/ /usr/share/nginx/html/
-COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+WORKDIR /usr/src/app
 
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+COPY package.json ./
+RUN npm install --production
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+COPY app/ ./app
+COPY server.js ./
+
+EXPOSE 8080
+CMD ["npm", "start"]

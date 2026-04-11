@@ -218,6 +218,66 @@ body {
     color:#cbd5e1;
 }
 
+.login-form {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-top:20px;
+}
+
+.login-input {
+    width:100%;
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06);
+    color:#f8fafc;
+}
+
+.login-input:focus {
+    outline:none;
+    border-color:#38bdf8;
+    background: rgba(255,255,255,0.12);
+}
+
+.login-submit {
+    background:#22c55e;
+    color:white;
+    border:none;
+    border-radius:14px;
+    padding:12px 16px;
+    cursor:pointer;
+    font-weight:700;
+    transition:0.2s;
+}
+
+.login-submit:hover {
+    background:#16a34a;
+}
+
+.login-divider {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:18px 0;
+    color:#cbd5e1;
+    font-size:12px;
+}
+
+.login-divider::before,
+.login-divider::after {
+    content:'';
+    flex:1;
+    height:1px;
+    background:rgba(203,213,225,0.16);
+}
+
+.login-error {
+    color:#fecaca;
+    font-size:13px;
+    min-height:18px;
+}
+
 .auth-bar {
     display:flex;
     align-items:center;
@@ -303,9 +363,16 @@ body {
 
 <div id="loginScreen" class="login-screen">
     <div class="login-box">
-        <h2>Sign in with Google</h2>
+        <h2>Sign in</h2>
         <div id="googleSignInButton"></div>
-        <p>Sign in with your Google account to access the portal.</p>
+        <div class="login-divider"><span>OR</span></div>
+        <form id="passwordLoginForm" class="login-form">
+            <input id="usernameInput" class="login-input" type="text" placeholder="Username" autocomplete="username">
+            <input id="passwordInput" class="login-input" type="password" placeholder="Password" autocomplete="current-password">
+            <button type="submit" class="login-submit">Sign in with password</button>
+            <div id="loginError" class="login-error"></div>
+        </form>
+        <p>Use Google or a local username/password to access the portal.</p>
     </div>
 </div>
 
@@ -436,6 +503,21 @@ style="
 <h3>Pod Health</h3>
 <div class="counter" id="health">Healthy</div>
 </div>
+
+<div class="metric">
+<h3>Visitor Hits</h3>
+<div class="counter" id="hits">0</div>
+</div>
+
+<div class="metric">
+<h3>Unique Visitors</h3>
+<div class="counter" id="uniqueVisitors">0</div>
+</div>
+</div>
+
+<div id="visitorDetails" style="margin-top:20px;background:rgba(30,41,59,0.9);padding:16px;border-radius:18px;max-height:260px;overflow:auto;">
+    <h3 style="margin-top:0;color:#cbd5e1;">Recent Visitor Hits</h3>
+    <div id="visitorList" style="font-size:13px;color:#e2e8f0;"></div>
 </div>
 
 <div class="chatbot" id="chatbox">
@@ -488,13 +570,63 @@ function handleCredentialResponse(response) {
 }
 
 function updateUserProfile(user) {
-    const name = user.name || 'Google User';
+    const name = user.name || 'Signed-in User';
     const email = user.email || 'No email available';
-    const picture = user.picture || '';
+    const picture = user.picture || 'https://www.gravatar.com/avatar/?d=mp&f=y';
 
     document.getElementById('userName').innerText = name;
     document.getElementById('userEmail').innerText = email;
     document.getElementById('userAvatar').src = picture;
+}
+
+const localUsers = [
+    {
+        username: 'admin',
+        password: 'admin123',
+        name: 'Admin User',
+        email: 'admin@example.com',
+        picture: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon'
+    },
+    {
+        username: 'guest',
+        password: 'guest123',
+        name: 'Guest User',
+        email: 'guest@example.com',
+        picture: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp'
+    }
+];
+
+function loginUser(user) {
+    currentUser = {
+        name: user.name,
+        email: user.email,
+        picture: user.picture || 'https://www.gravatar.com/avatar/?d=mp&f=y',
+        authMethod: user.username ? 'local' : 'google',
+        username: user.username || ''
+    };
+
+    localStorage.setItem('portalUser', JSON.stringify(currentUser));
+    updateUserProfile(currentUser);
+    document.getElementById('loginError').innerText = '';
+    showMainContent();
+    loadFiles();
+}
+
+function loginWithPassword(event) {
+    event.preventDefault();
+
+    const username = document.getElementById('usernameInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+    const error = document.getElementById('loginError');
+
+    const user = localUsers.find(entry => entry.username === username && entry.password === password);
+
+    if (!user) {
+        error.innerText = 'Invalid username or password.';
+        return;
+    }
+
+    loginUser(user);
 }
 
 function showMainContent() {
@@ -518,8 +650,152 @@ function signOutUser() {
     }
 }
 
+function formatVisitorTime(value) {
+    return new Date(value).toLocaleString();
+}
+
+function escapeHtml(text) {
+    return String(text).replace(/[&<>"']/g, function(match) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[match];
+    });
+}
+
+async function fetchVisitorStats() {
+    try {
+        const response = await fetch('/api/visitor-stats');
+        if (!response.ok) {
+            throw new Error('Visitor stats unavailable');
+        }
+        const data = await response.json();
+        const hitsEl = document.getElementById('hits');
+        const uniqueEl = document.getElementById('uniqueVisitors');
+        if (hitsEl) hitsEl.innerText = data.totalHits;
+        if (uniqueEl) uniqueEl.innerText = data.uniqueIps;
+        renderVisitorDetails(data.latest || []);
+    } catch (err) {
+        console.warn('Visitor stats fetch failed:', err);
+        updateLocalVisitorMetrics();
+    }
+}
+
+function renderVisitorDetails(hits) {
+    const list = document.getElementById('visitorList');
+    if (!list) {
+        return;
+    }
+    if (!hits || hits.length === 0) {
+        list.innerHTML = '<div style="color:#cbd5e1">No visitor hits recorded yet.</div>';
+        return;
+    }
+    list.innerHTML = hits.slice(0, 10).map(hit => {
+        const displayAgent = hit.userAgent.length > 80 ? hit.userAgent.substring(0, 80) + '…' : hit.userAgent;
+        return `
+            <div style="margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(148,163,184,0.16);">
+                <div><strong>${formatVisitorTime(hit.time)}</strong> — ${escapeHtml(hit.url)}</div>
+                <div style="font-size:12px;color:#94a3b8;">${escapeHtml(hit.platform)} · ${escapeHtml(hit.language)}</div>
+                <div style="font-size:12px;color:#94a3b8;">${escapeHtml(displayAgent)}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function recordVisitorHit() {
+    const payload = {
+        username: currentUser?.username || '',
+        email: currentUser?.email || '',
+        authMethod: currentUser?.authMethod || 'anonymous',
+        url: window.location.pathname,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language
+    };
+
+    try {
+        const response = await fetch('/api/visitor', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error('Server visitor log failed');
+        }
+        await fetchVisitorStats();
+        return;
+    } catch (err) {
+        console.warn('Visitor log failed, falling back to client metrics:', err);
+        recordLocalVisitorHit();
+        updateLocalVisitorMetrics();
+    }
+}
+
+const VISITOR_HITS_KEY = 'portalVisitorHits';
+const VISITOR_ID_KEY = 'portalVisitorId';
+
+function getVisitorId() {
+    let id = localStorage.getItem(VISITOR_ID_KEY);
+    if (!id) {
+        if (window.crypto && window.crypto.randomUUID) {
+            id = window.crypto.randomUUID();
+        } else {
+            id = 'visitor-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10);
+        }
+        localStorage.setItem(VISITOR_ID_KEY, id);
+    }
+    return id;
+}
+
+function getVisitorHits() {
+    try {
+        const raw = localStorage.getItem(VISITOR_HITS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveVisitorHits(hits) {
+    localStorage.setItem(VISITOR_HITS_KEY, JSON.stringify(hits));
+}
+
+function recordLocalVisitorHit() {
+    const hits = getVisitorHits();
+    const visitorId = getVisitorId();
+    const newHit = {
+        id: visitorId,
+        time: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        url: window.location.pathname
+    };
+    hits.unshift(newHit);
+    saveVisitorHits(hits.slice(0, 100));
+}
+
+function updateLocalVisitorMetrics() {
+    const hits = getVisitorHits();
+    const uniqueCount = new Set(hits.map(hit => hit.id)).size;
+    const hitsEl = document.getElementById('hits');
+    const uniqueEl = document.getElementById('uniqueVisitors');
+    if (hitsEl) hitsEl.innerText = hits.length;
+    if (uniqueEl) uniqueEl.innerText = uniqueCount;
+    renderVisitorDetails(hits);
+}
+
 function initAuth() {
-    if (window.google && google.accounts && google.accounts.id) {
+    const googleButton = document.getElementById('googleSignInButton');
+    const canUseGoogle = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID_HERE';
+
+    if (canUseGoogle && window.google && google.accounts && google.accounts.id) {
         google.accounts.id.initialize({
             client_id: GOOGLE_CLIENT_ID,
             callback: handleCredentialResponse,
@@ -528,11 +804,20 @@ function initAuth() {
         });
 
         google.accounts.id.renderButton(
-            document.getElementById('googleSignInButton'),
+            googleButton,
             { theme: 'outline', size: 'large', width: 280, shape: 'rectangular' }
         );
         google.accounts.id.prompt();
+    } else if (googleButton) {
+        googleButton.innerHTML = '<button type="button" class="login-submit" disabled>Google login unavailable</button>';
     }
+
+    const passwordForm = document.getElementById('passwordLoginForm');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', loginWithPassword);
+    }
+
+    recordVisitorHit();
 
     const storedUser = localStorage.getItem('portalUser');
 
@@ -673,18 +958,58 @@ function findBestFile(query){
     return bestFile;
 }
 
+function findMatchingFiles(query){
+    const normalized = query.trim().toLowerCase();
+    if(!normalized){
+        return [];
+    }
 
-/* ================= SPEECH ================= */
+    const terms = normalized.split(/\s+/).filter(Boolean);
 
-function speak(text){
-
-    const speech = new SpeechSynthesisUtterance(text);
-    speech.lang="en-US";
-
-    window.speechSynthesis.speak(speech);
-
+    return allFiles.filter(file => {
+        const lower = file.toLowerCase();
+        return terms.every(term => lower.includes(term));
+    });
 }
 
+function renderSearchResults(files, query){
+    const body = document.getElementById('chatBody');
+    if(!body){
+        return;
+    }
+
+    if(files.length === 0){
+        body.innerHTML += `<div style='color:red'><b>AI:</b> No files found for “${escapeHtml(query)}”.</div>`;
+    } else {
+        const listItems = files.map(file =>
+            `<div style='margin:6px 0;'><a href='/media/${encodeURIComponent(file)}' target='_blank' style='color:#38bdf8;text-decoration:none;'>${escapeHtml(file)}</a></div>`
+        ).join('');
+
+        body.innerHTML += `
+            <div style='color:#22c55e'><b>AI:</b> Found ${files.length} matching file${files.length === 1 ? '' : 's'} for “${escapeHtml(query)}”:</div>
+            ${listItems}
+        `;
+    }
+
+    body.scrollTop = body.scrollHeight;
+}
+
+function handleChatQuery(query){
+    const body = document.getElementById('chatBody');
+    if(!body){
+        return;
+    }
+
+    const trimmed = query.trim();
+    if(!trimmed){
+        body.innerHTML += `<div style='color:red'><b>AI:</b> Please provide a search query.</div>`;
+        body.scrollTop = body.scrollHeight;
+        return;
+    }
+
+    const matches = findMatchingFiles(trimmed);
+    renderSearchResults(matches, trimmed);
+}
 
 /* ================= OPEN FILE ================= */
 
@@ -706,25 +1031,11 @@ function openFile(file){
 
 function sendMessage(){
 
-    let input = document.getElementById("chatInput").value;
+    let input = document.getElementById("chatInput").value.trim();
     let body = document.getElementById("chatBody");
 
-    body.innerHTML += "<div><b>You:</b> "+input+"</div>";
-
-    let file = findBestFile(input);
-
-    if(file){
-
-        body.innerHTML += "<div style='color:#22c55e'><b>AI:</b> Opening "+file+"</div>";
-        openFile(file);
-
-    }
-    else{
-
-        body.innerHTML += "<div style='color:red'><b>AI:</b> File not found</div>";
-        speak("File not found");
-
-    }
+    body.innerHTML += `<div><b>You:</b> ${escapeHtml(input)}</div>`;
+    handleChatQuery(input);
 
     document.getElementById("chatInput").value="";
     body.scrollTop = body.scrollHeight;
@@ -814,12 +1125,13 @@ if(SpeechRecognition){
 
         console.log("Voice:", speech);
 
-        document.getElementById("chatBody").innerHTML +=
-            "<div><b>You (voice):</b> "+speech+"</div>";
+        const body = document.getElementById("chatBody");
+        if (body) {
+            body.innerHTML += `<div><b>You (voice):</b> ${escapeHtml(speech)}</div>`;
+            body.scrollTop = body.scrollHeight;
+        }
 
-        let file = findBestFile(speech);
-
-        openFile(file);
+        handleChatQuery(speech);
 
     };
 
