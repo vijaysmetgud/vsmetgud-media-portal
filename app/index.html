@@ -5,6 +5,7 @@
 <title>VSMETGUD MEDIA PORTAL</title>
 
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
 
@@ -184,6 +185,81 @@ body {
     justify-content:space-between;
 }
 
+/* ================= AUTHENTICATION ================= */
+
+.login-screen {
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,0.95);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:99999;
+}
+
+.login-box {
+    background:#111827;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:24px;
+    padding:40px;
+    width:min(420px,90%);
+    text-align:center;
+    box-shadow:0 30px 80px rgba(0,0,0,0.45);
+}
+
+.login-box h2 {
+    margin-bottom:24px;
+    font-size:28px;
+    color:#e2e8f0;
+}
+
+.login-box p {
+    margin-top:18px;
+    color:#cbd5e1;
+}
+
+.auth-bar {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:12px 20px;
+    margin:0 auto 20px auto;
+    max-width:1200px;
+    background:rgba(15,23,42,0.9);
+    border-radius:30px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.35);
+}
+
+.auth-bar.hidden,
+#mainContent.hidden {
+    display:none;
+}
+
+.auth-info {
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.auth-info img {
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    object-fit:cover;
+    border:2px solid #22c55e;
+}
+
+.auth-user {
+    display:flex;
+    flex-direction:column;
+    color:#e2e8f0;
+}
+
+.auth-user span:first-child {
+    font-weight:700;
+}
+
 .chatbot-body {
     padding:10px;
     height:200px;
@@ -225,7 +301,27 @@ body {
 
 <div id="particles-js"></div>
 
-<div id="clock"></div>
+<div id="loginScreen" class="login-screen">
+    <div class="login-box">
+        <h2>Sign in with Google</h2>
+        <div id="googleSignInButton"></div>
+        <p>Sign in with your Google account to access the portal.</p>
+    </div>
+</div>
+
+<div id="mainContent" class="hidden">
+    <div id="authBar" class="auth-bar hidden">
+        <div class="auth-info">
+            <img id="userAvatar" src="" alt="Profile">
+            <div class="auth-user">
+                <span id="userName">Guest</span>
+                <span id="userEmail">Not signed in</span>
+            </div>
+        </div>
+        <button class="nav-btn" onclick="signOutUser()">Sign Out</button>
+    </div>
+
+    <div id="clock"></div>
 
 <script>
 function updateClock() {
@@ -356,10 +452,104 @@ style="
 </div>
 
 <div class="chat-toggle" id="chatToggle" onclick="toggleChat()">🤖</div>
+</div>
 
 <script>
 
 /* ================= FILE INDEX ================= */
+
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE";
+let currentUser = null;
+
+function decodeJwtResponse(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+}
+
+function handleCredentialResponse(response) {
+    if (!response || !response.credential) {
+        console.error('Google credential response missing');
+        return;
+    }
+
+    try {
+        currentUser = decodeJwtResponse(response.credential);
+        localStorage.setItem('portalUser', JSON.stringify(currentUser));
+        updateUserProfile(currentUser);
+        showMainContent();
+        loadFiles();
+    } catch (error) {
+        console.error('Failed to decode token', error);
+    }
+}
+
+function updateUserProfile(user) {
+    const name = user.name || 'Google User';
+    const email = user.email || 'No email available';
+    const picture = user.picture || '';
+
+    document.getElementById('userName').innerText = name;
+    document.getElementById('userEmail').innerText = email;
+    document.getElementById('userAvatar').src = picture;
+}
+
+function showMainContent() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainContent').classList.remove('hidden');
+    document.getElementById('authBar').classList.remove('hidden');
+}
+
+function showLoginScreen() {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('mainContent').classList.add('hidden');
+    document.getElementById('authBar').classList.add('hidden');
+}
+
+function signOutUser() {
+    localStorage.removeItem('portalUser');
+    currentUser = null;
+    showLoginScreen();
+    if (window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.disableAutoSelect();
+    }
+}
+
+function initAuth() {
+    if (window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleCredentialResponse,
+            auto_select: false,
+            ux_mode: 'popup'
+        });
+
+        google.accounts.id.renderButton(
+            document.getElementById('googleSignInButton'),
+            { theme: 'outline', size: 'large', width: 280, shape: 'rectangular' }
+        );
+        google.accounts.id.prompt();
+    }
+
+    const storedUser = localStorage.getItem('portalUser');
+
+    if (storedUser) {
+        try {
+            currentUser = JSON.parse(storedUser);
+            updateUserProfile(currentUser);
+            showMainContent();
+            loadFiles();
+        } catch (error) {
+            console.warn('Unable to restore stored user', error);
+            showLoginScreen();
+        }
+    } else {
+        showLoginScreen();
+    }
+}
 
 let allFiles = [];
 
@@ -383,7 +573,7 @@ async function loadFiles(){
 
 }
 
-window.addEventListener("DOMContentLoaded", loadFiles);
+window.addEventListener("DOMContentLoaded", initAuth);
 
 /* ================= DISPLAY FILES ================= */
 
