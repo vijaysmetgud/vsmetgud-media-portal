@@ -39,6 +39,38 @@ app.use(express.json());
 app.set('trust proxy', true);
 app.use(express.static(path.join(__dirname, 'app')));
 
+const MEDIA_DIR = path.join(__dirname, 'app', 'media');
+
+app.use('/media', express.static(MEDIA_DIR));
+
+function getAllMediaFiles(dir, basePath = '') {
+  let results = [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      results = results.concat(getAllMediaFiles(path.join(dir, entry.name), path.join(basePath, entry.name)));
+    } else if (entry.isFile()) {
+      results.push(path.join(basePath, entry.name).replace(/\\/g, '/'));
+    }
+  }
+
+  return results;
+}
+
+app.get('/media-index.json', (req, res) => {
+  try {
+    if (!fs.existsSync(MEDIA_DIR)) {
+      return res.json([]);
+    }
+    const files = getAllMediaFiles(MEDIA_DIR);
+    res.json(files);
+  } catch (err) {
+    console.error('Failed to build media index:', err);
+    res.status(500).json({ success: false, error: 'Unable to build media index' });
+  }
+});
+
 app.post('/api/visitor', (req, res) => {
   const ip = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
   const {
