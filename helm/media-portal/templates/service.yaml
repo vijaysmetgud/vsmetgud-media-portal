@@ -8,5 +8,5 @@ spec:
     app: media-portal
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 80
+      targetPort: 8080
       nodePort: {{ .Values.service.nodePort }}

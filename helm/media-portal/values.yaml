@@ -7,12 +7,12 @@ image:
 
 service:
   type: NodePort
-  port: 80
+  port: 8080
   nodePort: 30080
 
 persistence:
   enabled: true
-  mountPath: /usr/share/nginx/html/media
+  mountPath: /usr/src/app/app/media
   hostPath: /mnt/media
 
 ingress:

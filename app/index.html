@@ -5,7 +5,6 @@
 <title>VSMETGUD MEDIA PORTAL</title>
 
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
 
@@ -364,15 +363,13 @@ body {
 <div id="loginScreen" class="login-screen">
     <div class="login-box">
         <h2>Sign in</h2>
-        <div id="googleSignInButton"></div>
-        <div class="login-divider"><span>OR</span></div>
         <form id="passwordLoginForm" class="login-form">
             <input id="usernameInput" class="login-input" type="text" placeholder="Username" autocomplete="username">
             <input id="passwordInput" class="login-input" type="password" placeholder="Password" autocomplete="current-password">
             <button type="submit" class="login-submit">Sign in with password</button>
             <div id="loginError" class="login-error"></div>
         </form>
-        <p>Use Google or a local username/password to access the portal.</p>
+        <p>Use a local username/password to access the portal.</p>
     </div>
 </div>
 
@@ -540,34 +537,7 @@ style="
 
 /* ================= FILE INDEX ================= */
 
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE";
 let currentUser = null;
-
-function decodeJwtResponse(token) {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-}
-
-function handleCredentialResponse(response) {
-    if (!response || !response.credential) {
-        console.error('Google credential response missing');
-        return;
-    }
-
-    try {
-        currentUser = decodeJwtResponse(response.credential);
-        localStorage.setItem('portalUser', JSON.stringify(currentUser));
-        updateUserProfile(currentUser);
-        showMainContent();
-        loadFiles();
-    } catch (error) {
-        console.error('Failed to decode token', error);
-    }
-}
 
 function updateUserProfile(user) {
     const name = user.name || 'Signed-in User';
@@ -582,17 +552,10 @@ function updateUserProfile(user) {
 const localUsers = [
     {
         username: 'admin',
-        password: 'admin123',
+        password: 'admin@123',
         name: 'Admin User',
         email: 'admin@example.com',
         picture: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon'
-    },
-    {
-        username: 'guest',
-        password: 'guest123',
-        name: 'Guest User',
-        email: 'guest@example.com',
-        picture: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp'
     }
 ];
 
@@ -601,7 +564,7 @@ function loginUser(user) {
         name: user.name,
         email: user.email,
         picture: user.picture || 'https://www.gravatar.com/avatar/?d=mp&f=y',
-        authMethod: user.username ? 'local' : 'google',
+        authMethod: 'local',
         username: user.username || ''
     };
 
@@ -645,9 +608,6 @@ function signOutUser() {
     localStorage.removeItem('portalUser');
     currentUser = null;
     showLoginScreen();
-    if (window.google && google.accounts && google.accounts.id) {
-        google.accounts.id.disableAutoSelect();
-    }
 }
 
 function formatVisitorTime(value) {
@@ -792,26 +752,6 @@ function updateLocalVisitorMetrics() {
 }
 
 function initAuth() {
-    const googleButton = document.getElementById('googleSignInButton');
-    const canUseGoogle = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID_HERE';
-
-    if (canUseGoogle && window.google && google.accounts && google.accounts.id) {
-        google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: handleCredentialResponse,
-            auto_select: false,
-            ux_mode: 'popup'
-        });
-
-        google.accounts.id.renderButton(
-            googleButton,
-            { theme: 'outline', size: 'large', width: 280, shape: 'rectangular' }
-        );
-        google.accounts.id.prompt();
-    } else if (googleButton) {
-        googleButton.innerHTML = '<button type="button" class="login-submit" disabled>Google login unavailable</button>';
-    }
-
     const passwordForm = document.getElementById('passwordLoginForm');
     if (passwordForm) {
         passwordForm.addEventListener('submit', loginWithPassword);
