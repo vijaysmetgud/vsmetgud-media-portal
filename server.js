@@ -37,9 +37,9 @@ db.serialize(() => {
 
 app.use(express.json());
 app.set('trust proxy', true);
-app.use(express.static(path.join(__dirname, 'app')));
+app.use(express.static(path.join(__dirname)));
 
-const MEDIA_DIR = path.join(__dirname, 'app', 'media');
+const MEDIA_DIR = path.join(__dirname, "media");
 
 app.use('/media', express.static(MEDIA_DIR));
 
