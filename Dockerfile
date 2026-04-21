@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 COPY package.json ./
 RUN npm install --production
 
-COPY app/ ./app
+COPY app/ .
 COPY server.js ./
 
 EXPOSE 8080
