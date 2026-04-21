@@ -1045,6 +1045,14 @@ window.addEventListener("DOMContentLoaded", () => {
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+function speak(text) {
+    window.speechSynthesis.cancel(); // stop previous speech
+    const speech = new SpeechSynthesisUtterance(text);
+    speech.lang = "en-US";
+    speech.rate = 1;
+    speech.pitch = 1;
+    window.speechSynthesis.speak(speech);
+}
 let recognition;
 
 if(SpeechRecognition){
