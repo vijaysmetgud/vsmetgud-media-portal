@@ -80,10 +80,4 @@ sudo systemctl start cloudflared
 sudo systemctl enable cloudflared
 ------------------------------------------------------------------------------------
 
-    devops
-
-
 ADDED CLOCK AT THE TOP OF THE DASHBOARD
-
-
-vijay
