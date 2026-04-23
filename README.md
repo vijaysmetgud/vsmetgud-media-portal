@@ -9,6 +9,9 @@ In Master node
 sudo chown -R 101:101 /mnt/media
 sudo chmod -R 755 /mnt/media
 
+
+WORKER VM:
+
 Command to copy files from local to WORKER VMs:
 sudo cp -r /media/sf_e-drive/ /mnt/media/
 sudo chown -R 101:101 /mnt/media
