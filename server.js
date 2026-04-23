@@ -63,13 +63,18 @@ app.get('/media-index.json', (req, res) => {
     if (!fs.existsSync(MEDIA_DIR)) {
       return res.json([]);
     }
+
     const files = getAllMediaFiles(MEDIA_DIR);
-    res.setHeader('Cache-Control', 'no-store');
+
+    // 🔥 FIX: disable caching
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     res.json(files);
 
   } catch (err) {
-    console.error('Failed to build media index:', err);
-    res.status(500).json({ success: false, error: 'Unable to build media index' });
+    res.status(500).json({ error: 'Unable to build media index' });
   }
 });
 
