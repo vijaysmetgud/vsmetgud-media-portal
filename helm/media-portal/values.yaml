@@ -12,7 +12,7 @@ service:
 
 persistence:
   enabled: true
-  mountPath: /usr/src/app/app/media
+  mountPath: /usr/src/app/media
   hostPath: /mnt/media
 
 ingress:
