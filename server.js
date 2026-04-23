@@ -59,14 +59,14 @@ function getAllMediaFiles(dir, basePath = '') {
 }
 
 app.get('/media-index.json', (req, res) => {
-  res.setHeader("Cache-Control", "no-store"); // 🔥 prevent caching
   try {
     if (!fs.existsSync(MEDIA_DIR)) {
       return res.json([]);
     }
     const files = getAllMediaFiles(MEDIA_DIR);
+    res.setHeader('Cache-Control', 'no-store');
     res.json(files);
-    
+
   } catch (err) {
     console.error('Failed to build media index:', err);
     res.status(500).json({ success: false, error: 'Unable to build media index' });
