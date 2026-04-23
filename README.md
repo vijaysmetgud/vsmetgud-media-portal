@@ -84,3 +84,6 @@ sudo systemctl enable cloudflared
 
 
 ADDED CLOCK AT THE TOP OF THE DASHBOARD
+
+
+vijay
