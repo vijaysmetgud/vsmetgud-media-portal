@@ -79,7 +79,6 @@ async function initializePostgres() {
     setTimeout(initializePostgres, 5000); // 🔥 FIX
   }
 }
-initializePostgres(); 
 
 // ==================== Redis Setup ====================
 const redisClient = redis.createClient({
@@ -325,3 +324,8 @@ app.post('/api/logout', verifyToken, async (req, res) => {
 });
 
 // (Rest of your visitor + stats + fallback routes remain EXACTLY same — unchanged)
+initializePostgres();
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
