@@ -49,11 +49,11 @@ env:
   - name: DB_PORT
     value: "5432"
   - name: DB_USER
-    value: "postgres"
+    value: "mediauser"
   - name: DB_PASSWORD
-    value: "password"
+    value: "securepassword"
   - name: DB_NAME
-    value: "media_portal"
+    value: "media_portal_db"
 
   # 🔥 Redis
   - name: REDIS_HOST
