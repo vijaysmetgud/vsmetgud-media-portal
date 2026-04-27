@@ -726,7 +726,7 @@ function updateLocalVisitorMetrics() {
 async function initAuth() {
     const passwordForm = document.getElementById('passwordLoginForm');
     if (passwordForm) {
-        passwordForm.addEventListener('submit', loginWithPassword);
+        passwordForm.addEventListener('submit', handleAuthForm);
     }
 
     recordVisitorHit();

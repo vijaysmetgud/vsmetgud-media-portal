@@ -4,6 +4,10 @@ let currentUser = null;
 let authToken = null;
 let isRegisterMode = false;
 
+function loginWithPassword(e) {
+    handleAuthForm(e);
+}
+
 // Update user profile display
 function updateUserProfile(user) {
     const name = user.username || 'Signed-in User';
