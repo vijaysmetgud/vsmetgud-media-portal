@@ -550,56 +550,13 @@ style="
 let currentUser = null;
 
 function updateUserProfile(user) {
-    const name = user.name || 'Signed-in User';
+    const name = user.username || user.name || 'Signed-in User';
     const email = user.email || 'No email available';
     const picture = user.picture || 'https://www.gravatar.com/avatar/?d=mp&f=y';
 
     document.getElementById('userName').innerText = name;
     document.getElementById('userEmail').innerText = email;
     document.getElementById('userAvatar').src = picture;
-}
-
-const localUsers = [
-    {
-        username: 'admin',
-        password: 'admin@123',
-        name: 'Admin User',
-        email: 'admin@example.com',
-        picture: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon'
-    }
-];
-
-function loginUser(user) {
-    currentUser = {
-        name: user.name,
-        email: user.email,
-        picture: user.picture || 'https://www.gravatar.com/avatar/?d=mp&f=y',
-        authMethod: 'local',
-        username: user.username || ''
-    };
-
-    localStorage.setItem('portalUser', JSON.stringify(currentUser));
-    updateUserProfile(currentUser);
-    document.getElementById('loginError').innerText = '';
-    showMainContent();
-    loadFiles();
-}
-
-function loginWithPassword(event) {
-    event.preventDefault();
-
-    const username = document.getElementById('usernameInput').value.trim();
-    const password = document.getElementById('passwordInput').value;
-    const error = document.getElementById('loginError');
-
-    const user = localUsers.find(entry => entry.username === username && entry.password === password);
-
-    if (!user) {
-        error.innerText = 'Invalid username or password.';
-        return;
-    }
-
-    loginUser(user);
 }
 
 function showMainContent() {
@@ -615,9 +572,14 @@ function showLoginScreen() {
 }
 
 function signOutUser() {
-    localStorage.removeItem('portalUser');
-    currentUser = null;
-    showLoginScreen();
+    if (window.authSignOut) {
+        window.authSignOut(); // call auth.js version
+    } else {
+        localStorage.removeItem('portalUser');
+        localStorage.removeItem('authToken');
+        currentUser = null;
+        showLoginScreen();
+    }
 }
 
 function formatVisitorTime(value) {
@@ -761,7 +723,7 @@ function updateLocalVisitorMetrics() {
     renderVisitorDetails(hits);
 }
 
-function initAuth() {
+async function initAuth() {
     const passwordForm = document.getElementById('passwordLoginForm');
     if (passwordForm) {
         passwordForm.addEventListener('submit', loginWithPassword);
@@ -776,7 +738,10 @@ function initAuth() {
             currentUser = JSON.parse(storedUser);
             updateUserProfile(currentUser);
             showMainContent();
-            loadFiles();
+
+            await loadFiles();   // 🔥 FIX
+            loadCategory("");
+
         } catch (error) {
             console.warn('Unable to restore stored user', error);
             showLoginScreen();
@@ -789,23 +754,36 @@ function initAuth() {
 let allFiles = [];
 
 async function loadFiles(){
+    const authToken = localStorage.getItem("authToken");
+    if (!authToken) return;
 
-    try{
+    try {
 
-        const response = await fetch("/media-index.json");
+        const response = await fetch(`/api/files?path=${encodeURIComponent("")}`, {
+            headers: {
+                "Authorization": `Bearer ${authToken}`
+            }
+        });
 
-        allFiles = await response.json();
+        if (response.status === 401) {
+            signOutUser();
+            return;
+        }
 
-        console.log("Files indexed:", allFiles.length);
-        console.log(allFiles.slice(0,10));
+        if (!response.ok) {
+            throw new Error("Failed to fetch files");
+        }
+
+        const files = await response.json();
+
+        // convert API format → your UI format
+        allFiles = files.map(f => f?.path ?? f?.name ?? "").filter(Boolean);
 
         renderFiles(allFiles);
 
+    } catch (e) {
+        console.error("Failed to load files", e);
     }
-    catch(e){
-        console.log("media-index.json not found");
-    }
-
 }
 
 window.addEventListener("DOMContentLoaded", initAuth);
@@ -817,6 +795,11 @@ function renderFiles(files){
     const container = document.getElementById("fileContainer");
 
     container.innerHTML = "";
+
+    if (!files || !Array.isArray(files)) {
+        container.innerHTML = "<p>Invalid file data</p>";
+        return;
+    }
 
     if(files.length === 0){
         container.innerHTML = "<p>No files found</p>";
@@ -842,7 +825,7 @@ function renderFiles(files){
         `;
 
         card.onclick = () => {
-            window.open("/media/" + encodeURIComponent(file), "_blank");
+            window.open(`/api/media?path=${encodeURIComponent(file)}`, "_blank");
         };
 
         container.appendChild(card);
@@ -855,27 +838,25 @@ function renderFiles(files){
 
 function loadCategory(folder, element){
 
-    document.querySelectorAll(".nav-btn")
-        .forEach(btn => btn.classList.remove("active"));
+    // 🔥 Fix: handle active button safely
+    if (element) {
+        document.querySelectorAll(".nav-btn")
+            .forEach(btn => btn.classList.remove("active"));
 
-    element.classList.add("active");
+        element.classList.add("active");
+    }
 
     let filtered;
 
-    if(folder === ""){
+    if (folder === "") {
         filtered = allFiles;
-    }
-    else{
-
+    } else {
         filtered = allFiles.filter(file => 
-            file.includes(folder + "/") ||
-            file.startsWith(folder)
+            file.startsWith(folder + "/")
         );
-
     }
 
     renderFiles(filtered);
-
 }
 
 /* ================= SMART FILE SEARCH ================= */
@@ -932,7 +913,7 @@ function renderSearchResults(files, query){
         body.innerHTML += `<div style='color:red'><b>AI:</b> No files found for “${escapeHtml(query)}”.</div>`;
     } else {
         const listItems = files.map(file =>
-            `<div style='margin:6px 0;'><a href='/media/${encodeURIComponent(file)}' target='_blank' style='color:#38bdf8;text-decoration:none;'>${escapeHtml(file)}</a></div>`
+            `<div style='margin:6px 0;'><a href='/api/media?path=${encodeURIComponent(file)}' target='_blank' style='color:#38bdf8;text-decoration:none;'>${escapeHtml(file)}</a></div>`
         ).join('');
 
         body.innerHTML += `
@@ -972,8 +953,7 @@ function openFile(file){
 
     speak("Opening " + file);
 
-    window.open("/media/" + encodeURIComponent(file), "_blank");
-
+    window.open(`/api/media?path=${encodeURIComponent(file)}`, "_blank");
 }
 
 
@@ -982,6 +962,7 @@ function openFile(file){
 function sendMessage(){
 
     let input = document.getElementById("chatInput").value.trim();
+    if (!input) return;
     let body = document.getElementById("chatBody");
 
     body.innerHTML += `<div><b>You:</b> ${escapeHtml(input)}</div>`;

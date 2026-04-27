@@ -6,19 +6,20 @@ image:
   pullPolicy: Always
 
 service:
-  type: NodePort
+  type: ClusterIP
   port: 8080
-  nodePort: 30080
+
+ingress:
+  enabled: true
+  className: nginx
+  host: vsmetgud.online
+  path: /
+  pathType: Prefix
 
 persistence:
   enabled: true
   mountPath: /usr/src/app/media
-  hostPath: /mnt/media
-
-ingress:
-  enabled: false
-  className: nginx
-  host: vsmetgud.online
+  hostPath: /mnt/media   # ⚠️ dev only
 
 resources:
   limits:
@@ -33,3 +34,43 @@ nodeSelector:
 
 autoscaling:
   enabled: false
+
+# 🔥 ENV VARIABLES (UPDATED)
+env:
+  - name: NODE_ENV
+    value: "production"
+
+  - name: JWT_SECRET
+    value: "change-this-secret"
+
+  # 🔥 PostgreSQL
+  - name: DB_HOST
+    value: "postgres-service"
+  - name: DB_PORT
+    value: "5432"
+  - name: DB_USER
+    value: "postgres"
+  - name: DB_PASSWORD
+    value: "password"
+  - name: DB_NAME
+    value: "media_portal"
+
+  # 🔥 Redis
+  - name: REDIS_HOST
+    value: "redis-service"
+  - name: REDIS_PORT
+    value: "6379"
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5

@@ -1,107 +1,143 @@
 console.log("APP JS LOADED");
-function loadCategory(folder) {
 
+/* ================= FILE BROWSER ================= */
+
+async function loadCategory(folder = "") {
     const content = document.getElementById("content");
     if (!content) return;
-    const basePath = folder ? `/media/${folder}/` : `/media/`;
 
-    content.innerHTML = `
+    content.innerHTML = `<p>Loading...</p>`;
+
+    try {
+        const response = await fetch(`/api/files?path=${folder}`, {
+            headers: {
+                "Authorization": `Bearer ${authToken}`
+            }
+        });
+
+        // Handle auth expiry
+        if (response.status === 401) {
+            signOutUser();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error("Failed to load files");
+        }
+
+        const files = await response.json();
+
+        renderFileList(files, folder);
+
+    } catch (err) {
+        console.error("Error loading files:", err);
+        content.innerHTML = `<p style="color:red;">Failed to load media</p>`;
+    }
+}
+
+/* ================= RENDER FILE LIST ================= */
+
+function renderFileList(files, folder) {
+    const content = document.getElementById("content");
+
+    let html = `
         <h2>Browsing: ${folder || "All Files"}</h2>
-        <iframe id="dirFrame"
-            src="${basePath}"
-            width="100%"
-            height="400px"
-            style="border:1px solid #ccc; border-radius:8px;">
-        </iframe>
-
+        <div id="fileList" style="display:flex; flex-wrap:wrap; gap:10px;"></div>
         <div id="playerArea" style="margin-top:20px;"></div>
     `;
 
-    // Wait for iframe to load
-    const frame = document.getElementById("dirFrame");
+    content.innerHTML = html;
 
-    frame.onload = function () {
+    const fileList = document.getElementById("fileList");
 
-        const iframeDoc = frame.contentDocument || frame.contentWindow.document;
-        const links = iframeDoc.getElementsByTagName("a");
+    files.forEach(file => {
+        const item = document.createElement("div");
 
-        for (let link of links) {
+        item.style.padding = "10px";
+        item.style.border = "1px solid #ccc";
+        item.style.borderRadius = "8px";
+        item.style.cursor = "pointer";
+        item.style.minWidth = "150px";
 
-            const href = link.getAttribute("href");
+        item.innerText = file.name;
 
-            if (!href || href === "../") continue;
+        item.onclick = () => handleFileClick(file, folder);
 
-            link.onclick = function (e) {
-                e.preventDefault();
+        fileList.appendChild(item);
+    });
+}
 
-                const fileUrl = basePath + href;
-                const lower = href.toLowerCase();
+/* ================= HANDLE FILE CLICK ================= */
 
-                const player = document.getElementById("playerArea");
+function handleFileClick(file, folder) {
+    const player = document.getElementById("playerArea");
 
-                // 🎬 VIDEO
-                if (lower.endsWith(".mp4") || lower.endsWith(".webm")) {
+    const fileUrl = `/api/media?path=${encodeURIComponent(file.path)}`;
+    const lower = file.name.toLowerCase();
 
-                    player.innerHTML = `
-                        <video 
-                            width="100%" 
-                            height="500"
-                            controls 
-                            autoplay 
-                            style="border-radius:10px;">
-                            <source src="${fileUrl}" type="video/mp4">
-                            Your browser does not support video.
-                        </video>
-                    `;
-
-                }
-                // 📕 PDF
-                else if (lower.endsWith(".pdf")) {
-
-                    player.innerHTML = `
-                        <iframe 
-                            src="${fileUrl}" 
-                            width="100%" 
-                            height="600px"
-                            style="border-radius:10px;">
-                        </iframe>
-                    `;
-                }
-                // 📁 Folder
-                else if (!lower.includes(".")) {
-                    loadCategory(folder ? `${folder}/${href.replace("/", "")}` : href.replace("/", ""));
-                }
-                else {
-                    // Other files → open normally
-                    window.open(fileUrl, "_blank");
-                }
-            }
-        }
+    // 📁 Folder
+    if (file.type === "directory") {
+        loadCategory(file.path);
+        return;
     }
+
+    // 🎬 Video
+    if (lower.endsWith(".mp4") || lower.endsWith(".webm")) {
+        const type = lower.endsWith(".webm") ? "webm" : "mp4";
+
+        player.innerHTML = `
+            <video width="100%" height="500" controls autoplay style="border-radius:10px;">
+                <source src="${fileUrl}" type="video/${type}">
+                Your browser does not support video.
+            </video>
+        `;
+        return;
+    }
+
+    // 📕 PDF
+    if (lower.endsWith(".pdf")) {
+        player.innerHTML = `
+            <iframe 
+                src="${fileUrl}" 
+                width="100%" 
+                height="600px"
+                style="border-radius:10px;">
+            </iframe>
+        `;
+        return;
+    }
+
+    // 📄 Other files
+    window.open(fileUrl, "_blank");
 }
 
 /* ================= CLOCK ================= */
 
-setTimeout(() => {
+function updateClock() {
+    const clockElement = document.getElementById("clock");
+    if (!clockElement) return;
 
-    function updateClock() {
-        const clockElement = document.getElementById("clock");
+    const now = new Date();
 
-        if (!clockElement) {
-            console.log("Clock not found");
-            return;
-        }
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
 
-        const now = new Date();
+    clockElement.innerText = `${hours}:${minutes}:${seconds}`;
+}
 
-        const hours = String(now.getHours()).padStart(2, "0");
-        const minutes = String(now.getMinutes()).padStart(2, "0");
-        const seconds = String(now.getSeconds()).padStart(2, "0");
+// Start clock immediately
+updateClock();
+setInterval(updateClock, 1000);
 
-        clockElement.innerText = `${hours}:${minutes}:${seconds}`;
+/* ================= INIT ================= */
+
+// Load root after login
+function initApp() {
+    if (typeof authToken !== "undefined" && authToken) {
+        loadCategory("");
     }
+}
 
-    updateClock();
-    setInterval(updateClock, 2000);
-
-}, 1000); // delay ensures everything loads first
+// Wait for auth to initialize
+setTimeout(initApp, 500);

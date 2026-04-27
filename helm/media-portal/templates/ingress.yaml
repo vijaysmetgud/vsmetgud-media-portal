@@ -1,0 +1,23 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "media-portal.fullname" . }}
+  labels:
+    app: {{ include "media-portal.name" . }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: {{ .Values.ingress.path | default "/" }}
+            pathType: {{ .Values.ingress.pathType | default "Prefix" }}
+            backend:
+              service:
+                name: {{ include "media-portal.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+{{- end }}

@@ -42,6 +42,14 @@ function toggleAuthMode() {
     }
 }
 
+// 🔥 FIX: helper for authenticated fetch
+function getAuthHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+    };
+}
+
 // Backend login
 async function loginUser(username, password) {
     try {
@@ -61,14 +69,17 @@ async function loginUser(username, password) {
         authToken = data.token;
         currentUser = data.user;
 
-        // Store in localStorage
         localStorage.setItem('authToken', authToken);
         localStorage.setItem('portalUser', JSON.stringify(currentUser));
 
         document.getElementById('loginError').innerText = '';
         updateUserProfile(currentUser);
         showMainContent();
-        loadFiles();
+
+        if (typeof loadCategory === "function") { // 🔥 FIX
+            loadCategory("");
+        }
+
     } catch (err) {
         console.error('Login error:', err);
         document.getElementById('loginError').innerText = 'Network error. Please try again.';
@@ -94,21 +105,24 @@ async function registerUser(username, email, password, confirmPassword) {
         authToken = data.token;
         currentUser = data.user;
 
-        // Store in localStorage
         localStorage.setItem('authToken', authToken);
         localStorage.setItem('portalUser', JSON.stringify(currentUser));
 
         document.getElementById('loginError').innerText = '';
         updateUserProfile(currentUser);
         showMainContent();
-        loadFiles();
+
+        if (typeof loadCategory === "function") { // 🔥 FIX
+            loadCategory("");
+        }
+
     } catch (err) {
         console.error('Registration error:', err);
         document.getElementById('loginError').innerText = 'Network error. Please try again.';
     }
 }
 
-// Handle auth form submission (login or register)
+// Handle auth form submission
 function handleAuthForm(event) {
     event.preventDefault();
 
@@ -125,13 +139,18 @@ function handleAuthForm(event) {
         const email = document.getElementById('emailInput').value.trim();
         const confirmPassword = document.getElementById('confirmPasswordInput').value;
 
-        if (!email) {
-            error.innerText = 'Please enter an email';
+        if (!email.includes('@')) { // 🔥 FIX
+            error.innerText = 'Please enter a valid email';
             return;
         }
 
         if (password !== confirmPassword) {
             error.innerText = 'Passwords do not match';
+            return;
+        }
+
+        if (password.length < 6) { // 🔥 FIX
+            error.innerText = 'Password must be at least 6 characters';
             return;
         }
 
@@ -141,7 +160,7 @@ function handleAuthForm(event) {
     }
 }
 
-// Show main content area
+// Show main content
 function showMainContent() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('mainContent').classList.remove('hidden');
@@ -161,24 +180,20 @@ async function signOutUser() {
         if (authToken) {
             await fetch('/api/logout', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
+                headers: getAuthHeaders() // 🔥 FIX
             });
         }
     } catch (err) {
         console.warn('Logout request failed:', err);
     }
 
-    // Clear local storage
     localStorage.removeItem('authToken');
     localStorage.removeItem('portalUser');
+
     authToken = null;
     currentUser = null;
     isRegisterMode = false;
-    
-    // Reset form
+
     document.getElementById('usernameInput').value = '';
     document.getElementById('passwordInput').value = '';
     document.getElementById('emailInput').value = '';
@@ -195,9 +210,10 @@ function initAuth() {
         passwordForm.addEventListener('submit', handleAuthForm);
     }
 
-    recordVisitorHit();
+    if (typeof recordVisitorHit === "function") { // 🔥 FIX
+        recordVisitorHit();
+    }
 
-    // Check for stored token first
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('portalUser');
 
@@ -205,9 +221,14 @@ function initAuth() {
         try {
             authToken = storedToken;
             currentUser = JSON.parse(storedUser);
+
             updateUserProfile(currentUser);
             showMainContent();
-            loadFiles();
+
+            if (typeof loadCategory === "function") { // 🔥 FIX
+                loadCategory("");
+            }
+
         } catch (error) {
             console.warn('Unable to restore stored auth', error);
             localStorage.removeItem('authToken');
