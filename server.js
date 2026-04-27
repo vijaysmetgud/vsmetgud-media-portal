@@ -79,6 +79,7 @@ async function initializePostgres() {
     setTimeout(initializePostgres, 5000); // 🔥 FIX
   }
 }
+initializePostgres(); 
 
 // ==================== Redis Setup ====================
 const redisClient = redis.createClient({
