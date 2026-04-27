@@ -2,8 +2,6 @@ This Portal is for accessing my files like pdfs, videos, audios etc on local lap
 
 HELLO VIJAY METGUD
 
-
-
 In Master node:
 
 sudo  cp -r /media/sf_e-drive/AUDIOS--- /mnt/media/AUDIOS---
