@@ -47,7 +47,7 @@ ON MASTERNODE ----> helm/mediaportal ----> and execute below commands:
     
     kubectl rollout restart deployment media-portal
 
-    k get pods -A
+    kubectl get pods -A
 
     k delete pods --all -A
 ---------------------------------------------------------------------
