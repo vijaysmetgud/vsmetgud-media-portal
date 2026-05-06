@@ -162,6 +162,10 @@ app.get('/api/visitors', (req, res) => {
 
 const os = require("os");
 
+const os = require("os");
+const https = require("https");
+const fs = require("fs");
+
 app.get("/api/metrics", async (req, res) => {
 
     try{
@@ -176,17 +180,101 @@ app.get("/api/metrics", async (req, res) => {
         const cpuLoad =
             os.loadavg()[0] * 100;
 
-        res.json({
+        // ===============================
+        // KUBERNETES API
+        // ===============================
 
-            cpu: cpuLoad.toFixed(1) + "%",
+        const token =
+            fs.readFileSync(
+                "/var/run/secrets/kubernetes.io/serviceaccount/token",
+                "utf8"
+            );
 
-            memory: usedMem.toFixed(1) + "%",
+        const options = {
 
-            pods: "1",
+            hostname: "kubernetes.default.svc",
 
-            health: "Healthy"
+            path: "/api/v1/pods",
+
+            method: "GET",
+
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
+
+            rejectUnauthorized: false
+        };
+
+        const request = https.request(options, apiRes => {
+
+            let data = "";
+
+            apiRes.on("data", chunk => {
+                data += chunk;
+            });
+
+            apiRes.on("end", () => {
+
+                try{
+
+                    const json = JSON.parse(data);
+
+                    // ONLY RUNNING PODS
+                    const runningPods =
+                        json.items.filter(
+                            pod =>
+                                pod.status.phase === "Running"
+                        ).length;
+
+                    res.json({
+
+                        cpu:
+                            cpuLoad.toFixed(1) + "%",
+
+                        memory:
+                            usedMem.toFixed(1) + "%",
+
+                        pods: runningPods,
+
+                        health:
+                            runningPods > 0
+                            ? "Healthy"
+                            : "Warning"
+
+                    });
+
+                }
+                catch(err){
+
+                    res.json({
+
+                        cpu: "N/A",
+                        memory: "N/A",
+                        pods: "N/A",
+                        health: "Unavailable"
+
+                    });
+
+                }
+
+            });
 
         });
+
+        request.on("error", err => {
+
+            res.json({
+
+                cpu: "N/A",
+                memory: "N/A",
+                pods: "N/A",
+                health: "Unavailable"
+
+            });
+
+        });
+
+        request.end();
 
     }
     catch(err){
@@ -203,6 +291,48 @@ app.get("/api/metrics", async (req, res) => {
     }
 
 });
+
+// app.get("/api/metrics", async (req, res) => {
+
+//     try{
+
+//         const totalMem = os.totalmem();
+
+//         const freeMem = os.freemem();
+
+//         const usedMem =
+//             ((totalMem - freeMem) / totalMem) * 100;
+
+//         const cpuLoad =
+//             os.loadavg()[0] * 100;
+
+//         res.json({
+
+//             cpu: cpuLoad.toFixed(1) + "%",
+
+//             memory: usedMem.toFixed(1) + "%",
+
+//             pods: "1",
+
+//             health: "Healthy"
+
+//         });
+
+//     }
+//     catch(err){
+
+//         res.json({
+
+//             cpu: "N/A",
+//             memory: "N/A",
+//             pods: "N/A",
+//             health: "Unavailable"
+
+//         });
+
+//     }
+
+// });
 
 // const { exec } = require("child_process");
 

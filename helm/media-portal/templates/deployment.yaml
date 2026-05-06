@@ -1,33 +1,51 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: media-portal
+
   labels:
     app: media-portal
+
 spec:
+
   replicas: {{ .Values.replicaCount }}
+
   selector:
     matchLabels:
       app: media-portal
+
   template:
+
     metadata:
       labels:
         app: media-portal
+
     spec:
+
+      serviceAccountName: media-portal-sa
+
       nodeSelector:
         {{- toYaml .Values.nodeSelector | nindent 8 }}
 
       containers:
+
         - name: media-portal
+
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+
           ports:
             - containerPort: 8080
+
           volumeMounts:
             - name: media-storage
               mountPath: {{ .Values.persistence.mountPath }}
 
       volumes:
+
         - name: media-storage
+
           hostPath:
             path: {{ .Values.persistence.hostPath }}

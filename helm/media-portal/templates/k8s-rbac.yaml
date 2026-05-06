@@ -1,0 +1,28 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+
+metadata:
+  name: media-portal-role
+
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+
+metadata:
+  name: media-portal-binding
+
+subjects:
+  - kind: ServiceAccount
+    name: media-portal-sa
+    namespace: default
+
+roleRef:
+  kind: ClusterRole
+  name: media-portal-role
+  apiGroup: rbac.authorization.k8s.io
