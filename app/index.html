@@ -806,6 +806,18 @@ function initAuth() {
 
 let allFiles = [];
 
+let aiMemory = {
+    lastOpenedFile: null,
+    lastSearchResults: [],
+    lastQuery: '',
+    currentCategory: '',
+    recentFiles: [],
+
+    currentPlayer: null,
+    currentPlaylist: [],
+    currentIndex: 0
+};
+
 async function loadFiles(){
 
     try{
@@ -986,6 +998,217 @@ function renderSearchResults(files, query){
 
     body.scrollTop = body.scrollHeight;
 }
+/* ================= FUZZY SEARCH ================= */
+
+function levenshtein(a, b) {
+
+    const matrix = [];
+
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= b.length; i++) {
+
+        for (let j = 1; j <= a.length; j++) {
+
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+
+                matrix[i][j] = matrix[i - 1][j - 1];
+
+            } else {
+
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+
+            }
+        }
+    }
+
+    return matrix[b.length][a.length];
+}
+
+
+/* ================= AI INTENT DETECTION ================= */
+
+function detectIntent(query){
+
+    query = query.toLowerCase();
+
+    if(query.includes("play")) return "play";
+
+    if(query.includes("open")) return "open";
+
+    if(query.includes("show")) return "show";
+
+    if(query.includes("watch")) return "watch";
+
+    if(query.includes("listen")) return "listen";
+
+    if(query.includes("pause")) return "pause";
+
+    if(query.includes("next")) return "next";
+
+    if(query.includes("previous")) return "previous";
+
+    return "search";
+}
+
+/* ================= FILE TYPE DETECTION ================= */
+
+function getFileType(file){
+
+    const lower = file.toLowerCase();
+
+    if(lower.match(/\.(mp4|mkv|avi|mov|webm)$/)){
+        return "video";
+    }
+
+    if(lower.match(/\.(mp3|wav|aac|ogg)$/)){
+        return "audio";
+    }
+
+    if(lower.match(/\.(jpg|jpeg|png|gif|webp)$/)){
+        return "image";
+    }
+
+    if(lower.match(/\.(pdf)$/)){
+        return "pdf";
+    }
+
+    return "other";
+}
+
+
+/* ================= AI RECOMMENDATIONS ================= */
+
+function recommendFiles(currentFile){
+
+    const lower = currentFile.toLowerCase();
+
+    const words = lower
+        .split(/[^a-z0-9]+/)
+        .filter(word => word.length > 3);
+
+    return allFiles.filter(file => {
+
+        const lf = file.toLowerCase();
+
+        let score = 0;
+
+        words.forEach(word => {
+
+            if(lf.includes(word)){
+                score++;
+            }
+
+        });
+
+        return score >= 2 && file !== currentFile;
+
+    }).slice(0,5);
+
+}
+
+
+/* ================= CLOSE AI PLAYER ================= */
+
+function closePlayer(){
+
+    const modal = document.getElementById("aiPlayerModal");
+
+    const container = document.getElementById("playerContainer");
+
+    if(modal){
+        modal.style.display = "none";
+    }
+
+    if(container){
+        container.innerHTML = "";
+    }
+
+}
+/* ================= VOLUME CONTROL ================= */
+
+function changeVolume(action){
+
+    if(!aiMemory.currentPlayer){
+        speak("No active media player");
+        return;
+    }
+
+    let player = aiMemory.currentPlayer;
+
+    if(action === "increase"){
+
+        player.volume = Math.min(1, player.volume + 0.1);
+
+        speak("Increasing volume");
+
+    }
+
+    if(action === "decrease"){
+
+        player.volume = Math.max(0, player.volume - 0.1);
+
+        speak("Decreasing volume");
+
+    }
+}
+
+/* ================= NEXT FILE ================= */
+
+function openNextFile(){
+
+    if(aiMemory.currentPlaylist.length === 0){
+
+        speak("No playlist available");
+
+        return;
+    }
+
+    aiMemory.currentIndex++;
+
+    if(aiMemory.currentIndex >= aiMemory.currentPlaylist.length){
+
+        aiMemory.currentIndex = 0;
+    }
+
+    const nextFile =
+        aiMemory.currentPlaylist[aiMemory.currentIndex];
+
+    speak("Opening next recording");
+
+    openFile(encodeURIComponent(nextFile));
+}
+/* ================= FIND LATEST FILE ================= */
+
+function findLatestMatchingFile(keywords){
+
+    const matches = allFiles.filter(file => {
+
+        const lower = file.toLowerCase();
+
+        return keywords.every(word =>
+            lower.includes(word)
+        );
+
+    });
+
+    if(matches.length === 0){
+        return null;
+    }
+
+    // LATEST FILE ASSUMED LAST IN INDEX
+    return matches[matches.length - 1];
+}
 
 function handleChatQuery(query){
 
@@ -1110,16 +1333,169 @@ function handleChatQuery(query){
 function openFile(file){
 
     if(!file){
+
         speak("File not found");
+
         return;
     }
 
-    speak("Opening " + file);
+    const decodedFile = decodeURIComponent(file);
 
-    window.open("/media/" + encodeURIComponent(file), "_blank");
+    aiMemory.lastOpenedFile = decodedFile;
 
+    aiMemory.recentFiles.unshift(decodedFile);
+
+    const type = getFileType(decodedFile);
+
+    const url =
+        "/media/" + encodeURIComponent(decodedFile);
+
+    speak("Opening " + decodedFile);
+
+    // CREATE PLAYLIST
+    aiMemory.currentPlaylist = allFiles.filter(f => {
+
+        return getFileType(f) === type;
+
+    });
+
+    aiMemory.currentIndex =
+        aiMemory.currentPlaylist.indexOf(decodedFile);
+
+    const modal =
+        document.getElementById("aiPlayerModal");
+
+    const container =
+        document.getElementById("playerContainer");
+
+    // IF PLAYER MODAL NOT PRESENT
+    if(!modal || !container){
+
+        window.open(url, "_blank");
+
+        return;
+    }
+
+    container.innerHTML = "";
+
+    /* ================= VIDEO ================= */
+
+    if(type === "video"){
+
+        container.innerHTML = `
+            <video controls autoplay
+            style="
+                max-width:90vw;
+                max-height:90vh;
+                border-radius:12px;
+            ">
+                <source src="${url}">
+            </video>
+        `;
+
+        modal.style.display = "flex";
+
+        aiMemory.currentPlayer =
+            container.querySelector("video");
+    }
+
+    /* ================= AUDIO ================= */
+
+    else if(type === "audio"){
+
+        container.innerHTML = `
+            <audio controls autoplay
+            style="width:80vw;">
+                <source src="${url}">
+            </audio>
+        `;
+
+        modal.style.display = "flex";
+
+        aiMemory.currentPlayer =
+            container.querySelector("audio");
+    }
+
+    /* ================= IMAGE ================= */
+
+    else if(type === "image"){
+
+        container.innerHTML = `
+            <img
+                src="${url}"
+                style="
+                    max-width:90vw;
+                    max-height:90vh;
+                    border-radius:20px;
+                "
+            >
+        `;
+
+        modal.style.display = "flex";
+    }
+
+    /* ================= PDF ================= */
+
+    else if(type === "pdf"){
+
+        container.innerHTML = `
+            <iframe
+                src="${url}"
+                style="
+                    width:95vw;
+                    height:95vh;
+                    border:none;
+                    background:white;
+                    border-radius:12px;
+                ">
+            </iframe>
+        `;
+
+        modal.style.display = "flex";
+    }
+
+    /* ================= OTHER FILES ================= */
+
+    else{
+
+        window.open(url, "_blank");
+
+    }
+
+    /* ================= AI RECOMMENDATIONS ================= */
+
+    const recommendations =
+        recommendFiles(decodedFile);
+
+    if(recommendations.length > 0){
+
+        setTimeout(()=>{
+
+            const body =
+                document.getElementById("chatBody");
+
+            body.innerHTML += `
+                <div style="
+                    margin-top:15px;
+                    color:#38bdf8;
+                ">
+                    <b>AI Recommendations:</b>
+
+                    <ul>
+                        ${recommendations.map(r =>
+                            `<li>${r}</li>`
+                        ).join("")}
+                    </ul>
+                </div>
+            `;
+
+            speak(
+                "I also found related files you may like"
+            );
+
+        },4000);
+    }
 }
-
 
 /* ================= CHAT ================= */
 
@@ -1258,30 +1634,40 @@ function startVoice(){
 
 }
 
+/* ================= REAL METRICS ================= */
 
-/* ================= METRICS ================= */
+async function fetchMetrics(){
 
-function fetchMetrics(){
+    try{
 
-    let cpu = Math.floor(Math.random()*40+30);
-    let mem = Math.floor(Math.random()*30+50);
-    let pods = Math.floor(Math.random()*5+3);
+        const response =
+            await fetch("/api/metrics");
 
-    document.getElementById("cpu").innerText = cpu + "%";
-    document.getElementById("memory").innerText = mem + "%";
-    document.getElementById("pods").innerText = pods;
+        const data = await response.json();
 
-    if(pods < 3){
-        document.getElementById("health").innerText = "Warning";
-    } else {
-        document.getElementById("health").innerText = "Healthy";
+        document.getElementById("cpu").innerText =
+            data.cpu;
+
+        document.getElementById("memory").innerText =
+            data.memory;
+
+        document.getElementById("pods").innerText =
+            data.pods;
+
+        document.getElementById("health").innerText =
+            data.health;
+
     }
+    catch(err){
 
+        console.log("Metrics fetch failed", err);
+
+    }
 }
 
-setInterval(fetchMetrics, 3000);
-fetchMetrics();
+setInterval(fetchMetrics, 5000);
 
+fetchMetrics();
 
 /* ================= PARTICLES ================= */
 
@@ -1295,6 +1681,36 @@ particlesJS("particles-js",{
 });
 
 </script>
+
+<div id="aiPlayerModal" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.9);
+    z-index:999999;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+">
+
+    <button onclick="closePlayer()"
+    style="
+        position:absolute;
+        top:20px;
+        right:20px;
+        background:red;
+        color:white;
+        border:none;
+        padding:10px 20px;
+        border-radius:10px;
+        cursor:pointer;
+    ">
+        CLOSE
+    </button>
+
+    <div id="playerContainer"></div>
+
+</div>
 
 </body>
 </html>

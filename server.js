@@ -160,6 +160,101 @@ app.get('/api/visitors', (req, res) => {
   );
 });
 
+const os = require("os");
+
+app.get("/api/metrics", async (req, res) => {
+
+    try{
+
+        const totalMem = os.totalmem();
+
+        const freeMem = os.freemem();
+
+        const usedMem =
+            ((totalMem - freeMem) / totalMem) * 100;
+
+        const cpuLoad =
+            os.loadavg()[0] * 100;
+
+        const filesCount =
+            allFiles ? allFiles.length : 0;
+
+        res.json({
+
+            cpu: cpuLoad.toFixed(1) + "%",
+
+            memory: usedMem.toFixed(1) + "%",
+
+            pods: "1",
+
+            health: "Healthy",
+
+            files: filesCount
+
+        });
+
+    }
+    catch(err){
+
+        res.json({
+
+            cpu: "N/A",
+            memory: "N/A",
+            pods: "N/A",
+            health: "Unavailable"
+
+        });
+
+    }
+
+});
+
+const { exec } = require("child_process");
+
+app.get("/api/metrics", (req, res) => {
+
+    exec(
+        "kubectl top nodes --no-headers && kubectl get pods --all-namespaces --field-selector=status.phase=Running --no-headers | wc -l",
+        (error, stdout, stderr) => {
+
+            if(error){
+
+                return res.json({
+                    cpu: "N/A",
+                    memory: "N/A",
+                    pods: 0,
+                    health: "Unavailable"
+                });
+            }
+
+            const lines = stdout.trim().split("\n");
+
+            let cpu = "0%";
+            let memory = "0%";
+
+            if(lines.length > 0){
+
+                const parts =
+                    lines[0].split(/\s+/);
+
+                cpu = parts[2] || "0%";
+                memory = parts[4] || "0%";
+            }
+
+            const pods =
+                parseInt(lines[lines.length - 1]) || 0;
+
+            res.json({
+                cpu,
+                memory,
+                pods,
+                health: pods > 0 ? "Healthy" : "Warning"
+            });
+
+        }
+    );
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
