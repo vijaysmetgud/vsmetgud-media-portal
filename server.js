@@ -161,8 +161,6 @@ app.get('/api/visitors', (req, res) => {
 });
 
 const os = require("os");
-
-const os = require("os");
 const https = require("https");
 const fs = require("fs");
 
