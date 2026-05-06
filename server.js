@@ -250,21 +250,25 @@ echo "$DISK"
             // ===============================
             // DISK
             // ===============================
+            
+            console.log("DISK SECTION:", diskSection);
 
             const diskParts =
-                diskSection.split(/\s+/);
+                diskSection.trim().split(/\s+/);
+
+            console.log("DISK PARTS:", diskParts);
 
             const diskTotal =
-                diskParts[1];
+                diskParts[1] || "N/A";
 
             const diskUsed =
-                diskParts[2];
+                diskParts[2] || "N/A";
 
             const diskFree =
-                diskParts[3];
+                diskParts[3] || "N/A";
 
             const diskUsage =
-                diskParts[4];
+                diskParts[4] || "N/A";
 
             // ===============================
             // RESPONSE

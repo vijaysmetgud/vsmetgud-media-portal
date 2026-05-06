@@ -112,39 +112,20 @@ header h1 {
 
 .metrics{
 
-    position:fixed;
-
-    top:120px;
-
-    right:20px;
-
-    width:420px;
-
-    max-height:80vh;
-
-    overflow:auto;
-
-    z-index:9999;
-
-    cursor:move;
-
-    background:rgba(15,23,42,0.92);
-
-    padding:14px;
-
-    border-radius:18px;
-
-    backdrop-filter:blur(10px);
-
-    box-shadow:
-        0 8px 25px rgba(0,0,0,0.4);
-
     display:grid;
 
     grid-template-columns:
-        repeat(2,1fr);
+        repeat(auto-fit, minmax(160px, 1fr));
 
     gap:12px;
+
+    margin-top:20px;
+
+    padding:12px;
+
+    cursor:move;
+
+    position:relative;
 }
 
 /* ================= MAIN CONTENT SPACING ================= */
@@ -529,60 +510,62 @@ style="
 ">
 </div> -->
 
-<div class="metrics" id="metricsPane"></div>    
+<div id="metricsWindow">
 
-    <div class="metric">
-        <h3>CPU Usage</h3>
-        <div class="counter" id="cpu">0%</div>
-    </div>
+    <div class="metrics" id="metricsPane"> 
 
-    <div class="metric">
-        <h3>Memory Usage</h3>
-        <div class="counter" id="memory">0%</div>
-    </div>
+        <div class="metric">
+            <h3>CPU Usage</h3>
+            <div class="counter" id="cpu">0%</div>
+        </div>
 
-    <div class="metric">
-        <h3>Pods Running</h3>
-        <div class="counter" id="pods">0</div>
-    </div>
+        <div class="metric">
+            <h3>Memory Usage</h3>
+            <div class="counter" id="memory">0%</div>
+        </div>
 
-    <div class="metric">
-        <h3>Pod Health</h3>
-        <div class="counter" id="health">Healthy</div>
-    </div>
+        <div class="metric">
+            <h3>Pods Running</h3>
+            <div class="counter" id="pods">0</div>
+        </div>
 
-    <div class="metric">
-        <h3>Visitor Hits</h3>
-        <div class="counter" id="hits">0</div>
-    </div>
+        <div class="metric">
+            <h3>Pod Health</h3>
+            <div class="counter" id="health">Healthy</div>
+        </div>
 
-    <div class="metric">
-        <h3>Unique Visitors</h3>
-        <div class="counter" id="uniqueVisitors">0</div>
-    </div>
+        <div class="metric">
+            <h3>Visitor Hits</h3>
+            <div class="counter" id="hits">0</div>
+        </div>
 
-    <!-- ===================== -->
-    <!-- DISK METRICS -->
-    <!-- ===================== -->
+        <div class="metric">
+            <h3>Unique Visitors</h3>
+            <div class="counter" id="uniqueVisitors">0</div>
+        </div>
 
-    <div class="metric">
-        <h3>DISK TOTAL</h3>
-        <div class="counter" id="diskTotal">Loading...</div>
-    </div>
+        <!-- DISK METRICS -->
 
-    <div class="metric">
-        <h3>DISK USED</h3>
-        <div class="counter" id="diskUsed">Loading...</div>
-    </div>
+        <div class="metric">
+            <h3>DISK TOTAL</h3>
+            <div class="counter" id="diskTotal">Loading...</div>
+        </div>
 
-    <div class="metric">
-        <h3>DISK FREE</h3>
-        <div class="counter" id="diskFree">Loading...</div>
-    </div>
+        <div class="metric">
+            <h3>DISK USED</h3>
+            <div class="counter" id="diskUsed">Loading...</div>
+        </div>
 
-    <div class="metric">
-        <h3>DISK USAGE</h3>
-        <div class="counter" id="diskUsage">Loading...</div>
+        <div class="metric">
+            <h3>DISK FREE</h3>
+            <div class="counter" id="diskFree">Loading...</div>
+        </div>
+
+        <div class="metric">
+            <h3>DISK USAGE</h3>
+            <div class="counter" id="diskUsage">Loading...</div>
+        </div>
+
     </div>
 
 </div>
