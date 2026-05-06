@@ -83,7 +83,7 @@ sudo systemctl enable cloudflared
 ADDED CLOCK AT THE TOP OF THE DASHBOARD
 
 
-
+Manually install METRICS SERVER IN KUBERNETES CLUSTER
 Install Metrics Server:
 
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
