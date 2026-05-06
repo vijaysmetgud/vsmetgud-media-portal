@@ -110,19 +110,41 @@ header h1 {
 
 /* ================= METRICS SIDEBAR ================= */
 
-.metrics {
-    position: fixed;
-    left: 20px;
-    top: 120px;              /* moved up to avoid overlap */
-    width: 240px;
+.metrics{
 
-    background: rgba(30,41,59,0.9);
-    backdrop-filter: blur(15px);
+    position:fixed;
 
-    padding: 25px;
-    border-radius: 20px;
+    top:120px;
 
-    box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+    right:20px;
+
+    width:420px;
+
+    max-height:80vh;
+
+    overflow:auto;
+
+    z-index:9999;
+
+    cursor:move;
+
+    background:rgba(15,23,42,0.92);
+
+    padding:14px;
+
+    border-radius:18px;
+
+    backdrop-filter:blur(10px);
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,0.4);
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(2,1fr);
+
+    gap:12px;
 }
 
 /* ================= MAIN CONTENT SPACING ================= */
@@ -507,63 +529,84 @@ style="
 ">
 </div> -->
 
-<div class="metric-card">
-    <h3>DISK TOTAL</h3>
-    <p id="diskTotal">Loading...</p>
+<div class="metrics" id="metricsPane"></div>    
+
+    <div class="metric">
+        <h3>CPU Usage</h3>
+        <div class="counter" id="cpu">0%</div>
+    </div>
+
+    <div class="metric">
+        <h3>Memory Usage</h3>
+        <div class="counter" id="memory">0%</div>
+    </div>
+
+    <div class="metric">
+        <h3>Pods Running</h3>
+        <div class="counter" id="pods">0</div>
+    </div>
+
+    <div class="metric">
+        <h3>Pod Health</h3>
+        <div class="counter" id="health">Healthy</div>
+    </div>
+
+    <div class="metric">
+        <h3>Visitor Hits</h3>
+        <div class="counter" id="hits">0</div>
+    </div>
+
+    <div class="metric">
+        <h3>Unique Visitors</h3>
+        <div class="counter" id="uniqueVisitors">0</div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- DISK METRICS -->
+    <!-- ===================== -->
+
+    <div class="metric">
+        <h3>DISK TOTAL</h3>
+        <div class="counter" id="diskTotal">Loading...</div>
+    </div>
+
+    <div class="metric">
+        <h3>DISK USED</h3>
+        <div class="counter" id="diskUsed">Loading...</div>
+    </div>
+
+    <div class="metric">
+        <h3>DISK FREE</h3>
+        <div class="counter" id="diskFree">Loading...</div>
+    </div>
+
+    <div class="metric">
+        <h3>DISK USAGE</h3>
+        <div class="counter" id="diskUsage">Loading...</div>
+    </div>
+
 </div>
 
-<div class="metric-card">
-    <h3>DISK USED</h3>
-    <p id="diskUsed">Loading...</p>
-</div>
+<div id="visitorDetails" style="
+    margin-top:20px;
+    background:rgba(30,41,59,0.9);
+    padding:16px;
+    border-radius:18px;
+    max-height:260px;
+    overflow:auto;
+">
+    <h3 style="
+        margin-top:0;
+        color:#cbd5e1;
+    ">
+        Recent Visitor Hits
+    </h3>
 
-<div class="metric-card">
-    <h3>DISK FREE</h3>
-    <p id="diskFree">Loading...</p>
+    <div id="visitorList" style="
+        font-size:13px;
+        color:#e2e8f0;
+    "></div>
 </div>
-
-<div class="metric-card">
-    <h3>DISK USAGE</h3>
-    <p id="diskUsage">Loading...</p>
-</div>
-
-<div class="metrics">
-<div class="metric">
-<h3>CPU Usage</h3>
-<div class="counter" id="cpu">0%</div>
-</div>
-
-<div class="metric">
-<h3>Memory Usage</h3>
-<div class="counter" id="memory">0%</div>
-</div>
-
-<div class="metric">
-<h3>Pods Running</h3>
-<div class="counter" id="pods">0</div>
-</div>
-
-<div class="metric">
-<h3>Pod Health</h3>
-<div class="counter" id="health">Healthy</div>
-</div>
-
-<div class="metric">
-<h3>Visitor Hits</h3>
-<div class="counter" id="hits">0</div>
-</div>
-
-<div class="metric">
-<h3>Unique Visitors</h3>
-<div class="counter" id="uniqueVisitors">0</div>
-</div>
-</div>
-
-<div id="visitorDetails" style="margin-top:20px;background:rgba(30,41,59,0.9);padding:16px;border-radius:18px;max-height:260px;overflow:auto;">
-    <h3 style="margin-top:0;color:#cbd5e1;">Recent Visitor Hits</h3>
-    <div id="visitorList" style="font-size:13px;color:#e2e8f0;"></div>
-</div>
-
 <div class="chatbot" id="chatbox">
 <div class="chatbot-header">
 <span>DevOps AI</span>
@@ -1581,6 +1624,47 @@ function toggleTheme() {
         localStorage.setItem("theme", "dark");
     }
 }
+
+/* ================= DRAGGABLE METRICS ================= */
+
+const metricsPane =
+    document.getElementById("metricsPane");
+
+let isDragging = false;
+
+let offsetX = 0;
+
+let offsetY = 0;
+
+metricsPane.addEventListener("mousedown", (e)=>{
+
+    isDragging = true;
+
+    offsetX =
+        e.clientX - metricsPane.offsetLeft;
+
+    offsetY =
+        e.clientY - metricsPane.offsetTop;
+
+});
+
+document.addEventListener("mousemove", (e)=>{
+
+    if(!isDragging) return;
+
+    metricsPane.style.left =
+        (e.clientX - offsetX) + "px";
+
+    metricsPane.style.top =
+        (e.clientY - offsetY) + "px";
+
+});
+
+document.addEventListener("mouseup", ()=>{
+
+    isDragging = false;
+
+});
 
 /* Load saved theme */
 window.addEventListener("DOMContentLoaded", () => {
