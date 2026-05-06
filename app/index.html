@@ -579,8 +579,8 @@ function updateUserProfile(user) {
 
 const localUsers = [
     {
-        username: 'admin',
-        password: 'admin123',
+        username: 'a',
+        password: 'a',
         name: 'Admin User',
         email: 'admin@example.com',
         picture: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon'
@@ -988,20 +988,161 @@ function renderSearchResults(files, query){
 }
 
 function handleChatQuery(query){
+
     const body = document.getElementById('chatBody');
+
     if(!body){
         return;
     }
 
     const trimmed = query.trim();
+
     if(!trimmed){
-        body.innerHTML += `<div style='color:red'><b>AI:</b> Please provide a search query.</div>`;
-        body.scrollTop = body.scrollHeight;
+
+        const msg = "Please tell me a file name to search.";
+
+        body.innerHTML += `
+            <div style='color:red'>
+                <b>AI:</b> ${msg}
+            </div>
+        `;
+
+        speak(msg);
+
         return;
     }
 
-    const matches = findMatchingFiles(trimmed);
-    renderSearchResults(matches, trimmed);
+    // BREAK QUERY INTO KEYWORDS
+    const keywords = trimmed
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(word => word.length > 1);
+
+    // SCORE FILES
+    const scoredFiles = allFiles.map(file => {
+
+        const lowerFile = file.toLowerCase();
+
+        let score = 0;
+
+        keywords.forEach(word => {
+
+            if(lowerFile.includes(word)){
+                score++;
+            }
+
+        });
+
+        return {
+            file,
+            score
+        };
+
+    });
+
+    // KEEP MATCHES
+    const matches = scoredFiles
+        .filter(item => item.score > 0)
+        .sort((a,b) => b.score - a.score)
+        .slice(0,10);
+
+    // NO MATCH
+    if(matches.length === 0){
+
+        const msg =
+            `Sorry, I could not find any matching file for ${trimmed}`;
+
+        body.innerHTML += `
+            <div style='color:red'>
+                <b>AI:</b> ${msg}
+            </div>
+        `;
+
+        speak(msg);
+
+        body.scrollTop = body.scrollHeight;
+
+        return;
+    }
+
+    // EXACT/BEST MATCH AUTO OPEN
+    if(matches[0].score >= keywords.length){
+
+        const bestFile = matches[0].file;
+
+        const msg =
+            `I found the best matching file.
+             Opening ${bestFile}`;
+
+        body.innerHTML += `
+            <div style='color:#22c55e'>
+                <b>AI:</b> ${msg}
+            </div>
+        `;
+
+        speak(msg);
+
+        setTimeout(() => {
+            window.open(
+                "/media/" + encodeURIComponent(bestFile),
+                "_blank"
+            );
+        }, 1500);
+
+        return;
+    }
+
+    // MULTIPLE MATCHES
+    const msg =
+        `I found multiple matching files.
+         Please choose one to open.`;
+
+    speak(msg);
+
+    const listItems = matches.map((item,index) => `
+
+        <div style="
+            margin:8px 0;
+            padding:10px;
+            background:#334155;
+            border-radius:8px;
+        ">
+
+            <div style="
+                margin-bottom:6px;
+                color:white;
+                word-break:break-word;
+            ">
+                ${index + 1}. ${escapeHtml(item.file)}
+            </div>
+
+            <button
+                onclick="openFile('${encodeURIComponent(item.file)}')"
+                style="
+                    background:#22c55e;
+                    border:none;
+                    padding:6px 12px;
+                    border-radius:6px;
+                    color:white;
+                    cursor:pointer;
+                "
+            >
+                Open
+            </button>
+
+        </div>
+
+    `).join('');
+
+    body.innerHTML += `
+        <div style='color:#22c55e'>
+            <b>AI:</b> ${msg}
+        </div>
+
+        ${listItems}
+    `;
+
+    body.scrollTop = body.scrollHeight;
 }
 
 /* ================= OPEN FILE ================= */
