@@ -17,7 +17,7 @@ persistence:
   #hostPath: /mnt/media
 
 ingress:
-  enabled: false
+  enabled: true
   className: nginx
   host: vsmetgud.online
 
