@@ -1664,6 +1664,10 @@ async function fetchMetrics(){
 
         const data = await response.json();
 
+        // ===============================
+        // CPU / MEMORY / PODS
+        // ===============================
+
         document.getElementById("cpu").innerText =
             data.cpu;
 
@@ -1675,6 +1679,22 @@ async function fetchMetrics(){
 
         document.getElementById("health").innerText =
             data.health;
+
+        // ===============================
+        // DISK METRICS
+        // ===============================
+
+        document.getElementById("diskTotal").innerText =
+            data.diskTotal;
+
+        document.getElementById("diskUsed").innerText =
+            data.diskUsed;
+
+        document.getElementById("diskFree").innerText =
+            data.diskFree;
+
+        document.getElementById("diskUsage").innerText =
+            data.diskUsage;
 
     }
     catch(err){
