@@ -13,7 +13,8 @@ service:
 persistence:
   enabled: true
   mountPath: /usr/src/app/media
-  hostPath: /mnt/media
+  hostPath: /media/sf_e-drive
+  #hostPath: /mnt/media
 
 ingress:
   enabled: false
