@@ -161,221 +161,170 @@ app.get('/api/visitors', (req, res) => {
 });
 
 const os = require("os");
-const https = require("https");
+const { exec } = require("child_process");
 
-app.get("/api/metrics", async (req, res) => {
+app.get("/api/metrics", (req, res) => {
 
-    try{
+    const totalMem = os.totalmem();
 
-        const totalMem = os.totalmem();
+    const freeMem = os.freemem();
 
-        const freeMem = os.freemem();
+    const usedMem =
+        ((totalMem - freeMem) / totalMem) * 100;
 
-        const usedMem =
-            ((totalMem - freeMem) / totalMem) * 100;
+    const cpuLoad =
+        os.loadavg()[0] * 100;
 
-        const cpuLoad =
-            os.loadavg()[0] * 100;
+    const command = `
+TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
-        // ===============================
-        // KUBERNETES API
-        // ===============================
+PODS=$(wget -qO- \
+--header="Authorization: Bearer $TOKEN" \
+--no-check-certificate \
+https://kubernetes.default.svc/api/v1/pods)
 
-        const token =
-            fs.readFileSync(
-                "/var/run/secrets/kubernetes.io/serviceaccount/token",
-                "utf8"
-            );
+DISK=$(df -h / | tail -1)
 
-        const options = {
+echo "===PODS==="
+echo "$PODS"
 
-            hostname: "kubernetes.default.svc",
+echo "===DISK==="
+echo "$DISK"
+`;
 
-            path: "/api/v1/pods",
+    exec(command, (error, stdout, stderr) => {
 
-            method: "GET",
+        if(error){
 
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
+            console.log("K8S API ERROR:", error);
 
-            rejectUnauthorized: false
-        };
-
-        const request = https.request(options, apiRes => {
-
-            let data = "";
-
-            apiRes.on("data", chunk => {
-                data += chunk;
-            });
-
-            apiRes.on("end", () => {
-
-                try{
-
-                    const json = JSON.parse(data);
-
-                    // ONLY RUNNING PODS
-                    const runningPods =
-                        json.items.filter(
-                            pod =>
-                                pod.status.phase === "Running"
-                        ).length;
-
-                    res.json({
-
-                        cpu:
-                            cpuLoad.toFixed(1) + "%",
-
-                        memory:
-                            usedMem.toFixed(1) + "%",
-
-                        pods: runningPods,
-
-                        health:
-                            runningPods > 0
-                            ? "Healthy"
-                            : "Warning"
-
-                    });
-
-                }
-                catch(err){
-
-                    res.json({
-
-                        cpu: "N/A",
-                        memory: "N/A",
-                        pods: "N/A",
-                        health: "Unavailable"
-
-                    });
-
-                }
-
-            });
-
-        });
-
-        request.on("error", err => {
-
-            res.json({
+            return res.json({
 
                 cpu: "N/A",
+
                 memory: "N/A",
+
                 pods: "N/A",
+
+                diskTotal: "N/A",
+
+                diskUsed: "N/A",
+
+                diskFree: "N/A",
+
+                diskUsage: "N/A",
+
                 health: "Unavailable"
 
             });
 
-        });
+        }
 
-        request.end();
+        try{
 
-    }
-    catch(err){
+            // ===============================
+            // SPLIT OUTPUT
+            // ===============================
 
-        res.json({
+            const podSection =
+                stdout.split("===DISK===")[0]
+                .replace("===PODS===","")
+                .trim();
 
-            cpu: "N/A",
-            memory: "N/A",
-            pods: "N/A",
-            health: "Unavailable"
+            const diskSection =
+                stdout.split("===DISK===")[1]
+                .trim();
 
-        });
+            // ===============================
+            // PODS
+            // ===============================
 
-    }
+            const data = JSON.parse(podSection);
+
+            const runningPods =
+                data.items.filter(
+                    pod =>
+                        pod.status.phase === "Running"
+                ).length;
+
+            // ===============================
+            // DISK
+            // ===============================
+
+            const diskParts =
+                diskSection.split(/\s+/);
+
+            const diskTotal =
+                diskParts[1];
+
+            const diskUsed =
+                diskParts[2];
+
+            const diskFree =
+                diskParts[3];
+
+            const diskUsage =
+                diskParts[4];
+
+            // ===============================
+            // RESPONSE
+            // ===============================
+
+            res.json({
+
+                cpu:
+                    cpuLoad.toFixed(1) + "%",
+
+                memory:
+                    usedMem.toFixed(1) + "%",
+
+                pods: runningPods,
+
+                diskTotal,
+
+                diskUsed,
+
+                diskFree,
+
+                diskUsage,
+
+                health:
+                    runningPods > 0
+                    ? "Healthy"
+                    : "Warning"
+
+            });
+
+        }
+        catch(err){
+
+            console.log("JSON PARSE ERROR:", err);
+
+            res.json({
+
+                cpu: "N/A",
+
+                memory: "N/A",
+
+                pods: "N/A",
+
+                diskTotal: "N/A",
+
+                diskUsed: "N/A",
+
+                diskFree: "N/A",
+
+                diskUsage: "N/A",
+
+                health: "Unavailable"
+
+            });
+
+        }
+
+    });
 
 });
-
-// app.get("/api/metrics", async (req, res) => {
-
-//     try{
-
-//         const totalMem = os.totalmem();
-
-//         const freeMem = os.freemem();
-
-//         const usedMem =
-//             ((totalMem - freeMem) / totalMem) * 100;
-
-//         const cpuLoad =
-//             os.loadavg()[0] * 100;
-
-//         res.json({
-
-//             cpu: cpuLoad.toFixed(1) + "%",
-
-//             memory: usedMem.toFixed(1) + "%",
-
-//             pods: "1",
-
-//             health: "Healthy"
-
-//         });
-
-//     }
-//     catch(err){
-
-//         res.json({
-
-//             cpu: "N/A",
-//             memory: "N/A",
-//             pods: "N/A",
-//             health: "Unavailable"
-
-//         });
-
-//     }
-
-// });
-
-// const { exec } = require("child_process");
-
-// app.get("/api/metrics", (req, res) => {
-
-//     exec(
-//         "kubectl top nodes --no-headers && kubectl get pods --all-namespaces --field-selector=status.phase=Running --no-headers | wc -l",
-//         (error, stdout, stderr) => {
-
-//             if(error){
-
-//                 return res.json({
-//                     cpu: "N/A",
-//                     memory: "N/A",
-//                     pods: 0,
-//                     health: "Unavailable"
-//                 });
-//             }
-
-//             const lines = stdout.trim().split("\n");
-
-//             let cpu = "0%";
-//             let memory = "0%";
-
-//             if(lines.length > 0){
-
-//                 const parts =
-//                     lines[0].split(/\s+/);
-
-//                 cpu = parts[2] || "0%";
-//                 memory = parts[4] || "0%";
-//             }
-
-//             const pods =
-//                 parseInt(lines[lines.length - 1]) || 0;
-
-//             res.json({
-//                 cpu,
-//                 memory,
-//                 pods,
-//                 health: pods > 0 ? "Healthy" : "Warning"
-//             });
-
-//         }
-//     );
-// });
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
