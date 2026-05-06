@@ -939,22 +939,47 @@ function findMatchingFiles(query){
         return terms.every(term => lower.includes(term));
     });
 }
-
 function renderSearchResults(files, query){
+
     const body = document.getElementById('chatBody');
+
     if(!body){
         return;
     }
 
     if(files.length === 0){
-        body.innerHTML += `<div style='color:red'><b>AI:</b> No files found for “${escapeHtml(query)}”.</div>`;
+
+        const message = `Sorry, I could not find any files matching ${query}`;
+
+        body.innerHTML += `
+            <div style='color:red'>
+                <b>AI:</b> ${message}
+            </div>
+        `;
+
+        speak(message);
+
     } else {
+
+        const message = `Found ${files.length} matching files for ${query}`;
+
+        speak(message);
+
         const listItems = files.map(file =>
-            `<div style='margin:6px 0;'><a href='/media/${encodeURIComponent(file)}' target='_blank' style='color:#38bdf8;text-decoration:none;'>${escapeHtml(file)}</a></div>`
+            `<div style='margin:6px 0;'>
+                <a href='/media/${encodeURIComponent(file)}'
+                   target='_blank'
+                   style='color:#38bdf8;text-decoration:none;'>
+                   ${escapeHtml(file)}
+                </a>
+            </div>`
         ).join('');
 
         body.innerHTML += `
-            <div style='color:#22c55e'><b>AI:</b> Found ${files.length} matching file${files.length === 1 ? '' : 's'} for “${escapeHtml(query)}”:</div>
+            <div style='color:#22c55e'>
+                <b>AI:</b> ${message}
+            </div>
+
             ${listItems}
         `;
     }
