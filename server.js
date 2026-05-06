@@ -160,11 +160,6 @@ app.get('/api/visitors', (req, res) => {
   );
 });
 
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
-const sqlite3 = require('sqlite3').verbose();
-
 const os = require("os");
 const https = require("https");
 
