@@ -208,13 +208,27 @@ nav, .welcome, .chatbot {
 }
 
 #clock {
+
   position: fixed;
+
   top: 20px;
+
   left: 50%;
+
   transform: translateX(-50%);
+
   z-index: 99999;
 
   color: #00ffcc;
-  font-size: 50px;
-  font-weight: 300;
+
+  font-size: 48px;
+
+  font-weight: 700;
+
+  letter-spacing: 2px;
+
+  text-shadow:
+      0 0 10px rgba(0,255,204,0.7);
+
+  cursor: pointer;
 }

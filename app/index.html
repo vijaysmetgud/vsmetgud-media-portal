@@ -386,6 +386,79 @@ body {
     cursor:pointer;
     display:none;
 }
+#reminderPopup{
+
+    display:none;
+
+    position:fixed;
+
+    top:90px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    background:
+        rgba(15,23,42,0.96);
+
+    padding:20px;
+
+    border-radius:18px;
+
+    z-index:999999;
+
+    width:280px;
+
+    color:white;
+
+    box-shadow:
+        0 0 25px rgba(0,255,204,0.25);
+}
+
+#reminderPopup input{
+
+    width:100%;
+
+    margin-top:10px;
+
+    padding:10px;
+
+    border:none;
+
+    border-radius:10px;
+
+    outline:none;
+}
+
+#reminderPopup button{
+
+    width:100%;
+
+    margin-top:14px;
+
+    padding:10px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#00ffcc;
+
+    color:black;
+
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+#reminderPopup label{
+
+    display:block;
+
+    margin-top:12px;
+
+    font-size:14px;
+}
 
 </style>
 </head>
@@ -420,6 +493,30 @@ body {
     </div>
 
     <div id="clock"></div>
+    <div id="reminderPopup">
+
+    <h3>Set Reminder</h3>
+
+    <label>Reminder Time</label>
+
+    <input
+        type="time"
+        id="reminderTime"
+    >
+
+    <label>Reminder Message</label>
+
+    <input
+        type="text"
+        id="reminderText"
+        placeholder="Reminder message"
+    >
+
+    <button onclick="setReminder()">
+        Set Notification
+    </button>
+
+</div>
 
 <script>
 function updateClock() {
@@ -439,6 +536,72 @@ updateClock();
 
 // run every second
 setInterval(updateClock, 1000);
+
+/* ================= CLOCK REMINDER ================= */
+
+const clock =
+    document.getElementById("clock");
+
+const reminderPopup =
+    document.getElementById("reminderPopup");
+
+clock.addEventListener("click", ()=>{
+
+    reminderPopup.style.display =
+        reminderPopup.style.display === "block"
+        ? "none"
+        : "block";
+
+});
+
+function setReminder(){
+
+    const time =
+        document.getElementById("reminderTime").value;
+
+    const text =
+        document.getElementById("reminderText").value;
+
+    if(!time){
+
+        alert("Please select reminder time");
+
+        return;
+    }
+
+    Notification.requestPermission();
+
+    const interval = setInterval(()=>{
+
+        const now = new Date();
+
+        const current =
+            now.getHours().toString().padStart(2,"0")
+            + ":"
+            +
+            now.getMinutes().toString().padStart(2,"0");
+
+        if(current === time){
+
+            new Notification(
+                text || "Reminder Alert!"
+            );
+
+            speak(text || "Reminder Alert");
+
+            alert(text || "Reminder Alert!");
+
+            clearInterval(interval);
+        }
+
+    },1000);
+
+    alert("Reminder set successfully");
+
+    reminderPopup.style.display =
+        "none";
+}
+
 </script>
 
 <div class="theme-toggle" onclick="toggleTheme()">🌙 Toggle Theme</div>
