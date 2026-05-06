@@ -999,7 +999,7 @@ function handleChatQuery(query){
 
     if(!trimmed){
 
-        const msg = "Please tell me a file name to search.";
+        const msg = "Please tell me a file name.";
 
         body.innerHTML += `
             <div style='color:red'>
@@ -1012,14 +1012,17 @@ function handleChatQuery(query){
         return;
     }
 
-    // BREAK QUERY INTO KEYWORDS
+    // SPLIT QUERY INTO KEYWORDS
     const keywords = trimmed
         .toLowerCase()
         .split(/\s+/)
         .filter(word => word.length > 1);
 
-    // SCORE FILES
-    const scoredFiles = allFiles.map(file => {
+    let bestFile = null;
+    let bestScore = 0;
+
+    // SEARCH FILES
+    allFiles.forEach(file => {
 
         const lowerFile = file.toLowerCase();
 
@@ -1033,24 +1036,26 @@ function handleChatQuery(query){
 
         });
 
-        return {
-            file,
-            score
-        };
+        // EXTRA BOOST FOR EXACT PHRASE
+        if(lowerFile.includes(trimmed.toLowerCase())){
+            score += 5;
+        }
+
+        // KEEP BEST MATCH
+        if(score > bestScore){
+
+            bestScore = score;
+            bestFile = file;
+
+        }
 
     });
 
-    // KEEP MATCHES
-    const matches = scoredFiles
-        .filter(item => item.score > 0)
-        .sort((a,b) => b.score - a.score)
-        .slice(0,10);
-
-    // NO MATCH
-    if(matches.length === 0){
+    // REQUIRE AT LEAST 3 KEYWORD MATCHES
+    if(!bestFile || bestScore < 3){
 
         const msg =
-            `Sorry, I could not find any matching file for ${trimmed}`;
+            `Sorry. I could not find a confident match for ${trimmed}`;
 
         body.innerHTML += `
             <div style='color:red'>
@@ -1065,84 +1070,39 @@ function handleChatQuery(query){
         return;
     }
 
-    // EXACT/BEST MATCH AUTO OPEN
-    if(matches[0].score >= keywords.length){
-
-        const bestFile = matches[0].file;
-
-        const msg =
-            `I found the best matching file.
-             Opening ${bestFile}`;
-
-        body.innerHTML += `
-            <div style='color:#22c55e'>
-                <b>AI:</b> ${msg}
-            </div>
-        `;
-
-        speak(msg);
-
-        setTimeout(() => {
-            window.open(
-                "/media/" + encodeURIComponent(bestFile),
-                "_blank"
-            );
-        }, 1500);
-
-        return;
-    }
-
-    // MULTIPLE MATCHES
-    const msg =
-        `I found multiple matching files.
-         Please choose one to open.`;
-
-    speak(msg);
-
-    const listItems = matches.map((item,index) => `
-
-        <div style="
-            margin:8px 0;
-            padding:10px;
-            background:#334155;
-            border-radius:8px;
-        ">
-
-            <div style="
-                margin-bottom:6px;
-                color:white;
-                word-break:break-word;
-            ">
-                ${index + 1}. ${escapeHtml(item.file)}
-            </div>
-
-            <button
-                onclick="openFile('${encodeURIComponent(item.file)}')"
-                style="
-                    background:#22c55e;
-                    border:none;
-                    padding:6px 12px;
-                    border-radius:6px;
-                    color:white;
-                    cursor:pointer;
-                "
-            >
-                Open
-            </button>
-
-        </div>
-
-    `).join('');
+    // AUTO OPEN FILE
+    const msg = `Opening ${bestFile}`;
 
     body.innerHTML += `
         <div style='color:#22c55e'>
             <b>AI:</b> ${msg}
         </div>
 
-        ${listItems}
+        <div style="
+            margin-top:8px;
+            padding:10px;
+            background:#334155;
+            border-radius:8px;
+            color:white;
+            word-break:break-word;
+        ">
+            ${escapeHtml(bestFile)}
+        </div>
     `;
 
+    speak(msg);
+
     body.scrollTop = body.scrollHeight;
+
+    setTimeout(() => {
+
+        window.open(
+            "/media/" + encodeURIComponent(bestFile),
+            "_blank"
+        );
+
+    }, 1200);
+
 }
 
 /* ================= OPEN FILE ================= */
