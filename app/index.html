@@ -1129,7 +1129,7 @@ function renderFiles(files){
         `;
 
         card.onclick = () => {
-            window.open("/media/" + encodeURIComponent(file), "_blank");
+            openFile(file);
         };
 
         container.appendChild(card);
@@ -1444,7 +1444,7 @@ function openNextFile(){
 
     speak("Opening next recording");
 
-    openFile(encodeURIComponent(nextFile));
+    openFile(nextFile);
 }
 /* ================= FIND LATEST FILE ================= */
 
@@ -1533,7 +1533,7 @@ function handleChatQuery(query){
     });
 
     // REQUIRE AT LEAST 3 KEYWORD MATCHES
-    if(!bestFile || bestScore < 3){
+    if(!bestFile || bestScore < 2){
 
         const msg =
             `Sorry. I could not find a confident match for ${trimmed}`;
@@ -1723,6 +1723,56 @@ window.addEventListener("DOMContentLoaded", () => {
 
 let chatOpen = true;
 
+/* ================= SEND MESSAGE ================= */
+
+function sendMessage(){
+
+    const input =
+        document.getElementById("chatInput");
+
+    if(!input){
+        return;
+    }
+
+    const message =
+        input.value.trim();
+
+    if(!message){
+        return;
+    }
+
+    const body =
+        document.getElementById("chatBody");
+
+    // ===============================
+    // SHOW USER MESSAGE
+    // ===============================
+
+    body.innerHTML += `
+        <div style="
+            margin-bottom:10px;
+            color:#38bdf8;
+        ">
+            <b>You:</b> ${escapeHtml(message)}
+        </div>
+    `;
+
+    body.scrollTop =
+        body.scrollHeight;
+
+    // ===============================
+    // HANDLE SEARCH
+    // ===============================
+
+    handleChatQuery(message);
+
+    // ===============================
+    // CLEAR INPUT
+    // ===============================
+
+    input.value = "";
+}
+
 function toggleChat() {
 
     const chatbox = document.getElementById("chatbox");
@@ -1756,7 +1806,7 @@ function toggleTheme() {
 /* ================= DRAGGABLE METRICS ================= */
 
 const metricsPane =
-    document.getElementById("metricsPane");
+    document.getElementById("metricsWindow");    
 
 let isDragging = false;
 
@@ -1802,6 +1852,7 @@ window.addEventListener("DOMContentLoaded", () => {
         document.body.classList.add("light");
     }
 });
+
 /* ================= VOICE RECOGNITION ================= */
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
