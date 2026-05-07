@@ -1596,87 +1596,111 @@ function closePlayer(){
 /* ================= OPEN FILE ================= */
 
 function openFile(file){
-    aiMemory.recentFiles.unshift(decodedFile);
 
-    const type = getFileType(decodedFile);
+    if(!file){
 
-    const url = '/media/' + encodeURIComponent(decodedFile);
+        speak("File not found");
 
-    speak('Opening ' + decodedFile);
-    const recommendations = recommendFiles(decodedFile);
-
-    if(recommendations.length > 0){
-
-        setTimeout(()=>{
-
-            const body = document.getElementById('chatBody');
-
-            body.innerHTML += `
-                <div style='margin-top:15px;color:#38bdf8'>
-                    <b>AI Recommendations:</b>
-                    <ul>
-                        ${recommendations.map(r=>`<li>${r}</li>`).join('')}
-                    </ul>
-                </div>
-            `;
-
-            speak('I also found related files you may like');
-
-        },4000);
+        return;
     }
-    const modal = document.getElementById('aiPlayerModal');
-    const container = document.getElementById('playerContainer');
 
-    container.innerHTML = '';
+    const lower =
+        file.toLowerCase();
 
-    if(type === 'video'){
+    speak("Opening " + file);
 
-        container.innerHTML = `
-            <video controls autoplay style="max-width:90vw;max-height:90vh;">
-                <source src="${url}">
-            </video>
-        `;
+    // ===============================
+    // VIDEO FILES
+    // ===============================
 
-        modal.style.display = 'flex';
+    if(
 
+        lower.endsWith(".mp4") ||
+        lower.endsWith(".webm") ||
+        lower.endsWith(".ogg") ||
+        lower.endsWith(".mkv") ||
+        lower.endsWith(".avi") ||
+        lower.endsWith(".flv") ||
+        lower.endsWith(".mov")
+
+    ){
+
+        const existing =
+            document.getElementById("videoPlayer");
+
+        if(existing){
+
+            existing.remove();
+        }
+
+        const player =
+            document.createElement("video");
+
+        player.id = "videoPlayer";
+
+        player.src =
+            "/stream/" +
+            encodeURIComponent(file);
+
+        player.controls = true;
+
+        player.autoplay = true;
+
+        player.style.position = "fixed";
+
+        player.style.top = "50%";
+
+        player.style.left = "50%";
+
+        player.style.transform =
+            "translate(-50%, -50%)";
+
+        player.style.width = "80%";
+
+        player.style.height = "80%";
+
+        player.style.background = "black";
+
+        player.style.zIndex = "999999";
+
+        player.style.borderRadius = "18px";
+
+        document.body.appendChild(player);
+
+        return;
     }
-    else if(type === 'audio'){
 
-        container.innerHTML = `
-            <audio controls autoplay style="width:80vw;">
-                <source src="${url}">
-            </audio>
-        `;
+    // ===============================
+    // AUDIO FILES
+    // ===============================
 
-        modal.style.display = 'flex';
+    if(
 
+        lower.endsWith(".mp3") ||
+        lower.endsWith(".wav")
+
+    ){
+
+        const audio =
+            new Audio(
+                "/media/" +
+                encodeURIComponent(file)
+            );
+
+        audio.play();
+
+        return;
     }
-    else if(type === 'image'){
 
-        container.innerHTML = `
-            <img src="${url}"
-            style="max-width:90vw;max-height:90vh;border-radius:20px;">
-        `;
+    // ===============================
+    // OTHER FILES
+    // ===============================
 
-        modal.style.display = 'flex';
-
-    }
-    else if(type === 'pdf'){
-
-        container.innerHTML = `
-            <iframe src="${url}"
-            style="width:95vw;height:95vh;border:none;background:white;">
-            </iframe>
-        `;
-
-        modal.style.display = 'flex';
-
-    }
-    else{
-
-        window.open(url,'_blank');
-
-    }
+    window.open(
+        "/media/" +
+        encodeURIComponent(file),
+        "_blank"
+    );
 }
 
 /* ================= ENTER KEY ================= */

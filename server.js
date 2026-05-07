@@ -7,6 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'visitors.db');
+const { spawn } = require("child_process");
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -162,6 +163,52 @@ app.get('/api/visitors', (req, res) => {
 
 const os = require("os");
 const { exec } = require("child_process");
+
+app.get("/stream/*", (req, res)=>{
+
+    const file =
+        decodeURIComponent(req.params[0]);
+
+    const filePath =
+        path.join(MEDIA_DIR, file);
+
+    res.writeHead(200, {
+
+        "Content-Type": "video/mp4",
+
+        "Transfer-Encoding": "chunked"
+
+    });
+
+    const ffmpeg = spawn("ffmpeg", [
+
+        "-i", filePath,
+
+        "-f", "mp4",
+
+        "-movflags", "frag_keyframe+empty_moov",
+
+        "-vcodec", "libx264",
+
+        "-acodec", "aac",
+
+        "-preset", "veryfast",
+
+        "-crf", "28",
+
+        "pipe:1"
+
+    ]);
+
+    ffmpeg.stdout.pipe(res);
+
+    ffmpeg.stderr.on("data", data=>{
+
+        console.log(data.toString());
+
+    });
+
+});
 
 app.get("/api/metrics", (req, res) => {
 

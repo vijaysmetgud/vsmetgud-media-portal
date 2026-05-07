@@ -3,6 +3,8 @@ FROM node:20-alpine
 WORKDIR /usr/src/app
 
 # INSTALL REQUIRED PACKAGES
+RUN apk add --no-cache ffmpeg
+
 RUN apk add --no-cache \
     curl \
     bash
