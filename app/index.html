@@ -1123,6 +1123,7 @@ function renderFiles(files){
 /* ================= CATEGORY FILTER ================= */
 
 function loadCategory(folder, element){
+    aiMemory.currentCategory = folder;
 
     document.querySelectorAll(".nav-btn")
         .forEach(btn => btn.classList.remove("active"));
@@ -1567,190 +1568,98 @@ function handleChatQuery(query){
 
 }
 
+function closePlayer(){
+
+    document.getElementById('aiPlayerModal').style.display = 'none';
+    document.getElementById('playerContainer').innerHTML = '';
+
+}
+
 /* ================= OPEN FILE ================= */
 
 function openFile(file){
-
-    if(!file){
-
-        speak("File not found");
-
-        return;
-    }
-
-    const decodedFile = decodeURIComponent(file);
-
-    aiMemory.lastOpenedFile = decodedFile;
-
     aiMemory.recentFiles.unshift(decodedFile);
 
     const type = getFileType(decodedFile);
 
-    const url =
-        "/media/" + encodeURIComponent(decodedFile);
+    const url = '/media/' + encodeURIComponent(decodedFile);
 
-    speak("Opening " + decodedFile);
-
-    // CREATE PLAYLIST
-    aiMemory.currentPlaylist = allFiles.filter(f => {
-
-        return getFileType(f) === type;
-
-    });
-
-    aiMemory.currentIndex =
-        aiMemory.currentPlaylist.indexOf(decodedFile);
-
-    const modal =
-        document.getElementById("aiPlayerModal");
-
-    const container =
-        document.getElementById("playerContainer");
-
-    // IF PLAYER MODAL NOT PRESENT
-    if(!modal || !container){
-
-        window.open(url, "_blank");
-
-        return;
-    }
-
-    container.innerHTML = "";
-
-    /* ================= VIDEO ================= */
-
-    if(type === "video"){
-
-        container.innerHTML = `
-            <video controls autoplay
-            style="
-                max-width:90vw;
-                max-height:90vh;
-                border-radius:12px;
-            ">
-                <source src="${url}">
-            </video>
-        `;
-
-        modal.style.display = "flex";
-
-        aiMemory.currentPlayer =
-            container.querySelector("video");
-    }
-
-    /* ================= AUDIO ================= */
-
-    else if(type === "audio"){
-
-        container.innerHTML = `
-            <audio controls autoplay
-            style="width:80vw;">
-                <source src="${url}">
-            </audio>
-        `;
-
-        modal.style.display = "flex";
-
-        aiMemory.currentPlayer =
-            container.querySelector("audio");
-    }
-
-    /* ================= IMAGE ================= */
-
-    else if(type === "image"){
-
-        container.innerHTML = `
-            <img
-                src="${url}"
-                style="
-                    max-width:90vw;
-                    max-height:90vh;
-                    border-radius:20px;
-                "
-            >
-        `;
-
-        modal.style.display = "flex";
-    }
-
-    /* ================= PDF ================= */
-
-    else if(type === "pdf"){
-
-        container.innerHTML = `
-            <iframe
-                src="${url}"
-                style="
-                    width:95vw;
-                    height:95vh;
-                    border:none;
-                    background:white;
-                    border-radius:12px;
-                ">
-            </iframe>
-        `;
-
-        modal.style.display = "flex";
-    }
-
-    /* ================= OTHER FILES ================= */
-
-    else{
-
-        window.open(url, "_blank");
-
-    }
-
-    /* ================= AI RECOMMENDATIONS ================= */
-
-    const recommendations =
-        recommendFiles(decodedFile);
+    speak('Opening ' + decodedFile);
+    const recommendations = recommendFiles(decodedFile);
 
     if(recommendations.length > 0){
 
         setTimeout(()=>{
 
-            const body =
-                document.getElementById("chatBody");
+            const body = document.getElementById('chatBody');
 
             body.innerHTML += `
-                <div style="
-                    margin-top:15px;
-                    color:#38bdf8;
-                ">
+                <div style='margin-top:15px;color:#38bdf8'>
                     <b>AI Recommendations:</b>
-
                     <ul>
-                        ${recommendations.map(r =>
-                            `<li>${r}</li>`
-                        ).join("")}
+                        ${recommendations.map(r=>`<li>${r}</li>`).join('')}
                     </ul>
                 </div>
             `;
 
-            speak(
-                "I also found related files you may like"
-            );
+            speak('I also found related files you may like');
 
         },4000);
     }
+    const modal = document.getElementById('aiPlayerModal');
+    const container = document.getElementById('playerContainer');
+
+    container.innerHTML = '';
+
+    if(type === 'video'){
+
+        container.innerHTML = `
+            <video controls autoplay style="max-width:90vw;max-height:90vh;">
+                <source src="${url}">
+            </video>
+        `;
+
+        modal.style.display = 'flex';
+
+    }
+    else if(type === 'audio'){
+
+        container.innerHTML = `
+            <audio controls autoplay style="width:80vw;">
+                <source src="${url}">
+            </audio>
+        `;
+
+        modal.style.display = 'flex';
+
+    }
+    else if(type === 'image'){
+
+        container.innerHTML = `
+            <img src="${url}"
+            style="max-width:90vw;max-height:90vh;border-radius:20px;">
+        `;
+
+        modal.style.display = 'flex';
+
+    }
+    else if(type === 'pdf'){
+
+        container.innerHTML = `
+            <iframe src="${url}"
+            style="width:95vw;height:95vh;border:none;background:white;">
+            </iframe>
+        `;
+
+        modal.style.display = 'flex';
+
+    }
+    else{
+
+        window.open(url,'_blank');
+
+    }
 }
-
-/* ================= CHAT ================= */
-
-function sendMessage(){
-
-    let input = document.getElementById("chatInput").value.trim();
-    let body = document.getElementById("chatBody");
-
-    body.innerHTML += `<div><b>You:</b> ${escapeHtml(input)}</div>`;
-    handleChatQuery(input);
-
-    document.getElementById("chatInput").value="";
-    body.scrollTop = body.scrollHeight;
-
-}
-
 
 /* ================= ENTER KEY ================= */
 
@@ -1856,13 +1765,29 @@ window.addEventListener("DOMContentLoaded", () => {
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 function speak(text) {
-    window.speechSynthesis.cancel(); // stop previous speech
+
+    window.speechSynthesis.cancel();
+
     const speech = new SpeechSynthesisUtterance(text);
-    speech.lang = "en-US";
+
+    speech.lang = 'en-US';
     speech.rate = 1;
     speech.pitch = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+
+    const preferred = voices.find(v =>
+        v.name.includes('Google') ||
+        v.name.includes('Microsoft')
+    );
+
+    if(preferred){
+        speech.voice = preferred;
+    }
+
     window.speechSynthesis.speak(speech);
 }
+
 let recognition;
 
 if(SpeechRecognition){
