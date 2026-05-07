@@ -360,21 +360,83 @@ body {
     overflow-y:auto;
 }
 
-.chatbot-input {
+.chatbot-input{
+
     display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    padding:10px;
+
+    background:#111827;
 }
 
-.chatbot-input input {
+/* Input field */
+.chatbot-input input{
+
     flex:1;
-    padding:8px;
+
+    height:42px;
+
+    padding:0 12px;
+
     border:none;
+
+    border-radius:10px;
+
+    outline:none;
 }
 
-.chatbot-input button {
-    background:#22c55e;
+/* Send button */
+.send-btn{
+
+    min-width:70px;
+
+    height:42px;
+
+    padding:0 16px;
+
     border:none;
-    padding:8px;
+
+    border-radius:10px;
+
+    background:#22c55e;
+
     color:white;
+
+    cursor:pointer;
+
+    font-weight:bold;
+}
+
+/* Mic button */
+.mic-btn{
+
+    width:42px;
+
+    height:42px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:#2563eb;
+
+    color:white;
+
+    font-size:18px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    cursor:pointer;
+
+    flex-shrink:0;
 }
 
 .chat-toggle {
