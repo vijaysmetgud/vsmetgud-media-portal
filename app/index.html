@@ -588,7 +588,21 @@ function setReminder(){
                 text || "Reminder Alert!"
             );
 
+            reminderSound.play();
+
             speak(text || "Reminder Alert");
+
+            const chatBody =
+                document.getElementById("chatBody");
+
+            chatBody.innerHTML += `
+                <div class="bot-message reminder-message">
+                    ⏰ ${text || "Reminder Alert!"}
+                </div>
+            `;
+
+            chatBody.scrollTop =
+                chatBody.scrollHeight;
 
             alert(text || "Reminder Alert!");
 
