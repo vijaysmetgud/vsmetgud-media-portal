@@ -166,47 +166,83 @@ const { exec } = require("child_process");
 
 app.get("/stream/*", (req, res)=>{
 
-    const file =
-        decodeURIComponent(req.params[0]);
+    try{
 
-    const filePath =
-        path.join(MEDIA_DIR, file);
+        const file =
+            decodeURIComponent(
+                req.path.replace("/stream/","")
+            );
 
-    res.writeHead(200, {
+        const filePath =
+            path.join(MEDIA_DIR, file);
 
-        "Content-Type": "video/mp4",
+        console.log("STREAM FILE:", filePath);
 
-        "Transfer-Encoding": "chunked"
+        if(!fs.existsSync(filePath)){
 
-    });
+            return res
+                .status(404)
+                .send("File not found");
+        }
 
-    const ffmpeg = spawn("ffmpeg", [
+        res.writeHead(200, {
 
-        "-i", filePath,
+            "Content-Type": "video/mp4",
 
-        "-f", "mp4",
+            "Transfer-Encoding": "chunked"
 
-        "-movflags", "frag_keyframe+empty_moov",
+        });
 
-        "-vcodec", "libx264",
+        const ffmpeg =
+            spawn("ffmpeg", [
 
-        "-acodec", "aac",
+                "-i", filePath,
 
-        "-preset", "veryfast",
+                "-f", "mp4",
 
-        "-crf", "28",
+                "-movflags",
+                "frag_keyframe+empty_moov",
 
-        "pipe:1"
+                "-vcodec", "libx264",
 
-    ]);
+                "-acodec", "aac",
 
-    ffmpeg.stdout.pipe(res);
+                "-preset", "veryfast",
 
-    ffmpeg.stderr.on("data", data=>{
+                "-crf", "28",
 
-        console.log(data.toString());
+                "-threads", "2",
 
-    });
+                "pipe:1"
+
+            ]);
+
+        ffmpeg.stdout.pipe(res);
+
+        ffmpeg.stderr.on("data", data=>{
+
+            console.log(
+                data.toString()
+            );
+
+        });
+
+        ffmpeg.on("error", err=>{
+
+            console.log(err);
+
+            res.end();
+
+        });
+
+    }
+    catch(err){
+
+        console.log(err);
+
+        res.status(500).send("Streaming error");
+
+    }
 
 });
 
