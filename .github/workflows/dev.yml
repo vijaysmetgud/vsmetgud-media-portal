@@ -24,7 +24,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      
+      - name: Install Dependencies
+        run: npm install
 
+      - name: Run npm audit
+        run: npm audit --audit-level=high     
+      
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}  
+          
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -36,15 +48,28 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and Push Image
+      
+      - name: Build Docker Image
         run: |
           docker buildx build \
-            --push \
+            --load \
             --tag $IMAGE_NAME:$IMAGE_TAG \
             --tag $IMAGE_NAME:latest \
             .
 
+      - name: Run Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          format: table
+          exit-code: 1
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+
+      - name: Push Docker Image
+        run: |
+          docker push $IMAGE_NAME:$IMAGE_TAG
+          docker push $IMAGE_NAME:latest    
   update-helm:
     needs: build-and-push
     runs-on: ubuntu-latest

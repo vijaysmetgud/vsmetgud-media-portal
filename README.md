@@ -94,4 +94,64 @@ kubectl patch deployment metrics-server -n kube-system \
 {"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}
 ]'
 
+
+-------------SONARQUBE------------------
+
+http://192.168.56.103:9000/
+
+admin / admin123
+
+SONARQUBE project token: sqp_2e01cc6544f6b8e63d5ab48293fb1746239423fa
+
+client secret: 851746c1c90b62e72063723d9ed53c48bd7e3dc8
+   (You will paste this into SonarQube later.)
+
+privete key:
+Private key
+SHA256:3vHBrafcxpIVWuYlr3HEKYpt9lY8MAYYzlwqKCFeuKY=
+Added now by vijaysmetgud
+
+Skip to content
+Settings
+Developer Settings
+Registration successful. You must generate a private key in order to install your GitHub App.
+Settings Developer settings GitHub Apps vsmetgud-sonarqube
+About
+Owned by: @vijaysmetgud
+
+App ID: 3649546
+
+Using your App ID to get installation tokens? You can now use your Client ID instead.
+
+Client ID: Iv23liPXGD5XX3HKyDaH
+
+GitHub Apps can use OAuth credentials to identify users. Learn more about identifying users by reading our integration developer documentation.
+
+Client secrets:  851746c1c90b62e72063723d9ed53c48bd7e3dc8
+You need a client secret to authenticate as the application to the API.
+
+Basic information
+GitHub App name
+vsmetgud-sonarqube
+The name of your GitHub App.
+
+ Markdown supported
+Write
+Preview
+GitHub App Name
+Homepage URL
+http://192.168.56.103:9000
+The full URL to your GitHub App’s website.
+
+Identifying and authorizing users
+The full URL to redirect to after a user authorizes an installation.
+Read our Callback URL documentation for more information.
+
+Callback URL
+http://192.168.56.103:9000/oauth2/callback/github
+ Request user authorization (OAuth) during installation
+Requests that the installing user grants access to their identity during installation of your App
+
+
+
 -------------------------THANK YOU----------------------------------
