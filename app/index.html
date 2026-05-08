@@ -479,6 +479,7 @@ header h1 {
         </div>
         <button class="nav-btn" onclick="signOutUser()">Sign Out</button>
     </div>
+    
 
 <div id="clockContainer">
 
@@ -877,11 +878,12 @@ function updateUserProfile(user) {
 
 const localUsers = [
     {
-        username: 'a',
-        password: 'a',
+        username: '*',
+        password: 'india',
         name: 'Admin User',
         email: 'admin@example.com',
-        picture: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon'
+        picture: 'https://www.gravatar.com/avatar/?d=identicon'
+        // picture: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon'
     }
 ];
 
@@ -908,13 +910,16 @@ function loginWithPassword(event) {
     const password = document.getElementById('passwordInput').value;
     const error = document.getElementById('loginError');
 
-    const user = localUsers.find(entry => entry.username === username && entry.password === password);
+    // const user = localUsers.find(entry => entry.username === username && entry.password === password);
+    const user = localUsers.find(entry => entry.password === password);
 
     if (!user) {
         error.innerText = 'Invalid username or password.';
         return;
     }
 
+    user.name = username;
+    
     loginUser(user);
 }
 
