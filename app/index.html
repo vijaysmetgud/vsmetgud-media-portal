@@ -494,6 +494,9 @@ body {
     </div>
 
     <div id="clock"></div>
+
+    <div id="date"></div>
+
     <div id="reminderPopup">
 
     <h3>Set Reminder</h3>
@@ -520,15 +523,51 @@ body {
 </div>
 
 <script>
-function updateClock() {
-    const clockElement = document.getElementById('clock');
-    if (clockElement) {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
+ 
+ function updateClock() {
 
-        clockElement.innerText = `${hours}:${minutes}:${seconds}`;
+    const clockElement =
+        document.getElementById('clock');
+
+    const dateElement =
+        document.getElementById('date');
+
+    if (clockElement && dateElement) {
+
+        const now = new Date();
+
+        // ===============================
+        // TIME
+        // ===============================
+
+        const hours =
+            String(now.getHours()).padStart(2, '0');
+
+        const minutes =
+            String(now.getMinutes()).padStart(2, '0');
+
+        const seconds =
+            String(now.getSeconds()).padStart(2, '0');
+
+        clockElement.innerText =
+            `${hours}:${minutes}:${seconds}`;
+
+        // ===============================
+        // DATE DD-MM-YYYY
+        // ===============================
+
+        const day =
+            String(now.getDate()).padStart(2,'0');
+
+        const month =
+            String(now.getMonth() + 1)
+                .padStart(2,'0');
+
+        const year =
+            now.getFullYear();
+
+        dateElement.innerText =
+            `${day}-${month}-${year}`;
     }
 }
 
