@@ -596,7 +596,7 @@ clock.addEventListener("click", ()=>{
 const reminderSound =
     new Audio("sounds/alert.mp3");
 
-function setReminder(){
+async function setReminder(){
 
     const time =
         document.getElementById("reminderTime").value;
@@ -1574,7 +1574,7 @@ function handleChatQuery(query){
     });
 
     // REQUIRE AT LEAST 3 KEYWORD MATCHES
-    if(!bestFile || 1){
+    if(!bestFile || bestScore < 1){
 
         const msg =
             `Sorry. I could not find a confident match for ${trimmed}`;
