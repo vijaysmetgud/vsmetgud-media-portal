@@ -159,19 +159,6 @@ header h1 {
     user-select:none;
 }
 
-/* ================= MAIN CONTENT SPACING ================= */
-
-body {
-    margin:0;
-    font-family:'Segoe UI',sans-serif;
-    background:#0f172a;
-    color:#e2e8f0;
-    overflow-x:hidden;
-    transition:0.4s;
-
-    padding-left:260px; /* keep only here */
-}
-
 /* ================= METRIC ITEMS ================= */
 
 .metric {
@@ -493,7 +480,7 @@ body {
         <button class="nav-btn" onclick="signOutUser()">Sign Out</button>
     </div>
 
-    <div id="clockContainer">
+<div id="clockContainer">
 
     <span class="clockLabel">
         TIME =&gt;
@@ -624,7 +611,7 @@ function setReminder(){
         return;
     }
 
-    Notification.requestPermission();
+    await Notification.requestPermission();
 
     const interval = setInterval(()=>{
 
@@ -649,14 +636,17 @@ function setReminder(){
             const chatBody =
                 document.getElementById("chatBody");
 
-            chatBody.innerHTML += `
-                <div class="bot-message reminder-message">
-                    ⏰ ${text || "Reminder Alert!"}
-                </div>
-            `;
+            if(chatBody){
 
-            chatBody.scrollTop =
-                chatBody.scrollHeight;
+                chatBody.innerHTML += `
+                    <div class="bot-message reminder-message">
+                        ⏰ ${text || "Reminder Alert!"}
+                    </div>
+                `;
+
+                chatBody.scrollTop =
+                    chatBody.scrollHeight;
+            }              
 
             alert(text || "Reminder Alert!");
 
@@ -1584,7 +1574,7 @@ function handleChatQuery(query){
     });
 
     // REQUIRE AT LEAST 3 KEYWORD MATCHES
-    if(!bestFile || bestScore < 2){
+    if(!bestFile || 1){
 
         const msg =
             `Sorry. I could not find a confident match for ${trimmed}`;
@@ -1628,19 +1618,13 @@ function handleChatQuery(query){
 
     setTimeout(() => {
 
-        window.open(
-            "/media/" + encodeURIComponent(bestFile),
-            "_blank"
-        );
+        openFile(bestFile);
+        // window.open(
+        //     "/media/" + encodeURIComponent(bestFile),
+        //     "_blank"
+        // );
 
     }, 1200);
-
-}
-
-function closePlayer(){
-
-    document.getElementById('aiPlayerModal').style.display = 'none';
-    document.getElementById('playerContainer').innerHTML = '';
 
 }
 
@@ -1998,8 +1982,15 @@ async function fetchMetrics(){
         // CPU / MEMORY / PODS
         // ===============================
 
-        document.getElementById("cpu").innerText =
-            data.cpu;
+        // document.getElementById("cpu").innerText =
+        //     data.cpu;
+
+        const cpuEl =
+            document.getElementById("cpu");
+
+        if(cpuEl){
+            cpuEl.innerText = data.cpu;
+        }    
 
         document.getElementById("memory").innerText =
             data.memory;
