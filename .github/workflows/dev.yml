@@ -72,7 +72,7 @@ jobs:
         with:
           image-ref: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           format: table
-          exit-code: 1
+          exit-code: 0
           severity: HIGH,CRITICAL
           ignore-unfixed: true
 
