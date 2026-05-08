@@ -206,32 +206,12 @@ nav, .welcome, .chatbot {
 
     border-radius: 14px;
 }
-
-#clockContainer {
-
-    position: fixed;
-
-    top: 20px;
-
-    left: 50%;
-
-    transform: translateX(-50%);
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 14px;
-
-    z-index: 99999;
-}
-
 .clockLabel,
 .dateLabel {
 
     color: #38bdf8;
 
-    font-size: 18px;
+    font-size: 22px;
 
     font-weight: 700;
 
@@ -242,9 +222,11 @@ nav, .welcome, .chatbot {
 
     color: #00ffcc;
 
-    font-size: 60px;
+    font-size: 42px;
 
     font-weight: 700;
+
+    margin-right: 18px;
 
     cursor: pointer;
 }
@@ -253,7 +235,7 @@ nav, .welcome, .chatbot {
 
     color: #facc15;
 
-    font-size: 50px;
+    font-size: 42px;
 
     font-weight: 700;
 }
