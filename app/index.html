@@ -200,35 +200,181 @@ header h1 {
 }
 
 /* ================= THEME TOGGLE ================= */
-
+/* Shared Button Style */
 .theme-toggle {
-
     position: fixed;
+    right: 20px;
+    padding: 10px 18px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 99999;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    user-select: none;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
 
+/* Dark / Light Theme Button */
+#themeBtn {
+    top: 140px;   /* moved below signout */
+    right: 20px;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Particles Theme Button */
+#visualBtn {
+    top: 80px;
+    right: 20px;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: white;
+    border: none;
+}
+
+/* Hover */
+.theme-toggle:hover {
+    transform: scale(1.05);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .theme-toggle {
+        right: 10px;
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+
+    #visualBtn {
+        top: 70px;
+    }
+
+    #themeBtn {
+        top: 125px;
+    }
+}
+
+/* =========================
+   THEME MENU LEFT SIDE
+========================= */
+
+.theme-menu-container {
+    position: fixed;
     top: 20px;
+    left: 20px;
+    z-index: 99999;
+}
 
-    left: auto;
+/* Main Dropdown Button */
+.theme-menu-btn {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 0 20px rgba(37,99,235,0.4);
+    transition: 0.3s ease;
+}
 
-    right:20px;
+/* Hover */
+.theme-menu-btn:hover {
+    transform: scale(1.04);
+}
 
-    z-index: 999999999;
+/* Dropdown */
+.theme-dropdown {
+    display: none;
+    flex-direction: column;
+    margin-top: 10px;
+    background: rgba(10, 15, 35, 0.95);
+    border-radius: 18px;
+    padding: 10px;
+    width: 220px;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 0 25px rgba(0,0,0,0.4);
+}
 
-    background: #2563eb;
+/* Dropdown Items */
+.theme-item {
+    padding: 12px 15px;
+    margin: 5px 0;
+    border-radius: 12px;
+    cursor: pointer;
+    color: white;
+    transition: 0.3s ease;
+    font-size: 14px;
+}
 
+/* Hover Effect */
+.theme-item:hover {
+    background: rgba(59,130,246,0.25);
+    transform: translateX(4px);
+}
+
+/* =========================
+   SIGNOUT RIGHT SIDE
+========================= */
+
+.signout-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
     color: white;
 
-    padding: 12px 20px;
-
+    border: none;
     border-radius: 30px;
+
+    padding: 12px 22px;
 
     cursor: pointer;
 
+    font-size: 14px;
     font-weight: 600;
 
-    box-shadow:
-        0 8px 25px rgba(37,99,235,0.35);
+    box-shadow: 0 0 20px rgba(37,99,235,0.4);
 
-    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+/* Hover */
+.signout-btn:hover {
+    transform: scale(1.05);
+}
+
+/* =========================
+   MOBILE RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+
+    .theme-menu-container {
+        left: 10px;
+        top: 10px;
+    }
+
+    .signout-btn {
+        right: 10px;
+        top: 10px;
+        padding: 10px 16px;
+        font-size: 12px;
+    }
+
+    .theme-menu-btn {
+        padding: 10px 14px;
+        font-size: 12px;
+    }
+
+    .theme-dropdown {
+        width: 190px;
+    }
 }
 
 /* ================= CHATBOT ================= */
@@ -347,19 +493,59 @@ header h1 {
 .auth-bar {
     display:flex;
     align-items:center;
-    justify-content:space-between;
+    justify-content:flex-start;
+
     gap:16px;
+
     padding:12px 20px;
+
     margin:0 auto 20px auto;
+
     max-width:1200px;
+
     background:rgba(15,23,42,0.9);
+
     border-radius:30px;
+
     box-shadow:0 10px 40px rgba(0,0,0,0.35);
+
+    position:relative;
 }
 
-.auth-bar.hidden,
-#mainContent.hidden {
-    display:none;
+/* RIGHT SIDE SIGNOUT */
+.signout-btn {
+
+    position:absolute;
+
+    right:20px;
+
+    top:50%;
+
+    transform:translateY(-50%);
+
+    background:linear-gradient(135deg,#2563eb,#3b82f6);
+
+    color:white;
+
+    border:none;
+
+    border-radius:30px;
+
+    padding:10px 22px;
+
+    cursor:pointer;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    box-shadow:0 0 20px rgba(37,99,235,0.4);
+
+    transition:0.3s ease;
+}
+
+.signout-btn:hover {
+    transform:translateY(-50%) scale(1.05);
 }
 
 .auth-info {
@@ -424,6 +610,7 @@ header h1 {
     display:none;
 
     position:fixed;
+
 
     top:90px;
 
@@ -572,7 +759,9 @@ body::after {
                 <span id="userEmail">Not signed in</span>
             </div>
         </div>
-        <button class="nav-btn" onclick="signOutUser()">Sign Out</button>
+        <button class="signout-btn" onclick="signOutUser()">
+            Sign Out
+        </button>
     </div>
     
 
@@ -759,13 +948,24 @@ async function setReminder(){
 
 </script>
 
-<div id="themeBtn" class="theme-toggle" onclick="toggleTheme()">
-    🌙 Toggle Theme
-</div>
+<!-- LEFT SIDE THEME DROPDOWN -->
+<div class="theme-menu-container">
 
-<div id="visualBtn" class="theme-toggle visual-toggle"
-     onclick="toggleVisualTheme()">
-    🎨 Switch Theme
+    <button class="theme-menu-btn" onclick="toggleThemeMenu()">
+        🎨 Themes ▼
+    </button>
+
+    <div class="theme-dropdown">
+
+        <div class="theme-item" onclick="toggleTheme()">
+            🌙 Dark / Light
+        </div>
+
+        <div class="theme-item" onclick="toggleVisualTheme()">
+            ✨ Particles Theme
+        </div>
+
+    </div>
 </div>
 
 <header>
@@ -1916,17 +2116,42 @@ function toggleChat() {
     chatOpen = !chatOpen;
 }
 
-/* ================= THEME TOGGLE ================= */
+/* ================= THEME MENU ================= */
 
-function toggleTheme() {
+function toggleThemeMenu(){
+
+    const menu =
+        document.querySelector(".theme-dropdown");
+
+    if(menu.style.display === "flex"){
+
+        menu.style.display = "none";
+
+    } else {
+
+        menu.style.display = "flex";
+    }
+}
+
+/* ================= LIGHT / DARK THEME ================= */
+
+function toggleTheme(){
 
     document.body.classList.toggle("light");
 
-    // Save preference
-    if (document.body.classList.contains("light")) {
-        localStorage.setItem("theme", "light");
+    if(document.body.classList.contains("light")){
+
+        localStorage.setItem(
+            "theme",
+            "light"
+        );
+
     } else {
-        localStorage.setItem("theme", "dark");
+
+        localStorage.setItem(
+            "theme",
+            "dark"
+        );
     }
 }
 
@@ -2172,9 +2397,6 @@ function toggleVisualTheme(){
     const threeBg =
         document.getElementById("bg");
 
-    const visualBtn =
-        document.getElementById("visualBtn");
-
     if(visualTheme === "particles"){
 
         document.body.classList.add("three-theme");
@@ -2184,14 +2406,6 @@ function toggleVisualTheme(){
         particles.style.display = "none";
 
         threeBg.style.display = "block";
-
-        visualBtn.innerHTML = "🌌 Particles Theme";
-
-        visualBtn.style.background =
-            "linear-gradient(135deg,#0ea5e9,#8b5cf6)";
-
-        visualBtn.style.boxShadow =
-            "0 0 25px rgba(14,165,233,0.45)";
 
         localStorage.setItem(
             "visualTheme",
@@ -2207,14 +2421,6 @@ function toggleVisualTheme(){
         particles.style.display = "block";
 
         threeBg.style.display = "none";
-
-        visualBtn.innerHTML = "🎨 Switch Theme";
-
-        visualBtn.style.background =
-            "#2563eb";
-
-        visualBtn.style.boxShadow =
-            "0 8px 25px rgba(37,99,235,0.35)";
 
         localStorage.setItem(
             "visualTheme",
