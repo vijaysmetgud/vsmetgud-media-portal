@@ -207,7 +207,9 @@ header h1 {
 
     top: 20px;
 
-    left: 20px;
+    left: auto;
+
+    right:20px;
 
     z-index: 999999999;
 
@@ -757,9 +759,12 @@ async function setReminder(){
 
 </script>
 
-<div class="theme-toggle" onclick="toggleTheme()">🌙 Toggle Theme</div>
+<div id="themeBtn" class="theme-toggle" onclick="toggleTheme()">
+    🌙 Toggle Theme
+</div>
 
-<div class="theme-toggle" onclick="toggleVisualTheme()">
+<div id="visualBtn" class="theme-toggle visual-toggle"
+     onclick="toggleVisualTheme()">
     🎨 Switch Theme
 </div>
 
