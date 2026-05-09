@@ -38,7 +38,7 @@ jobs:
       - name: Run npm audit
         run: npm audit --audit-level=critical || true
       
-            - name: Debug SonarQube URL
+      - name: Debug SonarQube URL
         run: |
           echo "Testing SonarQube Connection..."
           curl -I ${{ secrets.SONAR_HOST_URL }}
