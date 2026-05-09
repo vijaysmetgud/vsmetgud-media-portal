@@ -2164,7 +2164,6 @@ particlesJS("particles-js",{
 });
 
 let visualTheme = "particles";
-
 function toggleVisualTheme(){
 
     const particles =
@@ -2173,8 +2172,8 @@ function toggleVisualTheme(){
     const threeBg =
         document.getElementById("bg");
 
-    const toggleBtn =
-        document.querySelector(".theme-toggle");
+    const visualBtn =
+        document.getElementById("visualBtn");
 
     if(visualTheme === "particles"){
 
@@ -2182,21 +2181,16 @@ function toggleVisualTheme(){
 
         visualTheme = "three";
 
-        // SHOW THREE.JS
         particles.style.display = "none";
 
         threeBg.style.display = "block";
 
-        // MOVE BUTTON TO RIGHT
-        toggleBtn.style.left = "auto";
+        visualBtn.innerHTML = "🌌 Particles Theme";
 
-        toggleBtn.style.right = "20px";
-
-        // AI THEME STYLE
-        toggleBtn.style.background =
+        visualBtn.style.background =
             "linear-gradient(135deg,#0ea5e9,#8b5cf6)";
 
-        toggleBtn.style.boxShadow =
+        visualBtn.style.boxShadow =
             "0 0 25px rgba(14,165,233,0.45)";
 
         localStorage.setItem(
@@ -2210,22 +2204,17 @@ function toggleVisualTheme(){
 
         document.body.classList.remove("three-theme");
 
-        // SHOW PARTICLES
         particles.style.display = "block";
 
         threeBg.style.display = "none";
 
-        // MOVE BACK TO LEFT
-        toggleBtn.style.right = "auto";
+        visualBtn.innerHTML = "🎨 Switch Theme";
 
-        toggleBtn.style.left = "20px";
-
-        // ORIGINAL STYLE
-        toggleBtn.style.background =
+        visualBtn.style.background =
             "#2563eb";
 
-        toggleBtn.style.boxShadow =
-            "none";
+        visualBtn.style.boxShadow =
+            "0 8px 25px rgba(37,99,235,0.35)";
 
         localStorage.setItem(
             "visualTheme",
