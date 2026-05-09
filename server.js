@@ -20,22 +20,6 @@ const db = new Database(DB_PATH);
 
 console.log('SQLite database connected successfully.');
 
-// db.serialize(() => {
-//   db.run(`CREATE TABLE IF NOT EXISTS visitors (
-//     id INTEGER PRIMARY KEY AUTOINCREMENT,
-//     ip TEXT,
-//     username TEXT,
-//     email TEXT,
-//     authMethod TEXT,
-//     url TEXT,
-//     userAgent TEXT,
-//     platform TEXT,
-//     language TEXT,
-//     referrer TEXT,
-//     timestamp TEXT
-//   )`);
-// });
-
 db.prepare(`
   CREATE TABLE IF NOT EXISTS visitors (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
