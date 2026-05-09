@@ -8,7 +8,7 @@ COPY package*.json ./
 
 RUN npm install --omit=dev
 
-COPY app/ ./app/
+COPY app/ .
 COPY server.js ./
 
 # ================= RUNTIME STAGE =================
