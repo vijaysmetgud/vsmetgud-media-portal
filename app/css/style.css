@@ -212,13 +212,15 @@ nav, .welcome, .chatbot {
 
 #clockContainer {
 
-    position: fixed;
+    position: fixed !important;
 
-    top: 80px;   /* BELOW SIGNOUT BUTTON */
+    top: 90px !important;
 
-    right: 25px;
+    right: 25px !important;
 
-    z-index: 9999;
+    left: auto !important;
+
+    z-index: 99999;
 
     text-align: right;
 
@@ -227,21 +229,7 @@ nav, .welcome, .chatbot {
     line-height: 1.4;
 
     text-shadow:
-        0 0 10px rgba(0,0,0,0.6);
-}
-
-/* LABELS */
-
-.clockLabel,
-.dateLabel {
-
-    display: block;
-
-    font-size: 14px;
-
-    font-weight: 600;
-
-    color: #cbd5e1;
+        0 0 10px rgba(0,0,0,0.7);
 }
 
 /* TIME */
@@ -268,15 +256,42 @@ nav, .welcome, .chatbot {
     color: #e2e8f0;
 }
 
+/* LABELS */
+
+.clockLabel,
+.dateLabel {
+
+    display: block;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    color: #cbd5e1;
+}
+
+/* THREE THEME FIX */
+
+body.three-theme #clockContainer {
+
+    top: 90px !important;
+
+    right: 25px !important;
+
+    left: auto !important;
+}
+
 /* MOBILE */
 
 @media (max-width:768px){
 
     #clockContainer{
 
-        top: 70px;
+        top: 70px !important;
 
-        right: 10px;
+        right: 10px !important;
+
+        left: auto !important;
     }
 
     #clock{
