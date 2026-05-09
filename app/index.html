@@ -447,6 +447,55 @@ header h1 {
 
     font-size:14px;
 }
+body::before {
+
+    content: "";
+
+    position: fixed;
+
+    width: 600px;
+    height: 600px;
+
+    top: -250px;
+    right: -150px;
+
+    background:
+        radial-gradient(
+            rgba(56,189,248,0.12),
+            transparent
+        );
+
+    filter: blur(120px);
+
+    z-index: -1;
+
+    pointer-events: none;
+}
+
+body::after {
+
+    content: "";
+
+    position: fixed;
+
+    width: 500px;
+    height: 500px;
+
+    bottom: -200px;
+    left: -100px;
+
+    background:
+        radial-gradient(
+            rgba(168,85,247,0.10),
+            transparent
+        );
+
+    filter: blur(120px);
+
+    z-index: -1;
+
+    pointer-events: none;
+}
 
 </style>
 </head>
@@ -454,6 +503,7 @@ header h1 {
 <body>
 
 <div id="particles-js"></div>
+<canvas id="bg"></canvas>
 
 <div id="loginScreen" class="login-screen">
     <div class="login-box">
@@ -664,7 +714,11 @@ async function setReminder(){
 
 </script>
 
-<div class="theme-toggle" onclick="toggleTheme()">🌙 Toggle Theme</div>
+<!-- <div class="theme-toggle" onclick="toggleTheme()">🌙 Toggle Theme</div> -->
+
+<div class="theme-toggle" onclick="toggleVisualTheme()">
+    🎨 Switch Theme
+</div>
 
 <header>
 <h1>WELCOME</h1>
@@ -1893,6 +1947,37 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+window.addEventListener("DOMContentLoaded", ()=>{
+
+    const saved =
+        localStorage.getItem("visualTheme");
+
+    const particles =
+        document.getElementById("particles-js");
+
+    const threeBg =
+        document.getElementById("bg");
+
+    if(saved === "three"){
+
+        visualTheme = "three";
+
+        particles.style.display = "none";
+
+        threeBg.style.display = "block";
+
+    } else {
+
+        visualTheme = "particles";
+
+        particles.style.display = "block";
+
+        threeBg.style.display = "none";
+
+    }
+
+});
+
 /* ================= VOICE RECOGNITION ================= */
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -2045,6 +2130,45 @@ particlesJS("particles-js",{
     }
 });
 
+let visualTheme = "particles";
+
+function toggleVisualTheme(){
+
+    const particles =
+        document.getElementById("particles-js");
+
+    const threeBg =
+        document.getElementById("bg");
+
+    if(visualTheme === "particles"){
+
+        visualTheme = "three";
+
+        particles.style.display = "none";
+
+        threeBg.style.display = "block";
+
+        localStorage.setItem(
+            "visualTheme",
+            "three"
+        );
+
+    } else {
+
+        visualTheme = "particles";
+
+        particles.style.display = "block";
+
+        threeBg.style.display = "none";
+
+        localStorage.setItem(
+            "visualTheme",
+            "particles"
+        );
+
+    }
+}
+
 </script>
 
 <div id="aiPlayerModal" style="
@@ -2076,6 +2200,17 @@ particlesJS("particles-js",{
     <div id="playerContainer"></div>
 
 </div>
+
+<!-- <script type="module">
+
+import * as THREE from
+'https://cdn.jsdelivr.net/npm/three@0.170/build/three.module.js';
+
+// Three.js code here
+
+</script> -->
+
+<script type="module" src="three-background.js"></script>
 
 </body>
 </html>
