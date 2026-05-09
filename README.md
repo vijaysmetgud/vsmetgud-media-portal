@@ -154,4 +154,4 @@ Requests that the installing user grants access to their identity during install
 
 
 
--------------------------THANK YOU----------------------------------
+-------------------------THANK YOU GOOD BYE----------------------------------
