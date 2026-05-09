@@ -30,6 +30,31 @@ body.light {
     height:100%;
     z-index:-2;
 }
+/* ================= THREE THEME LAYOUT FIX ================= */
+
+body.three-theme header {
+
+    padding-top: 8px;
+
+    padding-bottom: 0px;
+}
+
+body.three-theme .navbar {
+
+    margin-top: 0px;
+
+    padding-top: 5px;
+}
+
+body.three-theme #clockContainer {
+
+    top: 110px;
+}
+
+body.three-theme #fileContainer {
+
+    margin-top: 10px;
+}
 
 /* ================= HERO ================= */
 
@@ -2140,13 +2165,31 @@ function toggleVisualTheme(){
     const threeBg =
         document.getElementById("bg");
 
+    const toggleBtn =
+        document.querySelector(".theme-toggle");
+
     if(visualTheme === "particles"){
+
+        document.body.classList.add("three-theme");
 
         visualTheme = "three";
 
+        // SHOW THREE.JS
         particles.style.display = "none";
 
         threeBg.style.display = "block";
+
+        // MOVE BUTTON TO RIGHT
+        toggleBtn.style.left = "auto";
+
+        toggleBtn.style.right = "20px";
+
+        // AI THEME STYLE
+        toggleBtn.style.background =
+            "linear-gradient(135deg,#0ea5e9,#8b5cf6)";
+
+        toggleBtn.style.boxShadow =
+            "0 0 25px rgba(14,165,233,0.45)";
 
         localStorage.setItem(
             "visualTheme",
@@ -2157,9 +2200,24 @@ function toggleVisualTheme(){
 
         visualTheme = "particles";
 
+        document.body.classList.remove("three-theme");
+
+        // SHOW PARTICLES
         particles.style.display = "block";
 
         threeBg.style.display = "none";
+
+        // MOVE BACK TO LEFT
+        toggleBtn.style.right = "auto";
+
+        toggleBtn.style.left = "20px";
+
+        // ORIGINAL STYLE
+        toggleBtn.style.background =
+            "#2563eb";
+
+        toggleBtn.style.boxShadow =
+            "none";
 
         localStorage.setItem(
             "visualTheme",
