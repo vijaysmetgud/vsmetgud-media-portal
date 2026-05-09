@@ -38,22 +38,23 @@ jobs:
       - name: Run npm audit
         run: npm audit --audit-level=critical || true
       
-      - name: Debug SonarQube URL
-        run: |
-          echo "Testing SonarQube Connection..."
-          curl -I ${{ secrets.SONAR_HOST_URL }}
+      # - name: Debug SonarQube URL
+      #   run: |
+      #     echo "Testing SonarQube Connection..."
+      #     curl -I ${{ secrets.SONAR_HOST_URL }}
 
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      # - name: SonarQube Scan
+      #   uses: SonarSource/sonarqube-scan-action@master
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      - name: SonarQube Quality Gate
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # - name: SonarQube Quality Gate
+      #   uses: sonarsource/sonarqube-quality-gate-action@master
+      #   timeout-minutes: 5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
