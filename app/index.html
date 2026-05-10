@@ -353,15 +353,6 @@ header h1 {
     z-index: 99999;
 }
 
-body:not(.three-theme) #clockContainer {
-
-    position: fixed;
-
-    top: 85px;
-
-    right: 25px;
-}
-
 /* =========================
    MOBILE RESPONSIVE
 ========================= */
@@ -743,18 +734,14 @@ body::after {
 }
 
 /* =================================
-   TOP CENTER LAYOUT
+   TOP CENTER LAYOUT - ALL THEMES
 ================================= */
 
-body.three-theme .top-center-container {
+.top-center-container {
 
-    position: fixed;
+    position: relative;
 
-    top: 50px;
-
-    left: 50%;
-
-    transform: translateX(-50%);
+    margin: 30px auto 10px auto;
 
     display: flex;
 
@@ -763,73 +750,13 @@ body.three-theme .top-center-container {
     justify-content: center;
 
     gap: 120px;
-
-    z-index: 99999;
-}
-
-/* =================================
-   THREE THEME TOP SECTION POLISH
-================================= */
-
-body.three-theme .top-center-container {
-
-    position: fixed;
-
-    top: 50px;
-
-    left: 50%;
-
-    transform: translateX(-50%);
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    gap: 120px;
-
-    z-index: 99999;
 
     width: min(95%, 1100px);
 
     flex-wrap: wrap;
+
+    z-index: 10;
 }
-
-/* welcome subtitle */
-
-body.three-theme .welcome-banner p {
-
-    margin-top: 10px;
-
-    font-size: 15px;
-
-    letter-spacing: 2px;
-
-    color: #cbd5e1;
-
-    text-shadow:
-        0 0 10px rgba(255,255,255,0.15);
-}
-
-/* clock styling */
-
-body.three-theme #clockContainer {
-
-    padding: 14px 22px;
-
-    border-radius: 18px;
-
-    background:
-        rgba(255,255,255,0.04);
-
-    backdrop-filter: blur(12px);
-
-    box-shadow:
-        0 0 20px rgba(0,255,255,0.12);
-}
-
-/* time */
 
 body.three-theme #clock {
 
@@ -865,18 +792,32 @@ body.three-theme .dateLabel {
 
     color: #94a3b8;
 }
-
-/* header size fix */
+/* =================================
+   THREE THEME WELCOME
+================================= */
 
 body.three-theme .welcome-banner {
 
     width: fit-content;
 
     margin: 0;
+
+    position: relative;
+
+    overflow: hidden;
+
+    padding: 20px 40px;
+
+    border-radius: 20px;
+
+    background: rgba(0,255,255,0.04);
+
+    backdrop-filter: blur(10px);
+
+    box-shadow:
+        0 0 25px rgba(0,255,255,0.15),
+        0 0 60px rgba(0,255,255,0.08);
 }
-
-/* remove old clock positioning */
-
 body.three-theme #clockContainer {
 
     position: relative !important;
@@ -888,6 +829,17 @@ body.three-theme #clockContainer {
     left: unset !important;
 
     text-align: left;
+
+    padding: 14px 22px;
+
+    border-radius: 18px;
+
+    background: rgba(255,255,255,0.04);
+
+    backdrop-filter: blur(12px);
+
+    box-shadow:
+        0 0 20px rgba(0,255,255,0.12);
 }
 
 /* =================================
