@@ -478,3 +478,32 @@ body.three-theme .welcome-banner h1 {
         font-size: 48px !important;
     }
 }
+/* =================================
+   FORCE REMOVE EXTRA TOP SPACE
+================================= */
+
+#mainContent {
+
+    margin-top: 0 !important;
+
+    padding-top: 0 !important;
+}
+
+header {
+
+    padding-top: 0 !important;
+
+    margin-top: 0 !important;
+}
+
+.top-center-container {
+
+    margin-top: 0 !important;
+
+    padding-top: 0 !important;
+}
+
+.navbar {
+
+    margin-top: 10px !important;
+}
