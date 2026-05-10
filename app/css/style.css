@@ -223,17 +223,6 @@ nav, .welcome, .chatbot {
         0 0 10px rgba(0,0,0,0.7);
 }
 
-/* particles theme */
-
-body:not(.three-theme) #clockContainer {
-
-    position: fixed;
-
-    top: 90px;
-
-    right: 25px;
-}
-
 /* TIME */
 
 #clock {
@@ -454,10 +443,10 @@ body.three-theme .welcome-banner h1 {
 }
 
 /* =================================
-   THREE THEME CENTER LAYOUT
+   CENTER TOP LAYOUT - ALL THEMES
 ================================= */
 
-body.three-theme .top-center-container {
+.top-center-container {
 
     position: fixed;
 
@@ -482,7 +471,9 @@ body.three-theme .top-center-container {
     z-index: 99999;
 }
 
-body.three-theme #clockContainer {
+/* clock inside flex layout */
+
+#clockContainer {
 
     position: relative !important;
 
@@ -491,6 +482,4 @@ body.three-theme #clockContainer {
     right: unset !important;
 
     left: unset !important;
-
-    text-align: left;
 }
