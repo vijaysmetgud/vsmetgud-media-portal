@@ -2390,22 +2390,25 @@ window.addEventListener("DOMContentLoaded", ()=>{
     }
 
 });
-
 /* ================= VOICE RECOGNITION ================= */
 
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
 
 function speak(text) {
 
     window.speechSynthesis.cancel();
 
-    const speech = new SpeechSynthesisUtterance(text);
+    const speech =
+        new SpeechSynthesisUtterance(text);
 
     speech.lang = 'en-US';
     speech.rate = 1;
     speech.pitch = 1;
 
-    const voices = window.speechSynthesis.getVoices();
+    const voices =
+        window.speechSynthesis.getVoices();
 
     const preferred = voices.find(v =>
         v.name.includes('Google') ||
@@ -2421,40 +2424,86 @@ function speak(text) {
 
 let recognition;
 
+/* PREVENT MULTIPLE TRIGGERS */
+let isVoiceProcessing = false;
+
 if(SpeechRecognition){
 
     recognition = new SpeechRecognition();
 
     recognition.lang = "en-US";
+
     recognition.continuous = false;
+
     recognition.interimResults = false;
 
+    recognition.maxAlternatives = 1;
+
     recognition.onstart = function(){
+
         console.log("Voice listening...");
+
     };
 
     recognition.onresult = function(event){
 
-        let speech = event.results[0][0].transcript;
+        /* BLOCK DUPLICATE EVENTS */
+        if(isVoiceProcessing){
+            return;
+        }
+
+        isVoiceProcessing = true;
+
+        let speech =
+            event.results[0][0].transcript;
 
         console.log("Voice:", speech);
 
-        const body = document.getElementById("chatBody");
-        if (body) {
-            body.innerHTML += `<div><b>You (voice):</b> ${escapeHtml(speech)}</div>`;
-            body.scrollTop = body.scrollHeight;
+        const body =
+            document.getElementById("chatBody");
+
+        if(body){
+
+            body.innerHTML += `
+                <div>
+                    <b>You (voice):</b>
+                    ${escapeHtml(speech)}
+                </div>
+            `;
+
+            body.scrollTop =
+                body.scrollHeight;
         }
 
         handleChatQuery(speech);
 
+        /* RESET AFTER 2 SECONDS */
+        setTimeout(()=>{
+
+            isVoiceProcessing = false;
+
+        },2000);
+
     };
 
     recognition.onerror = function(event){
-        console.log("Voice error:", event.error);
+
+        console.log(
+            "Voice error:",
+            event.error
+        );
+
+        isVoiceProcessing = false;
+
+    };
+
+    recognition.onend = function(){
+
+        isVoiceProcessing = false;
+
     };
 
 }
-
 
 /* ================= START VOICE ================= */
 
