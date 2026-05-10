@@ -291,39 +291,6 @@ header h1 {
     transform: translateX(4px);
 }
 
-/* =========================
-   SIGNOUT RIGHT SIDE
-========================= */
-
-.signout-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 99999;
-
-    background: linear-gradient(135deg, #2563eb, #3b82f6);
-    color: white;
-
-    border: none;
-    border-radius: 30px;
-
-    padding: 12px 22px;
-
-    cursor: pointer;
-
-    font-size: 14px;
-    font-weight: 600;
-
-    box-shadow: 0 0 20px rgba(37,99,235,0.4);
-
-    transition: all 0.3s ease;
-}
-
-/* Hover */
-.signout-btn:hover {
-    transform: scale(1.05);
-}
-
 /* ================= CLOCK POSITION ================= */
 
 #clockContainer {
@@ -739,18 +706,12 @@ body::after {
 }
 
 /* =================================
-   AUTH BAR POSITION
+   NAV BAR POSITION
 ================================= */
 
-.auth-bar {
+.navbar {
 
-    position: relative;
-
-    margin: 20px auto 10px auto;
-
-    width: min(95%, 1200px);
-
-    z-index: 20;
+    margin-top: 20px;
 }
 
 /* three theme spacing */
@@ -796,31 +757,20 @@ body.three-theme .dateLabel {
 
     color: #94a3b8;
 }
+
 /* =================================
    THREE THEME WELCOME
 ================================= */
 
-body.three-theme .welcome-banner {
+body.three-theme .welcome-banner p {
 
-    width: fit-content;
+    margin-top: 8px;
 
-    margin: 0;
+    font-size: 14px;
 
-    position: relative;
+    letter-spacing: 2px;
 
-    overflow: hidden;
-
-    padding: 20px 40px;
-
-    border-radius: 20px;
-
-    background: rgba(0,255,255,0.04);
-
-    backdrop-filter: blur(10px);
-
-    box-shadow:
-        0 0 25px rgba(0,255,255,0.15),
-        0 0 60px rgba(0,255,255,0.08);
+    color: #94a3b8;
 }
 
 body.three-theme #clockContainer {
@@ -889,6 +839,32 @@ body.three-theme .welcome-banner h1 {
             0 0 70px #00ffff,
             0 0 120px #00ffff;
     }
+}
+
+/* =================================
+   THREE THEME WELCOME PANEL
+================================= */
+
+body.three-theme .welcome-banner {
+
+    position: relative;
+
+    width: fit-content;
+
+    margin: 0;
+
+    padding: 14px 22px;
+
+    border-radius: 18px;
+
+    background: rgba(15,23,42,0.92);
+
+    border: 1px solid rgba(0,255,255,0.12);
+
+    box-shadow:
+        0 0 20px rgba(0,255,255,0.12);
+
+    text-align: center;
 }
 
 </style>
