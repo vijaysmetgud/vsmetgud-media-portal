@@ -31,26 +31,6 @@ body.light {
     z-index:-2;
     pointer-events: none;
 }
-/* ================= THREE THEME LAYOUT FIX ================= */
-
-body.three-theme header {
-
-    padding-top: 8px;
-
-    padding-bottom: 0px;
-}
-
-body.three-theme .navbar {
-
-    margin-top: 0px;
-
-    padding-top: 5px;
-}
-
-body.three-theme #fileContainer {
-
-    margin-top: 10px;
-}
 
 /* ================= HERO ================= */
 
@@ -756,6 +736,30 @@ body::after {
     flex-wrap: wrap;
 
     z-index: 10;
+}
+
+/* =================================
+   AUTH BAR POSITION
+================================= */
+
+.auth-bar {
+
+    position: relative;
+
+    margin: 20px auto 10px auto;
+
+    width: min(95%, 1200px);
+
+    z-index: 20;
+}
+
+/* three theme spacing */
+
+body.three-theme .auth-bar {
+
+    margin-top: 20px;
+
+    margin-bottom: 10px;
 }
 
 body.three-theme #clock {
