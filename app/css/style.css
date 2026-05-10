@@ -207,82 +207,6 @@ nav, .welcome, .chatbot {
     border-radius: 14px;
 }
 
-/* ================= CLOCK CONTAINER ================= */
-
-#clockContainer {
-
-    z-index: 99999;
-
-    text-align: right;
-
-    color: white;
-
-    line-height: 1.4;
-
-    text-shadow:
-        0 0 10px rgba(0,0,0,0.7);
-}
-
-/* TIME */
-
-#clock {
-
-    font-size: 34px;
-
-    font-weight: bold;
-
-    color: #ffffff;
-
-    margin-bottom: 6px;
-}
-
-/* DATE */
-
-#date {
-
-    font-size: 18px;
-
-    font-weight: 600;
-
-    color: #e2e8f0;
-}
-
-/* LABELS */
-
-.clockLabel,
-.dateLabel {
-
-    display: block;
-
-    font-size: 14px;
-
-    font-weight: 600;
-
-    color: #cbd5e1;
-}
-
-/* MOBILE */
-
-@media (max-width:768px){
-
-    #clockContainer{
-
-        top: 70px !important;
-
-        right: 10px !important;
-
-        left: auto !important;
-    }
-
-    #clock{
-        font-size: 24px;
-    }
-
-    #date{
-        font-size: 14px;
-    }
-}
-
 /* =================================
    THREE THEME WELCOME HIGHLIGHT
 ================================= */
@@ -471,7 +395,7 @@ body.three-theme .welcome-banner h1 {
     z-index: 99999;
 }
 
-/* clock inside flex layout */
+/* ================= CLOCK CONTAINER ================= */
 
 #clockContainer {
 
@@ -482,4 +406,82 @@ body.three-theme .welcome-banner h1 {
     right: unset !important;
 
     left: unset !important;
+
+    z-index: 99999;
+
+    text-align: left;
+
+    color: white;
+
+    line-height: 1.4;
+
+    text-shadow:
+        0 0 10px rgba(0,0,0,0.7);
+}
+
+/* TIME */
+
+#clock {
+
+    font-size: 34px;
+
+    font-weight: bold;
+
+    color: #ffffff;
+
+    margin-bottom: 6px;
+}
+
+/* DATE */
+
+#date {
+
+    font-size: 18px;
+
+    font-weight: 600;
+
+    color: #e2e8f0;
+}
+
+/* LABELS */
+
+.clockLabel,
+.dateLabel {
+
+    display: block;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    color: #cbd5e1;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width:768px){
+
+    .top-center-container {
+
+        gap: 40px;
+
+        top: 30px;
+
+        flex-direction: column;
+    }
+
+    #clock {
+
+        font-size: 24px;
+    }
+
+    #date {
+
+        font-size: 14px;
+    }
+
+    .welcome-banner h1 {
+
+        font-size: 48px !important;
+    }
 }
