@@ -213,11 +213,11 @@ nav, .welcome, .chatbot {
 
 body.three-theme .welcome-banner {
 
+    width: fit-content;
+
+    margin: 0;
+
     position: relative;
-
-    z-index: 99999;
-
-    isolation: isolate;
 
     overflow: hidden;
 
@@ -225,13 +225,12 @@ body.three-theme .welcome-banner {
 
     border-radius: 20px;
 
-    background: rgba(0, 255, 255, 0.04);
+    background: rgba(15,23,42,0.92);
 
-    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0,255,255,0.15);
 
     box-shadow:
-        0 0 25px rgba(0,255,255,0.15),
-        0 0 60px rgba(0,255,255,0.08);
+        0 0 25px rgba(0,255,255,0.15);
 }
 
 /* animated neon border */
@@ -367,18 +366,14 @@ body.three-theme .welcome-banner h1 {
 }
 
 /* =================================
-   CENTER TOP LAYOUT - ALL THEMES
+   TOP CENTER LAYOUT
 ================================= */
 
 .top-center-container {
 
-    position: fixed;
+    position: relative;
 
-    top: 50px;
-
-    left: 50%;
-
-    transform: translateX(-50%);
+    margin: 30px auto 20px auto;
 
     display: flex;
 
@@ -391,8 +386,6 @@ body.three-theme .welcome-banner h1 {
     width: min(95%, 1100px);
 
     flex-wrap: wrap;
-
-    z-index: 99999;
 }
 
 /* ================= CLOCK CONTAINER ================= */

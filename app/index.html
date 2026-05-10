@@ -818,15 +818,10 @@ body.three-theme .welcome-banner {
         0 0 25px rgba(0,255,255,0.15),
         0 0 60px rgba(0,255,255,0.08);
 }
+
 body.three-theme #clockContainer {
 
     position: relative !important;
-
-    top: unset !important;
-
-    right: unset !important;
-
-    left: unset !important;
 
     text-align: left;
 
@@ -834,9 +829,9 @@ body.three-theme #clockContainer {
 
     border-radius: 18px;
 
-    background: rgba(255,255,255,0.04);
+    background: rgba(15,23,42,0.92);
 
-    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0,255,255,0.12);
 
     box-shadow:
         0 0 20px rgba(0,255,255,0.12);
@@ -1009,18 +1004,26 @@ setInterval(updateClock, 1000);
 
 /* ================= CLOCK REMINDER ================= */
 
-const clock =
-    document.getElementById("clock");
+window.addEventListener("DOMContentLoaded", () => {
 
-const reminderPopup =
-    document.getElementById("reminderPopup");
+    const clock =
+        document.getElementById("clock");
 
-clock.addEventListener("click", ()=>{
+    const reminderPopup =
+        document.getElementById("reminderPopup");
 
-    reminderPopup.style.display =
-        reminderPopup.style.display === "block"
-        ? "none"
-        : "block";
+    if(clock && reminderPopup){
+
+        clock.addEventListener("click", ()=>{
+
+            reminderPopup.style.display =
+                reminderPopup.style.display === "block"
+                ? "none"
+                : "block";
+
+        });
+
+    }
 
 });
 
