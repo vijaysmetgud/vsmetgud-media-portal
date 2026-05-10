@@ -208,17 +208,8 @@ nav, .welcome, .chatbot {
 }
 
 /* ================= CLOCK CONTAINER ================= */
-/* ================= CLOCK CONTAINER ================= */
 
 #clockContainer {
-
-    position: fixed !important;
-
-    top: 90px !important;
-
-    right: 25px !important;
-
-    left: auto !important;
 
     z-index: 99999;
 
@@ -230,6 +221,17 @@ nav, .welcome, .chatbot {
 
     text-shadow:
         0 0 10px rgba(0,0,0,0.7);
+}
+
+/* particles theme */
+
+body:not(.three-theme) #clockContainer {
+
+    position: fixed;
+
+    top: 90px;
+
+    right: 25px;
 }
 
 /* TIME */
@@ -270,17 +272,6 @@ nav, .welcome, .chatbot {
     color: #cbd5e1;
 }
 
-/* THREE THEME FIX */
-
-body.three-theme #clockContainer {
-
-    top: 90px !important;
-
-    right: 25px !important;
-
-    left: auto !important;
-}
-
 /* MOBILE */
 
 @media (max-width:768px){
@@ -303,6 +294,122 @@ body.three-theme #clockContainer {
     }
 }
 
+/* =================================
+   THREE THEME WELCOME HIGHLIGHT
+================================= */
+
+body.three-theme .welcome-banner {
+
+    position: relative;
+
+    z-index: 99999;
+
+    isolation: isolate;
+
+    overflow: hidden;
+
+    padding: 20px 40px;
+
+    border-radius: 20px;
+
+    background: rgba(0, 255, 255, 0.04);
+
+    backdrop-filter: blur(10px);
+
+    box-shadow:
+        0 0 25px rgba(0,255,255,0.15),
+        0 0 60px rgba(0,255,255,0.08);
+}
+
+/* animated neon border */
+
+body.three-theme .welcome-banner::before {
+
+    content: "";
+
+    position: absolute;
+
+    inset: -2px;
+
+    border-radius: 22px;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0,255,255,0.5),
+        transparent
+    );
+
+    animation: borderGlow 3s linear infinite;
+
+    z-index: -1;
+}
+
+/* welcome text */
+
+body.three-theme .welcome-banner h1 {
+
+    position: relative;
+
+    z-index: 99999;
+
+    font-size: 80px;
+
+    font-weight: 900;
+
+    letter-spacing: 10px;
+
+    margin: 0;
+
+    color: #7df9ff;
+
+    filter: brightness(1.25);
+
+    animation: welcomeGlow 2s ease-in-out infinite alternate;
+
+    text-shadow:
+        0 0 10px #00f5ff,
+        0 0 20px #00f5ff,
+        0 0 40px #00e5ff,
+        0 0 80px #00e5ff;
+}
+
+/* border animation */
+
+@keyframes borderGlow {
+
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* text glow animation */
+
+@keyframes welcomeGlow {
+
+    from {
+
+        text-shadow:
+            0 0 10px #00f5ff,
+            0 0 20px #00f5ff,
+            0 0 40px #00e5ff,
+            0 0 80px #00e5ff;
+    }
+
+    to {
+
+        text-shadow:
+            0 0 20px #00ffff,
+            0 0 40px #00ffff,
+            0 0 70px #00ffff,
+            0 0 120px #00ffff;
+    }
+}
+
 #particles-js {
 
     position: fixed;
@@ -321,10 +428,11 @@ body.three-theme #clockContainer {
     left: 0;
 
     width: 100%;
-
     height: 45vh;
 
-    z-index: -3;
+    z-index: -10;
+
+    pointer-events: none;
 
     display: none;
 
@@ -343,4 +451,46 @@ body.three-theme #clockContainer {
             rgba(0,0,0,1),
             rgba(0,0,0,0)
         );
+}
+
+/* =================================
+   THREE THEME CENTER LAYOUT
+================================= */
+
+body.three-theme .top-center-container {
+
+    position: fixed;
+
+    top: 50px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 120px;
+
+    width: min(95%, 1100px);
+
+    flex-wrap: wrap;
+
+    z-index: 99999;
+}
+
+body.three-theme #clockContainer {
+
+    position: relative !important;
+
+    top: unset !important;
+
+    right: unset !important;
+
+    left: unset !important;
+
+    text-align: left;
 }

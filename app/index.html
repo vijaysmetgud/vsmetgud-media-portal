@@ -47,21 +47,6 @@ body.three-theme .navbar {
     padding-top: 5px;
 }
 
-body.three-theme #clockContainer {
-
-    position: fixed !important;
-
-    top: 90px !important;
-
-    right: 25px !important;
-
-    left: auto !important;
-
-    text-align: right !important;
-
-    z-index: 99999 !important;
-}
-
 body.three-theme #fileContainer {
 
     margin-top: 10px;
@@ -361,19 +346,20 @@ header h1 {
 
 /* ================= CLOCK POSITION ================= */
 
-#clockContainer{
+#clockContainer {
+
+    text-align: right;
+
+    z-index: 99999;
+}
+
+body:not(.three-theme) #clockContainer {
 
     position: fixed;
 
     top: 85px;
 
     right: 25px;
-
-    left: auto;
-
-    text-align: right;
-
-    z-index: 99999;
 }
 
 /* =========================
@@ -756,6 +742,204 @@ body::after {
     pointer-events: none;
 }
 
+/* =================================
+   TOP CENTER LAYOUT
+================================= */
+
+body.three-theme .top-center-container {
+
+    position: fixed;
+
+    top: 50px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 120px;
+
+    z-index: 99999;
+}
+
+/* =================================
+   THREE THEME TOP SECTION POLISH
+================================= */
+
+body.three-theme .top-center-container {
+
+    position: fixed;
+
+    top: 50px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 120px;
+
+    z-index: 99999;
+
+    width: min(95%, 1100px);
+
+    flex-wrap: wrap;
+}
+
+/* welcome subtitle */
+
+body.three-theme .welcome-banner p {
+
+    margin-top: 10px;
+
+    font-size: 15px;
+
+    letter-spacing: 2px;
+
+    color: #cbd5e1;
+
+    text-shadow:
+        0 0 10px rgba(255,255,255,0.15);
+}
+
+/* clock styling */
+
+body.three-theme #clockContainer {
+
+    padding: 14px 22px;
+
+    border-radius: 18px;
+
+    background:
+        rgba(255,255,255,0.04);
+
+    backdrop-filter: blur(12px);
+
+    box-shadow:
+        0 0 20px rgba(0,255,255,0.12);
+}
+
+/* time */
+
+body.three-theme #clock {
+
+    font-size: 34px;
+
+    font-weight: 700;
+
+    color: #7df9ff;
+
+    text-shadow:
+        0 0 12px #00f5ff;
+}
+
+/* date */
+
+body.three-theme #date {
+
+    margin-top: 6px;
+
+    font-size: 16px;
+
+    color: #dbeafe;
+}
+
+/* labels */
+
+body.three-theme .clockLabel,
+body.three-theme .dateLabel {
+
+    font-size: 12px;
+
+    letter-spacing: 2px;
+
+    color: #94a3b8;
+}
+
+/* header size fix */
+
+body.three-theme .welcome-banner {
+
+    width: fit-content;
+
+    margin: 0;
+}
+
+/* remove old clock positioning */
+
+body.three-theme #clockContainer {
+
+    position: relative !important;
+
+    top: unset !important;
+
+    right: unset !important;
+
+    left: unset !important;
+
+    text-align: left;
+}
+
+/* =================================
+   THREE THEME WELCOME GLOW
+================================= */
+
+body.three-theme .welcome-banner h1 {
+
+    font-size: 80px;
+
+    font-weight: 900;
+
+    letter-spacing: 10px;
+
+    margin: 0;
+
+    color: #7df9ff;
+
+    -webkit-text-fill-color: #7df9ff;
+
+    background: none;
+
+    text-shadow:
+        0 0 10px #00f5ff,
+        0 0 20px #00f5ff,
+        0 0 40px #00e5ff,
+        0 0 80px #00e5ff;
+
+    animation: welcomeGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes welcomeGlow {
+
+    from {
+
+        text-shadow:
+            0 0 10px #00f5ff,
+            0 0 20px #00f5ff,
+            0 0 40px #00e5ff,
+            0 0 80px #00e5ff;
+    }
+
+    to {
+
+        text-shadow:
+            0 0 20px #00ffff,
+            0 0 40px #00ffff,
+            0 0 70px #00ffff,
+            0 0 120px #00ffff;
+    }
+}
+
 </style>
 </head>
 
@@ -791,22 +975,6 @@ body::after {
         </button>
     </div>
     
-<div id="clockContainer">
-
-    <div class="clockLabel">
-        TIME =>
-    </div>
-
-    <div id="clock"></div>
-
-    <div class="dateLabel">
-        DATE =>
-    </div>
-
-    <div id="date"></div>
-
-</div>
-
 <div id="reminderPopup">
 
     <h3>Set Reminder</h3>
@@ -994,10 +1162,35 @@ async function setReminder(){
     </div>
 </div>
 
-<header>
-<h1>WELCOME</h1>
-<p>VSMETGUD MEDIA PORTAL - Enterprise DevOps Dashboard</p>
-</header>
+<div class="top-center-container">
+
+    <header class="welcome-banner">
+
+        <h1>WELCOME</h1>
+
+        <p>
+            VSMETGUD MEDIA PORTAL - Enterprise DevOps Dashboard
+        </p>
+
+    </header>
+
+    <div id="clockContainer">
+
+        <div class="clockLabel">
+            TIME =>
+        </div>
+
+        <div id="clock"></div>
+
+        <div class="dateLabel">
+            DATE =>
+        </div>
+
+        <div id="date"></div>
+
+    </div>
+
+</div>
 
 <div class="navbar">
 
