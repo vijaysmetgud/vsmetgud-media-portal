@@ -2390,6 +2390,7 @@ window.addEventListener("DOMContentLoaded", ()=>{
     }
 
 });
+
 /* ================= VOICE RECOGNITION ================= */
 
 const SpeechRecognition =
@@ -2509,14 +2510,27 @@ if(SpeechRecognition){
 
 function startVoice(){
 
-    if(recognition){
-
-        recognition.start();
-
-        speak("Listening");
-
+    if(!recognition){
+        return;
     }
 
+    /* STOP OLD SPEECH */
+    window.speechSynthesis.cancel();
+
+    /* SPEAK FIRST */
+    const speech =
+        new SpeechSynthesisUtterance(
+            "Listening"
+        );
+
+    speech.onend = () => {
+
+        /* START MIC AFTER SPEAK ENDS */
+        recognition.start();
+
+    };
+
+    window.speechSynthesis.speak(speech);
 }
 
 /* ================= REAL METRICS ================= */
