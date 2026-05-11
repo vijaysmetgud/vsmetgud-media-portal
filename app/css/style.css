@@ -374,6 +374,10 @@ nav, .welcome, .chatbot {
 /* ================= CLOCK CONTAINER ================= */
 
 #clockContainer {
+    
+    position: relative;
+
+    top: 45px;
 
     display: flex;
 
@@ -420,7 +424,9 @@ nav, .welcome, .chatbot {
 
     font-weight: bold;
 
-    color: #00ffcc;
+    color: #00ffcc !important;
+
+    -webkit-text-fill-color: #00ffcc;
 
     text-shadow:
         0 0 10px #00ffcc,
@@ -436,7 +442,9 @@ nav, .welcome, .chatbot {
 
     font-weight: 600;
 
-    color: #ffd166;
+    color: #ffd166 !important;
+
+    -webkit-text-fill-color: #ffd166;
 
     text-shadow:
         0 0 8px #ffd166,
