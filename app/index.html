@@ -287,15 +287,9 @@ header {
 
 .theme-menu-container {
 
-    position: fixed;
+    position: relative;
 
-    top: 155px;
-
-    left: 58%;
-
-    transform: translateX(-50%);
-
-    z-index: 99999;
+    margin: 0 30px;
 }
 
 /* Main Dropdown Button */
@@ -748,19 +742,58 @@ body::after {
 </div>
 
 <div id="mainContent" class="hidden">
+
     <div id="authBar" class="auth-bar hidden">
+
         <div class="auth-info">
+
             <img id="userAvatar" src="" alt="Profile">
+
             <div class="auth-user">
+
                 <span id="userName">Guest</span>
-                <span id="userEmail">Not signed in</span>
+
+                <span id="userEmail">
+                    Not signed in
+                </span>
+
             </div>
+
         </div>
-        <button class="signout-btn" onclick="signOutUser()">
+
+        <!-- THEME BUTTON HERE -->
+
+        <div class="theme-menu-container">
+
+            <button class="theme-menu-btn"
+                    onclick="toggleThemeMenu()">
+
+                🎨 Themes ▼
+
+            </button>
+
+            <div class="theme-dropdown">
+
+                <div class="theme-item"
+                     onclick="toggleTheme()">
+
+                    🌙 Dark / Light
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <button class="signout-btn"
+                onclick="signOutUser()">
+
             Sign Out
+
         </button>
+
     </div>
-    
+
 <div id="reminderPopup">
 
     <h3>Set Reminder</h3>
