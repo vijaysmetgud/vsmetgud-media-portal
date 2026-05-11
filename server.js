@@ -415,6 +415,10 @@ app.get("/api/metrics", (req, res) => {
 
             console.log("K8S API ERROR:", error);
 
+            console.log("STDERR:", stderr);
+
+            console.log("STDOUT:", stdout);
+
             return res.json({
 
                 cpu:
