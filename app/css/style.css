@@ -392,24 +392,15 @@ nav, .welcome, .chatbot {
 
 #clockContainer {
 
-    position: relative !important;
-
-    top: unset !important;
-
-    right: unset !important;
-
-    left: unset !important;
+    text-align: right;
 
     z-index: 99999;
 
-    text-align: left;
-
-    color: white;
-
-    line-height: 1.4;
+    color: #7df9ff;
 
     text-shadow:
-        0 0 10px rgba(0,0,0,0.7);
+        0 0 10px #00f5ff,
+        0 0 20px #00f5ff;
 }
 
 /* TIME */
@@ -420,9 +411,12 @@ nav, .welcome, .chatbot {
 
     font-weight: bold;
 
-    color: #ffffff;
+    color: #7df9ff;
 
-    margin-bottom: 6px;
+    text-shadow:
+        0 0 10px #00f5ff,
+        0 0 20px #00f5ff,
+        0 0 40px #00e5ff;
 }
 
 /* DATE */
@@ -433,7 +427,10 @@ nav, .welcome, .chatbot {
 
     font-weight: 600;
 
-    color: #e2e8f0;
+    color: #c8f9ff;
+
+    text-shadow:
+        0 0 8px #00e5ff;
 }
 
 /* LABELS */
@@ -441,13 +438,10 @@ nav, .welcome, .chatbot {
 .clockLabel,
 .dateLabel {
 
-    display: block;
+    color: #94f9ff;
 
-    font-size: 14px;
-
-    font-weight: 600;
-
-    color: #cbd5e1;
+    text-shadow:
+        0 0 8px #00e5ff;
 }
 
 /* ================= MOBILE ================= */
