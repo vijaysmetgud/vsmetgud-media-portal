@@ -356,9 +356,6 @@ app.get("/api/metrics", (req, res) => {
         ((totalMem - freeMem) / totalMem) * 100;
 
     const cpuLoad =
-        os.loadavg()[0] * 100;
-    
-    const cpuLoad =
         (os.loadavg()[0] / os.cpus().length) * 100;
 
     const command = `
