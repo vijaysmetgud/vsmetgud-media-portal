@@ -471,7 +471,7 @@ nav, .welcome, .chatbot {
     margin-top: -5px;
 }
 
-#metricsWindow {
+#metricsWindow * {    
 
     position: fixed;
 
