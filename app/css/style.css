@@ -344,11 +344,11 @@ nav, .welcome, .chatbot {
 
     align-items: center;
 
-    gap: 40px;
-
-    margin-top: 20px;
+    gap: 55px;
 
     width: 100%;
+
+    margin-top: 20px;
 }
 
 /* ================= CLOCK CONTAINER ================= */
@@ -374,6 +374,20 @@ nav, .welcome, .chatbot {
         0 0 20px #00f5ff;
 }
 
+/* ADD BELOW HERE */
+
+.time-row,
+.date-row {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin: 6px 0;
+}
+
 /* TIME */
 
 #clock {
@@ -382,7 +396,7 @@ nav, .welcome, .chatbot {
 
     font-weight: bold;
 
-    color: #7df9ff;
+    color: #00ff99;
 
     text-shadow:
         0 0 10px #00f5ff,
@@ -398,7 +412,7 @@ nav, .welcome, .chatbot {
 
     font-weight: 600;
 
-    color: #c8f9ff;
+    color: #7CFFB2;
 
     text-shadow:
         0 0 8px #00e5ff;
