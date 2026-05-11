@@ -274,7 +274,17 @@ app.get("/stream/*", (req, res)=>{
             );
 
         const filePath =
-            path.join(MEDIA_DIR, file);
+            path.normalize(
+                path.join(MEDIA_DIR, file)
+            );
+
+        if (!filePath.startsWith(MEDIA_DIR)) {
+
+            return res
+                .status(403)
+                .send("Access denied");
+
+        }    
 
         console.log("STREAM FILE:", filePath);
 
@@ -294,7 +304,6 @@ app.get("/stream/*", (req, res)=>{
         });
 
         const ffmpeg =
-            spawn("ffmpeg", [
             spawn("ffmpeg", [
 
                 "-loglevel",
@@ -325,6 +334,16 @@ app.get("/stream/*", (req, res)=>{
 
         ffmpeg.stdout.pipe(res);
 
+        req.on("close", ()=>{
+
+            if (!ffmpeg.killed) {
+
+                ffmpeg.kill("SIGKILL");
+
+            }
+
+        });
+
         ffmpeg.stderr.on("data", ()=>{});
 
         ffmpeg.on("error", err=>{
@@ -332,6 +351,16 @@ app.get("/stream/*", (req, res)=>{
             console.log(err);
 
             res.end();
+
+        });
+
+        ffmpeg.on("close", ()=>{
+
+            if (!res.writableEnded) {
+
+                res.end();
+
+            }
 
         });
 
@@ -359,23 +388,28 @@ app.get("/api/metrics", (req, res) => {
         (os.loadavg()[0] / os.cpus().length) * 100;
 
     const command = `
-TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
-PODS=$(curl -s \
---header="Authorization: Bearer $TOKEN" \
---no-check-certificate \
-https://kubernetes.default.svc/api/v1/pods)
+    PODS=$(curl -s -k \
+    --header="Authorization: Bearer $TOKEN" \
+    https://kubernetes.default.svc/api/v1/pods)
 
-DISK=$(df -h / | tail -1)
+    DISK=$(df -h / | tail -1)
 
-echo "===PODS==="
-echo "$PODS"
+    echo "===PODS==="
+    echo "$PODS"
 
-echo "===DISK==="
-echo "$DISK"
-`;
+    echo "===DISK==="
+    echo "$DISK"
+    `;
 
-    exec(command, (error, stdout, stderr) => {
+    exec(
+        command,
+        {
+            timeout: 10000,
+            maxBuffer: 1024 * 1024
+        },
+        (error, stdout, stderr) => {  
 
         if(error){
 
@@ -410,12 +444,12 @@ echo "$DISK"
             // ===============================
 
             const podSection =
-                stdout.split("===DISK===")[0]
+                (stdout.split("===DISK===")[0] || "")
                 .replace("===PODS===","")
                 .trim();
 
             const diskSection =
-                stdout.split("===DISK===")[1]
+                (stdout.split("===DISK===")[1] || "")
                 .trim();
 
             // ===============================
