@@ -34,13 +34,13 @@ body.light {
 
 /* ================= HERO ================= */
 
-body:not(.three-theme) header {
+header {
 
     text-align: center;
 
-    padding-top: 30px;
+    padding-top: 5px;
 
-    padding-bottom: 10px;
+    padding-bottom: 5px;
 }
 
 /* PARTICLES THEME */
@@ -738,7 +738,6 @@ body::after {
 <body>
 
 <div id="particles-js"></div>
-<canvas id="bg"></canvas>
 
 <div id="loginScreen" class="login-screen">
     <div class="login-box">
@@ -959,10 +958,6 @@ async function setReminder(){
 
         <div class="theme-item" onclick="toggleTheme()">
             🌙 Dark / Light
-        </div>
-
-        <div class="theme-item" onclick="toggleVisualTheme()">
-            ✨ Particles Theme
         </div>
 
     </div>
@@ -2230,37 +2225,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-window.addEventListener("DOMContentLoaded", ()=>{
-
-    const saved =
-        localStorage.getItem("visualTheme");
-
-    const particles =
-        document.getElementById("particles-js");
-
-    const threeBg =
-        document.getElementById("bg");
-
-    if(saved === "three"){
-
-        visualTheme = "three";
-
-        particles.style.display = "none";
-
-        threeBg.style.display = "block";
-
-    } else {
-
-        visualTheme = "particles";
-
-        particles.style.display = "block";
-
-        threeBg.style.display = "none";
-
-    }
-
-});
-
 /* ================= VOICE RECOGNITION ================= */
 
 const SpeechRecognition =
@@ -2458,48 +2422,6 @@ particlesJS("particles-js",{
     }
 });
 
-let visualTheme = "particles";
-function toggleVisualTheme(){
-
-    const particles =
-        document.getElementById("particles-js");
-
-    const threeBg =
-        document.getElementById("bg");
-
-    if(visualTheme === "particles"){
-
-        document.body.classList.add("three-theme");
-
-        visualTheme = "three";
-
-        particles.style.display = "none";
-
-        threeBg.style.display = "block";
-
-        localStorage.setItem(
-            "visualTheme",
-            "three"
-        );
-
-    } else {
-
-        visualTheme = "particles";
-
-        document.body.classList.remove("three-theme");
-
-        particles.style.display = "block";
-
-        threeBg.style.display = "none";
-
-        localStorage.setItem(
-            "visualTheme",
-            "particles"
-        );
-
-    }
-}
-
 </script>
 
 <div id="aiPlayerModal" style="
@@ -2531,8 +2453,6 @@ function toggleVisualTheme(){
     <div id="playerContainer"></div>
 
 </div>
-
-<script type="module" src="three-background.js"></script>
 
 </body>
 </html>

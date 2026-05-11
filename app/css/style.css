@@ -207,11 +207,11 @@ nav, .welcome, .chatbot {
     border-radius: 14px;
 }
 
-/* =================================
-   THREE THEME WELCOME HIGHLIGHT
-================================= */
+/* ================================
+    WELCOME HIGHLIGHT NEON GLOW 
+=================================== */
 
-body.three-theme .welcome-banner {
+.welcome-banner {
 
     width: fit-content;
 
@@ -235,7 +235,7 @@ body.three-theme .welcome-banner {
 
 /* animated neon border */
 
-body.three-theme .welcome-banner::before {
+.welcome-banner::before {
 
     content: "";
 
@@ -259,7 +259,7 @@ body.three-theme .welcome-banner::before {
 
 /* welcome text */
 
-body.three-theme .welcome-banner h1 {
+.welcome-banner h1 {
 
     position: relative;
 
@@ -478,56 +478,6 @@ body.three-theme .welcome-banner h1 {
         font-size: 48px !important;
     }
 }
-/* =================================
-   FORCE REMOVE EXTRA TOP SPACE
-================================= */
-
-#mainContent {
-
-    margin-top: 0 !important;
-
-    padding-top: 0 !important;
-}
-
-header {
-
-    padding-top: 0 !important;
-
-    margin-top: 0 !important;
-}
-
-.top-center-container {
-
-    margin-top: 0 !important;
-
-    padding-top: 0 !important;
-}
-/* DEFAULT / PARTICLES THEME */
-
-body:not(.three-theme) .navbar {
-
-    justify-content: center;
-
-    margin-top: 10px;
-}
-
-/* THREE.JS THEME */
-
-body.three-theme .navbar {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(auto-fit, minmax(180px, 1fr));
-
-    gap: 18px;
-
-    width: min(95%, 1400px);
-
-    margin: 30px auto;
-
-    padding: 20px;
-}
 
 .navbar {
 
@@ -535,5 +485,9 @@ body.three-theme .navbar {
 
     flex-wrap: wrap;
 
+    justify-content: center;
+
     gap: 15px;
+
+    margin-top: -5px;
 }
