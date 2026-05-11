@@ -342,17 +342,21 @@ nav, .welcome, .chatbot {
 
     margin: 0 auto 10px auto;
 
-    display: flex;
+    display: inline-flex;
 
     align-items: center;
 
     justify-content: center;
 
-    gap: 80px;
+    gap: 60px;
 
     width: fit-content;
 
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+
+    left: 50%;
+
+    transform: translateX(-50%);
 }
 
 /* ================= CLOCK CONTAINER ================= */
