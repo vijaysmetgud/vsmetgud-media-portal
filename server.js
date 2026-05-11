@@ -392,7 +392,7 @@ app.get("/api/metrics", (req, res) => {
 
     PODS=$(curl -s -k \
     --header="Authorization: Bearer $TOKEN" \
-    https://kubernetes.default.svc/api/v1/pods
+    https://kubernetes.default.svc/api/v1/pods)
 
     DISK=$(df -h / | tail -1)
 
