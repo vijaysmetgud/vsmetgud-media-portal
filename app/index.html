@@ -34,18 +34,32 @@ body.light {
 
 /* ================= HERO ================= */
 
-header {
+body:not(.three-theme) header {
+
     text-align: center;
-    padding-top: 30px;   /* reduced */
+
+    padding-top: 30px;
+
     padding-bottom: 10px;
 }
 
-header h1 {
-    font-size:70px;
-    font-weight:700;
-    background:linear-gradient(90deg,#38bdf8,#22c55e);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
+/* PARTICLES THEME */
+
+body:not(.three-theme) .welcome-banner h1 {
+
+    font-size: 70px;
+
+    font-weight: 700;
+
+    background: linear-gradient(
+        90deg,
+        #38bdf8,
+        #22c55e
+    );
+
+    -webkit-background-clip: text;
+
+    -webkit-text-fill-color: transparent;
 }
 
 /* ================= BUTTONS ================= */
