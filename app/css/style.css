@@ -338,11 +338,9 @@ nav, .welcome, .chatbot {
 
 .top-center-container {
 
-    position: relative;
-
     margin: 0 auto 10px auto;
 
-    display: inline-flex;
+    display: flex;
 
     align-items: center;
 
@@ -351,37 +349,25 @@ nav, .welcome, .chatbot {
     gap: 40px;
 
     width: fit-content;
-
-    flex-wrap: nowrap;
-
-    left: 50%;
-
-    transform: translateX(-50%);
 }
 
 /* ================= CLOCK CONTAINER ================= */
 
 #clockContainer {
 
-    position: relative;
-
-    left: 15px;
-
     display: flex;
 
     flex-direction: column;
 
-    align-items: center;
-
     justify-content: center;
 
-    min-width: 180px;
-
-    z-index: 99999;
-
-    color: #7df9ff;
+    align-items: center;
 
     text-align: center;
+
+    min-width: 160px;
+
+    color: #7df9ff;
 
     text-shadow:
         0 0 10px #00f5ff,
