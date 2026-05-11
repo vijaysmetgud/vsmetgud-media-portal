@@ -2430,82 +2430,48 @@ function startVoice(){
 
 /* ================= REAL METRICS ================= */
 
-// async function fetchMetrics(){
-
-//     try{
-
-//         const response = await fetch("/api/metrics");
-
-//         if(!response.ok){
-//             throw new Error("Metrics API failed");
-//         }
-
-//         const data = await response.json();
-
-//         console.log("METRICS:", data);
-
-//         // SAFE ELEMENT UPDATE
-//         const setText = (id, value) => {
-
-//             const el = document.getElementById(id);
-
-//             if(el){
-//                 el.innerText = value ?? "N/A";
-//             }
-//         };
-
-//         setText("cpu", data.cpu);
-//         setText("memory", data.memory);
-//         setText("pods", data.pods);
-//         setText("health", data.health);
-
-//         setText("diskTotal", data.diskTotal);
-//         setText("diskUsed", data.diskUsed);
-//         setText("diskFree", data.diskFree);
-//         setText("diskUsage", data.diskUsage);
-
-//     }
-//     catch(err){
-
-//         console.log("Metrics fetch failed:", err);
-
-//     }
-// }
-
 async function fetchMetrics(){
 
-    const data = {
+    try{
 
-        cpu: "15%",
-        memory: "48%",
-        pods: "12",
-        health: "Healthy",
+        const response = await fetch("/api/metrics");
 
-        diskTotal: "120GB",
-        diskUsed: "60GB",
-        diskFree: "60GB",
-        diskUsage: "50%"
-    };
-
-    const setText = (id, value) => {
-
-        const el = document.getElementById(id);
-
-        if(el){
-            el.innerText = value;
+        if(!response.ok){
+            throw new Error("Metrics API failed");
         }
-    };
 
-    setText("cpu", data.cpu);
-    setText("memory", data.memory);
-    setText("pods", data.pods);
-    setText("health", data.health);
+        const data = await response.json();
 
-    setText("diskTotal", data.diskTotal);
-    setText("diskUsed", data.diskUsed);
-    setText("diskFree", data.diskFree);
-    setText("diskUsage", data.diskUsage);
+        console.log("METRICS:", data);
+
+        // SAFE ELEMENT UPDATE
+        const setText = (id, value) => {
+
+            const el = document.getElementById(id);
+
+            if(el){
+                el.innerText = value ?? "N/A";
+            }
+        };
+
+        setText("cpu", data.cpu);
+        setText("memory", data.memory);
+        setText("pods", data.pods);
+        setText("health", data.health);
+
+        setText("diskTotal", data.diskTotal);
+        setText("diskUsed", data.diskUsed);
+        setText("diskFree", data.diskFree);
+        setText("diskUsage", data.diskUsage);
+
+    }
+    catch(err){
+
+        console.log("Metrics fetch failed:", err);
+
+    }
 }
+
 
 /* ================= PARTICLES ================= */
 

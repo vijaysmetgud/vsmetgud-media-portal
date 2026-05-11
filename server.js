@@ -357,6 +357,9 @@ app.get("/api/metrics", (req, res) => {
 
     const cpuLoad =
         os.loadavg()[0] * 100;
+    
+    const cpuLoad =
+        (os.loadavg()[0] / os.cpus().length) * 100;
 
     const command = `
 TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
@@ -382,6 +385,26 @@ echo "$DISK"
             console.log("K8S API ERROR:", error);
 
             return res.json({
+
+                cpu:
+                    cpuLoad.toFixed(1) + "%",
+
+                memory:
+                    usedMem.toFixed(1) + "%",
+
+                pods: "0",
+
+                diskTotal: "N/A",
+
+                diskUsed: "N/A",
+
+                diskFree: "N/A",
+
+                diskUsage: "N/A",
+
+                health: "Standalone Mode"
+            });
+        }
 
                 cpu: "N/A",
 
