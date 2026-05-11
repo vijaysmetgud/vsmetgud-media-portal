@@ -363,13 +363,25 @@ nav, .welcome, .chatbot {
 
 #clockContainer {
 
-    text-align: right;
+    position: relative;
 
-    margin-left: 10px;
+    left: 15px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 180px;
 
     z-index: 99999;
 
     color: #7df9ff;
+
+    text-align: center;
 
     text-shadow:
         0 0 10px #00f5ff,
