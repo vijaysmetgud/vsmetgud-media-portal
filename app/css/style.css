@@ -374,10 +374,14 @@ nav, .welcome, .chatbot {
 /* ================= CLOCK CONTAINER ================= */
 
 #clockContainer {
-    
-    position: relative;
 
-    top: 45px;
+    position: absolute;
+
+    top: 95px;
+
+    right: 180px;
+
+    z-index: 99999;
 
     display: flex;
 
@@ -390,8 +394,6 @@ nav, .welcome, .chatbot {
     text-align: center;
 
     min-width: 160px;
-
-    margin-top: 35px;
 
     text-shadow:
         0 0 10px #00f5ff,
