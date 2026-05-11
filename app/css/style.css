@@ -348,7 +348,7 @@ nav, .welcome, .chatbot {
 
     justify-content: center;
 
-    gap: 60px;
+    gap: 40px;
 
     width: fit-content;
 
@@ -364,6 +364,8 @@ nav, .welcome, .chatbot {
 #clockContainer {
 
     text-align: right;
+
+    margin-left: 10px;
 
     z-index: 99999;
 
