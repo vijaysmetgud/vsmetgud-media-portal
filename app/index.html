@@ -160,6 +160,45 @@ header h1 {
     user-select:none;
 }
 
+@media (max-width:768px){
+
+    #metricsWindow{
+
+        width:120px;
+
+        left:5px;
+
+        top:160px;
+
+        padding:8px;
+
+        max-height:60vh;
+    }
+
+    .counter{
+
+        font-size:18px;
+    }
+
+    .metric h3{
+
+        font-size:12px;
+    }
+
+    .chatbot{
+
+        width:95%;
+
+        right:2.5%;
+
+        bottom:10px;
+    }
+
+    #fileContainer{
+
+        margin-left:130px;
+    }
+}
 /* ================= METRIC ITEMS ================= */
 
 .metric {
@@ -986,6 +1025,12 @@ setInterval(updateClock, 1000);
 /* ================= CLOCK REMINDER ================= */
 
 window.addEventListener("DOMContentLoaded", () => {
+
+    fetchMetrics();
+
+    setInterval(fetchMetrics, 5000);
+
+});    
 
     const clock =
         document.getElementById("clock");
@@ -2539,61 +2584,43 @@ async function fetchMetrics(){
 
     try{
 
-        const response =
-            await fetch("/api/metrics");
+        const response = await fetch("/api/metrics");
+
+        if(!response.ok){
+            throw new Error("Metrics API failed");
+        }
 
         const data = await response.json();
 
-        // ===============================
-        // CPU / MEMORY / PODS
-        // ===============================
+        console.log("METRICS:", data);
 
-        // document.getElementById("cpu").innerText =
-        //     data.cpu;
+        // SAFE ELEMENT UPDATE
+        const setText = (id, value) => {
 
-        const cpuEl =
-            document.getElementById("cpu");
+            const el = document.getElementById(id);
 
-        if(cpuEl){
-            cpuEl.innerText = data.cpu;
-        }    
+            if(el){
+                el.innerText = value ?? "N/A";
+            }
+        };
 
-        document.getElementById("memory").innerText =
-            data.memory;
+        setText("cpu", data.cpu);
+        setText("memory", data.memory);
+        setText("pods", data.pods);
+        setText("health", data.health);
 
-        document.getElementById("pods").innerText =
-            data.pods;
-
-        document.getElementById("health").innerText =
-            data.health;
-
-        // ===============================
-        // DISK METRICS
-        // ===============================
-
-        document.getElementById("diskTotal").innerText =
-            data.diskTotal;
-
-        document.getElementById("diskUsed").innerText =
-            data.diskUsed;
-
-        document.getElementById("diskFree").innerText =
-            data.diskFree;
-
-        document.getElementById("diskUsage").innerText =
-            data.diskUsage;
+        setText("diskTotal", data.diskTotal);
+        setText("diskUsed", data.diskUsed);
+        setText("diskFree", data.diskFree);
+        setText("diskUsage", data.diskUsage);
 
     }
     catch(err){
 
-        console.log("Metrics fetch failed", err);
+        console.log("Metrics fetch failed:", err);
 
     }
 }
-
-setInterval(fetchMetrics, 5000);
-
-fetchMetrics();
 
 /* ================= PARTICLES ================= */
 
