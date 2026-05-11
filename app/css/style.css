@@ -338,17 +338,17 @@ nav, .welcome, .chatbot {
 
 .top-center-container {
 
-    margin: 0 auto 10px auto;
-
     display: flex;
-
-    align-items: center;
 
     justify-content: center;
 
+    align-items: center;
+
     gap: 40px;
 
-    width: fit-content;
+    margin-top: 20px;
+
+    width: 100%;
 }
 
 /* ================= CLOCK CONTAINER ================= */
