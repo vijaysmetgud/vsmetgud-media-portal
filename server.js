@@ -295,12 +295,18 @@ app.get("/stream/*", (req, res)=>{
 
         const ffmpeg =
             spawn("ffmpeg", [
+            spawn("ffmpeg", [
+
+                "-loglevel",
+
+                "quiet",
 
                 "-i", filePath,
 
                 "-f", "mp4",
 
                 "-movflags",
+
                 "frag_keyframe+empty_moov",
 
                 "-vcodec", "libx264",
@@ -319,13 +325,7 @@ app.get("/stream/*", (req, res)=>{
 
         ffmpeg.stdout.pipe(res);
 
-        ffmpeg.stderr.on("data", data=>{
-
-            console.log(
-                data.toString()
-            );
-
-        });
+        ffmpeg.stderr.on("data", ()=>{});
 
         ffmpeg.on("error", err=>{
 
@@ -361,7 +361,7 @@ app.get("/api/metrics", (req, res) => {
     const command = `
 TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
-PODS=$(wget -qO- \
+PODS=$(curl -s \
 --header="Authorization: Bearer $TOKEN" \
 --no-check-certificate \
 https://kubernetes.default.svc/api/v1/pods)
@@ -422,12 +422,40 @@ echo "$DISK"
             // PODS
             // ===============================
 
-            const data = JSON.parse(podSection);
+            // const data = JSON.parse(podSection);
+            let data = { items: [] };
+
+            if (
+                podSection &&
+                podSection.startsWith("{") &&
+                podSection.endsWith("}")
+            ) {
+
+                try {
+
+                    data = JSON.parse(podSection);
+
+                } catch(parseErr) {
+
+                    console.log(
+                        "INVALID POD JSON:",
+                        parseErr.message
+                    );
+
+                }
+
+            } else {
+
+                console.log(
+                    "EMPTY OR INCOMPLETE POD JSON"
+                );
+
+            }
 
             const runningPods =
-                data.items.filter(
+                (data.items || []).filter(
                     pod =>
-                        pod.status.phase === "Running"
+                        pod?.status?.phase === "Running"
                 ).length;
 
             // ===============================
