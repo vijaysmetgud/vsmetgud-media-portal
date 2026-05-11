@@ -882,9 +882,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
     fetchMetrics();
 
-    setInterval(fetchMetrics, 5000);
+    if(window.metricsInterval){
 
+        clearInterval(
+            window.metricsInterval
+        );
 
+    }
+
+    window.metricsInterval =
+        setInterval(fetchMetrics, 5000);
+
+});
 
     const clock =
         document.getElementById("clock");
@@ -2434,7 +2443,9 @@ async function fetchMetrics(){
 
     try{
 
-        const response = await fetch("/api/metrics");
+        const response = await fetch("/api/metrics", {
+            cache: "no-store"
+        });
 
         if(!response.ok){
             throw new Error("Metrics API failed");
