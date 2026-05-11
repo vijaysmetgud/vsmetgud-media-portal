@@ -2184,6 +2184,44 @@ document.addEventListener("mousemove", (e)=>{
 
 });
 
+/* ================= MOBILE TOUCH DRAG ================= */
+
+metricsPane.addEventListener("touchstart", (e) => {
+
+    isDragging = true;
+
+    const touch = e.touches[0];
+
+    offsetX =
+        touch.clientX - metricsPane.offsetLeft;
+
+    offsetY =
+        touch.clientY - metricsPane.offsetTop;
+
+}, { passive: false });
+
+document.addEventListener("touchmove", (e) => {
+
+    if (!isDragging) return;
+
+    const touch = e.touches[0];
+
+    metricsPane.style.left =
+        (touch.clientX - offsetX) + "px";
+
+    metricsPane.style.top =
+        (touch.clientY - offsetY) + "px";
+
+    e.preventDefault();
+
+}, { passive: false });
+
+document.addEventListener("touchend", () => {
+
+    isDragging = false;
+
+});
+
 document.addEventListener("mouseup", ()=>{
 
     isDragging = false;
