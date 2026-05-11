@@ -387,7 +387,7 @@ nav, .welcome, .chatbot {
 
     min-width: 160px;
 
-    color: #7df9ff;
+    margin-top: 35px;
 
     text-shadow:
         0 0 10px #00f5ff,
@@ -420,12 +420,12 @@ nav, .welcome, .chatbot {
 
     font-weight: bold;
 
-    color: #00ff99;
+    color: #00ffcc;
 
     text-shadow:
-        0 0 10px #00ff99,
-        0 0 20px #00ff99,
-        0 0 40px #00ff99;
+        0 0 10px #00ffcc,
+        0 0 20px #00ffcc,
+        0 0 40px #00ffcc;
 }
 
 /* DATE */
@@ -436,10 +436,11 @@ nav, .welcome, .chatbot {
 
     font-weight: 600;
 
-    color: #7CFFB2;
+    color: #ffd166;
 
     text-shadow:
-        0 0 8px #00ff99;
+        0 0 8px #ffd166,
+        0 0 16px #ffd166;
 }
 
 /* LABELS */
