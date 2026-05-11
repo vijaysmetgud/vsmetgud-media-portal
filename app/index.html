@@ -287,9 +287,11 @@ header {
 
 .theme-menu-container {
 
-    position: relative;
+    position: absolute;
 
-    margin: 0 30px;
+    left: 50%;
+
+    transform: translateX(-50%);
 }
 
 /* Main Dropdown Button */
@@ -485,7 +487,7 @@ header {
 .auth-bar {
     display:flex;
     align-items:center;
-    justify-content:flex-start;
+    justify-content:space-between;
 
     gap:16px;
 
@@ -974,22 +976,6 @@ async function setReminder(){
 }
 
 </script>
-
-<!-- LEFT SIDE THEME DROPDOWN -->
-<div class="theme-menu-container">
-
-    <button class="theme-menu-btn" onclick="toggleThemeMenu()">
-        🎨 Themes ▼
-    </button>
-
-    <div class="theme-dropdown">
-
-        <div class="theme-item" onclick="toggleTheme()">
-            🌙 Dark / Light
-        </div>
-
-    </div>
-</div>
 
 <div id="clockContainer">
 
