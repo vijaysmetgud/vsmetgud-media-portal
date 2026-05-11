@@ -403,26 +403,6 @@ echo "$DISK"
             });
         }
 
-                cpu: "N/A",
-
-                memory: "N/A",
-
-                pods: "N/A",
-
-                diskTotal: "N/A",
-
-                diskUsed: "N/A",
-
-                diskFree: "N/A",
-
-                diskUsage: "N/A",
-
-                health: "Unavailable"
-
-            });
-
-        }
-
         try{
 
             // ===============================
