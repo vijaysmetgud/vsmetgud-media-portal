@@ -1216,12 +1216,11 @@ function updateUserProfile(user) {
 
 const localUsers = [
     {
-        username: '*',
-        password: 'india',
+        username: 'Vijay',
+        password: 'metgud@123',
         name: 'Admin User',
         email: 'admin@example.com',
-        picture: 'https://www.gravatar.com/avatar/?d=identicon'
-        // picture: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon'
+        picture: 'https://www.gravatar.com/avatar/?d=identicon'       
     }
 ];
 
@@ -1248,8 +1247,11 @@ function loginWithPassword(event) {
     const password = document.getElementById('passwordInput').value;
     const error = document.getElementById('loginError');
 
-    // const user = localUsers.find(entry => entry.username === username && entry.password === password);
-    const user = localUsers.find(entry => entry.password === password);
+    const user = localUsers.find(
+    entry =>
+        entry.username === username &&
+        entry.password === password
+);
 
     if (!user) {
         error.innerText = 'Invalid username or password.';
