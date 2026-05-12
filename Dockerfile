@@ -4,9 +4,13 @@ FROM node:20-alpine AS builder
 
 WORKDIR /usr/src/app
 
+RUN apk add --no-cache python3 make g++
+
+ENV PYTHON=/usr/bin/python3
+
 COPY package*.json ./
 
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 COPY app/ .
 COPY server.js ./

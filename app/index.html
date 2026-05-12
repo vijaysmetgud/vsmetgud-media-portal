@@ -1204,7 +1204,15 @@ PYTHON PRACTICE
 
 let currentUser = null;
 
-const AUTH_VERSION = "v2";
+function getSessionSignature(){
+
+    return btoa(
+        localUsers[0].password
+    );
+
+}
+
+// const AUTH_VERSION = "v2";
 
 function updateUserProfile(user) {
     const name = user.name || 'Signed-in User';
@@ -1237,10 +1245,8 @@ function loginUser(user) {
 
     localStorage.setItem('portalUser', JSON.stringify(currentUser));
 
-    localStorage.setItem(
-        'authVersion',
-        AUTH_VERSION
-    );
+    localStorage.setItem('sessionSignature', getSessionSignature());
+
     updateUserProfile(currentUser);
     document.getElementById('loginError').innerText = '';
     showMainContent();
@@ -1437,10 +1443,15 @@ function initAuth() {
 
     recordVisitorHit();
 
-    const savedVersion =
-        localStorage.getItem('authVersion');
+    const savedSignature =
+        localStorage.getItem(
+            'sessionSignature'
+        );
 
-    if(savedVersion !== AUTH_VERSION){
+    const currentSignature =
+        getSessionSignature();
+
+    if(savedSignature !== currentSignature){
 
         localStorage.clear();
 
