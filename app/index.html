@@ -1204,6 +1204,8 @@ PYTHON PRACTICE
 
 let currentUser = null;
 
+const AUTH_VERSION = "v2";
+
 function updateUserProfile(user) {
     const name = user.name || 'Signed-in User';
     const email = user.email || 'No email available';
@@ -1234,6 +1236,11 @@ function loginUser(user) {
     };
 
     localStorage.setItem('portalUser', JSON.stringify(currentUser));
+
+    localStorage.setItem(
+        'authVersion',
+        AUTH_VERSION
+    );
     updateUserProfile(currentUser);
     document.getElementById('loginError').innerText = '';
     showMainContent();
@@ -1429,6 +1436,18 @@ function initAuth() {
     }
 
     recordVisitorHit();
+
+    const savedVersion =
+        localStorage.getItem('authVersion');
+
+    if(savedVersion !== AUTH_VERSION){
+
+        localStorage.clear();
+
+        showLoginScreen();
+
+        return;
+    }
 
     const storedUser = localStorage.getItem('portalUser');
 
