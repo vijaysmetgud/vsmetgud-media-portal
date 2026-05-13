@@ -556,6 +556,19 @@ body.light .dateLabel {
 }
 
 
+/* ================= METRICS LAYOUT ================= */
+
+.metrics{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:20px;
+
+    width:100%;
+}
+
 /* ================= METRICS SIDEBAR ================= */
 
 #metricsWindow{
@@ -564,7 +577,7 @@ body.light .dateLabel {
 
     left: 15px;
 
-    top: 280px;
+    top: 220px;
 
     width: 200px;
 
@@ -605,7 +618,7 @@ body.light .dateLabel {
 
         left:10px;
 
-        top:280px;
+        top:220px;
 
         min-height:420px;
 
