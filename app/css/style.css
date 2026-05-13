@@ -564,7 +564,7 @@ body.light .dateLabel {
 
     left: 15px;
 
-    top: 340px;
+    top: 280px;
 
     width: 200px;
 
@@ -605,7 +605,7 @@ body.light .dateLabel {
 
         left:10px;
 
-        top:300px;
+        top:280px;
 
         min-height:420px;
 
@@ -613,7 +613,6 @@ body.light .dateLabel {
 
         max-height:95vh;
     }
-}
 
     .counter{
 
@@ -639,6 +638,7 @@ body.light .dateLabel {
         margin-left:130px;
     }
 }
+
 /* ================= METRIC ITEMS ================= */
 
 .metric {
