@@ -136,15 +136,15 @@ header {
 
 #metricsWindow{
 
-    position:relative;
+    position:fixed;
 
     left:15px;
 
-    top:10px;
+    top:170px;
 
     width:200px;
 
-    max-height:110vh;
+    max-height:90vh;
 
     overflow-y:auto;
 
@@ -174,16 +174,16 @@ header {
 
         left:10px;
 
-        top:90px;
+        top:70px;
 
         padding:8px;
 
-        max-height:90vh;
+        max-height:75vh;
     }
 
     .counter{
 
-        font-size:18px;
+        font-size:16px;
     }
 
     .metric h3{
@@ -209,6 +209,24 @@ header {
 
 .metric {
     margin-bottom: 25px;
+}
+
+/* ================= METRIC HEADING COLORS ================= */
+
+.metric h3 {
+
+    color: #e2e8f0 !important;
+
+    font-size: 16px;
+
+    font-weight: 600;
+}
+
+/* LIGHT THEME */
+
+body.light .metric h3 {
+
+    color: #334155 !important;
 }
 
 /* ================= LIGHT THEME FIX ================= */
@@ -248,7 +266,7 @@ body.light .metric h3 {
     top: 140px;   /* moved below signout */
     right: 20px;
     background: rgba(0, 0, 0, 0.75);
-    color: #334155 !important;
+    color: white;
     border: 1px solid rgba(255,255,255,0.2);
 }
 
