@@ -557,20 +557,120 @@ body.light .dateLabel {
     margin-top: -5px;
 }
 
-#metricsWindow {    
 
-    position: fixed;
+/* ================= METRICS SIDEBAR ================= */
 
-    left: 10px;
+#metricsWindow{
 
-    top: 220px;
+    position:fixed;
 
-    z-index: 99999;
+    left:15px;
 
-    touch-action: none;
+    top:50%;
 
-    user-select: none;
+    transform:translateY(-20%);
 
-    -webkit-user-select: none;
+    width:200px;
 
+    max-height:75vh;
+
+    overflow-y:auto;
+
+    overflow-x:hidden;
+
+    z-index:9999;
+
+    background:
+        rgba(15,23,42,0.92);
+
+    border-radius:24px;
+
+    padding:14px 10px;
+
+    backdrop-filter:blur(12px);
+
+    cursor:move;
+
+    user-select:none;
+}
+
+@media (max-width:768px){
+
+    #metricsWindow{
+
+        width:120px;
+
+        left:10px;
+
+        top:55%;
+
+        transform:translateY(-25%);
+
+        padding:8px;
+
+        max-height:75vh;
+    }
+}
+
+    .counter{
+
+        font-size:16px;
+    }
+
+    .metric h3{
+
+        font-size:16px;
+    }
+
+    .chatbot{
+
+        width:95%;
+
+        right:2.5%;
+
+        bottom:10px;
+    }
+
+    #fileContainer{
+
+        margin-left:130px;
+    }
+}
+/* ================= METRIC ITEMS ================= */
+
+.metric {
+    margin-bottom: 25px;
+}
+
+/* ================= METRIC HEADING COLORS ================= */
+
+.metric h3 {
+
+    color: #e2e8f0 !important;
+
+    font-size: 18px;
+
+    font-weight: 600;
+}
+
+/* LIGHT THEME */
+
+body.light .metric h3 {
+
+    color: #334155 !important;
+}
+
+/* ================= LIGHT THEME FIX ================= */
+
+body.light .metric h3 {
+
+    color: #0f172a !important;
+}
+
+/* ================= COUNTER ================= */
+
+.counter {
+    font-size: 25px;
+    font-weight: bold;
+    color: #22c55e;
 }
