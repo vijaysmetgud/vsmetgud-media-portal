@@ -381,6 +381,8 @@ nav, .welcome, .chatbot {
 
     right: 180px;
 
+    padding-left: 20px;
+
     z-index: 99999;
 
     display: flex;
@@ -438,11 +440,15 @@ nav, .welcome, .chatbot {
 
 /* DATE */
 
+/* DATE */
+
 #date {
 
-    font-size: 18px;
+    font-size: 24px;
 
-    font-weight: 600;
+    font-weight: 800;
+
+    letter-spacing: 1px;
 
     color: #ffd700 !important;
 
@@ -459,10 +465,39 @@ nav, .welcome, .chatbot {
 .clockLabel,
 .dateLabel {
 
-    color: #94f9ff;
+    font-size: 18px;
+
+    font-weight: 800;
+
+    color: #ffd700;
 
     text-shadow:
-        0 0 8px #00e5ff;
+        0 0 8px #ffd700,
+        0 0 16px #ffcc00;
+}
+
+/* LIGHT THEME CLOCK FIX */
+
+body.light #clockContainer {
+
+    text-shadow:
+        0 0 10px #ffd700,
+        0 0 20px #ffcc00;
+}
+
+body.light #clock,
+body.light #date,
+body.light .clockLabel,
+body.light .dateLabel {
+
+    color: #d4a017 !important;
+
+    -webkit-text-fill-color: #d4a017;
+
+    text-shadow:
+        0 0 8px #ffd700,
+        0 0 16px #ffcc00,
+        0 0 24px #ffb700;
 }
 
 /* ================= MOBILE ================= */
