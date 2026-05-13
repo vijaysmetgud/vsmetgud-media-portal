@@ -571,19 +571,21 @@ body.light .dateLabel {
 
 /* ================= METRICS SIDEBAR ================= */
 
-#metricsWindow{
+body #metricsWindow{
 
     position: fixed;
 
-    isolation: isolate;
+    display: flex;
+
+    flex-direction: column;
 
     left: 15px;
 
     top: 220px;
 
-    width: 200px;
+    min-width: 200px;
 
-    min-height: 500px;
+    height: fit-content;
 
     max-height: 90vh;
 
@@ -591,7 +593,7 @@ body.light .dateLabel {
 
     overflow-x: hidden;
 
-    z-index: 9999;
+    z-index: 99999;
 
     background: rgba(15,23,42,0.92);
 
@@ -607,7 +609,7 @@ body.light .dateLabel {
         0 8px 30px rgba(0,0,0,0.45);
 
     border:
-        1px solid rgba(255,255,255,0.06);
+        1px solid rgba(255,255,255,0.08);
 
     cursor: move;
 
@@ -616,7 +618,7 @@ body.light .dateLabel {
 
 @media (max-width:768px){
 
-    #metricsWindow{
+    body #metricsWindow{
 
         width:120px;
 
@@ -629,30 +631,6 @@ body.light .dateLabel {
         padding:8px;
 
         max-height:95vh;
-    }
-
-    .counter{
-
-        font-size:16px;
-    }
-
-    .metric h3{
-
-        font-size:16px;
-    }
-
-    .chatbot{
-
-        width:95%;
-
-        right:2.5%;
-
-        bottom:10px;
-    }
-
-    #fileContainer{
-
-        margin-left:130px;
     }
 }
 
