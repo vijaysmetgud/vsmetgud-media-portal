@@ -63,10 +63,22 @@ header {
 /* ================= BUTTONS ================= */
 
 .navbar {
+    
     display: flex;
+
     flex-wrap: wrap;
+
+    justify-content: center;
+
+    align-items: center;
+
     gap: 15px;
+
     padding: 15px;
+
+    width: 100%;
+
+    margin: 0 auto;
 }
     
 #fileContainer {
@@ -1500,13 +1512,42 @@ async function loadFiles(){
         allFiles = await response.json();
 
         console.log("Files indexed:", allFiles.length);
+
         console.log(allFiles.slice(0,10));
 
-        renderFiles(allFiles);
+        // DO NOT RENDER FILES INITIALLY
+        // renderFiles(allFiles);
+
+        // EMPTY CONTAINER INITIALLY
+        document.getElementById("fileContainer").innerHTML = `
+            <div style="
+                grid-column:1/-1;
+                text-align:center;
+                padding:40px;
+                color:#94a3b8;
+                font-size:18px;
+            ">
+                Please select a category
+            </div>
+        `;
 
     }
     catch(e){
-        console.log("media-index.json not found");
+        console.error("Failed to load media-index.json", e);
+        const container = document.getElementById("fileContainer");
+        if(container){
+            container.innerHTML = `
+                <div style="
+                    grid-column:1/-1;
+                    text-align:center;
+                    padding:40px;
+                    color:#f87171;
+                    font-size:18px;
+                ">
+                    Unable to load media index.
+                </div>
+            `;
+        }
     }
 
 }
