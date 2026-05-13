@@ -426,14 +426,14 @@ nav, .welcome, .chatbot {
 
     font-weight: bold;
 
-    color: #00ffcc !important;
+    color: #ffd700 !important;
 
-    -webkit-text-fill-color: #00ffcc;
+    -webkit-text-fill-color: #ffd700;
 
     text-shadow:
-        0 0 10px #00ffcc,
-        0 0 20px #00ffcc,
-        0 0 40px #00ffcc;
+        0 0 10px #ffd700,
+        0 0 20px #ffcc00,
+        0 0 40px #ffb700;
 }
 
 /* DATE */
@@ -444,13 +444,14 @@ nav, .welcome, .chatbot {
 
     font-weight: 600;
 
-    color: #ffd166 !important;
+    color: #ffd700 !important;
 
-    -webkit-text-fill-color: #ffd166;
+    -webkit-text-fill-color: #ffd700;
 
     text-shadow:
-        0 0 8px #ffd166,
-        0 0 16px #ffd166;
+        0 0 8px #ffd700,
+        0 0 16px #ffcc00,
+        0 0 28px #ffb700;
 }
 
 /* LABELS */
@@ -480,11 +481,13 @@ nav, .welcome, .chatbot {
     #clock {
 
         font-size: 24px;
+        left: 15px;
     }
 
     #date {
 
         font-size: 14px;
+        left: 15px;
     }
 
     .welcome-banner h1 {
