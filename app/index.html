@@ -1860,6 +1860,23 @@ function findMatchingFiles(query){
 
     return allFiles.filter(file => {
         const lower = file.toLowerCase();
+        /* RESET VIEWERS */
+
+        document.getElementById(
+            "textViewer"
+        ).style.display = "none";
+
+        document.getElementById(
+            "pdfViewer"
+        ).style.display = "none";
+
+        document.getElementById(
+            "textViewer"
+        ).innerHTML = "";
+
+        document.getElementById(
+            "pdfViewer"
+        ).innerHTML = "";
         return terms.every(term => lower.includes(term));
     });
 }
@@ -2296,7 +2313,7 @@ function openFile(file){
     const lower =
         file.toLowerCase();
 
-    speak("Opening " + file);
+    console.log("Opening:", file);
 
     /* ================= TEXT/PDF READER ================= */
 
@@ -2808,8 +2825,6 @@ function readNextLine(){
 
     currentSpeech.volume = 1;
 
-    speechSynthesis.cancel();
-
     currentSpeech.onend = ()=>{
 
         setTimeout(()=>{
@@ -2851,6 +2866,8 @@ function stopTextReading(){
     currentSpeech = null;
 
     currentLineIndex = 0;
+
+    textLines = [];
 
     speechSynthesis.cancel();
 }
@@ -3203,7 +3220,6 @@ if(SpeechRecognition){
 
 }
 
-/* ================= START VOICE ================= */
 /* ================= START VOICE ================= */
 
 function startVoice(){
