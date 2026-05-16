@@ -908,6 +908,8 @@ setInterval(updateClock, 1000);
 /* ================= CLOCK REMINDER ================= */
 
 window.addEventListener("DOMContentLoaded", () => {
+    
+    startReminderChecker();
 
     fetchMetrics();
 
@@ -950,70 +952,176 @@ const reminderSound =
 async function setReminder(){
 
     const time =
-        document.getElementById("reminderTime").value;
+        document.getElementById(
+            "reminderTime"
+        ).value;
 
     const text =
-        document.getElementById("reminderText").value;
+        document.getElementById(
+            "reminderText"
+        ).value;
 
     if(!time){
 
-        speak("Please select reminder time");
+        speak(
+            "Please select reminder time"
+        );
 
         return;
     }
 
-    await Notification.requestPermission();
+    /* ================= PERMISSION ================= */
 
-    const interval = setInterval(()=>{
+    if(Notification.permission !== "granted"){
+
+        const permission =
+            await Notification.requestPermission();
+
+        if(permission !== "granted"){
+
+            alert(
+                "Notification permission denied"
+            );
+
+            speak(
+                "Notification permission denied"
+            );
+
+            return;
+        }
+    }
+
+    /* ================= SAVE REMINDER ================= */
+
+    const reminder = {
+
+        time: time,
+
+        text: text || "Reminder Alert",
+
+        active: true
+    };
+
+    localStorage.setItem(
+        "portalReminder",
+        JSON.stringify(reminder)
+    );
+   
+    speak(
+        "Reminder set successfully"
+    );
+
+    reminderPopup.style.display =
+        "none";
+}
+
+/* ================= MOBILE SAFE REMINDER CHECKER ================= */
+
+function startReminderChecker(){
+
+    setInterval(()=>{
+
+        const saved =
+            localStorage.getItem(
+                "portalReminder"
+            );
+
+        if(!saved) return;
+
+        const reminder =
+            JSON.parse(saved);
+
+        if(!reminder.active) return;
 
         const now = new Date();
 
         const current =
-            now.getHours().toString().padStart(2,"0")
-            + ":"
+            now.getHours()
+                .toString()
+                .padStart(2,"0")
             +
-            now.getMinutes().toString().padStart(2,"0");
+            ":"
+            +
+            now.getMinutes()
+                .toString()
+                .padStart(2,"0");
 
-        if(current === time){
+        /* ================= IMPORTANT MOBILE FIX ================= */
 
-            new Notification(
-                text || "Reminder Alert!"
-            );
+        if(current === reminder.time
+            && reminder.active){
 
-            reminderSound.play();
-            
-            alert(text || "Reminder Alert!");
-            speak(text || "Reminder Alert");
+            /* NOTIFICATION */
+
+            try{
+
+                new Notification(
+                    reminder.text
+                );
+
+            } catch(err){
+
+                console.log(err);
+            }
+
+            /* MOBILE VIBRATION */
+
+            if(navigator.vibrate){
+
+                navigator.vibrate([
+                    500,
+                    300,
+                    500
+                ]);
+            }
+
+            /* SOUND */
+
+            reminderSound.play()
+
+            .catch(err=>{
+
+                console.log(
+                    "Audio blocked",
+                    err
+                );
+            });
+
+            /* MOBILE SAFE ALERT */
 
             const chatBody =
-                document.getElementById("chatBody");
+                document.getElementById(
+                    "chatBody"
+                );
 
             if(chatBody){
 
                 chatBody.innerHTML += `
-                    <div class="bot-message reminder-message">
-                        ⏰ ${text || "Reminder Alert!"}
+                    <div class="
+                        bot-message
+                        reminder-message
+                    ">
+                        ⏰ ${reminder.text}
                     </div>
                 `;
 
                 chatBody.scrollTop =
                     chatBody.scrollHeight;
-            }              
+            }
 
-            speak(text || "Reminder Alert!");
+            speak(reminder.text);
 
-            clearInterval(interval);
+            /* DISABLE AFTER FIRING */
+
+            reminder.active = false;
+
+            localStorage.setItem(
+                "portalReminder",
+                JSON.stringify(reminder)
+            );
         }
-
-    },1000);
-
-    alert("Reminder set successfully");
-
-    speak("Reminder set successfully");
-
-    reminderPopup.style.display =
-        "none";
-}
+    }, 1000);
+}    
 
 </script>
 
@@ -1258,6 +1366,27 @@ PYTHON PRACTICE
 </div>
 
 <script>
+
+document.addEventListener(
+
+    "click",
+
+    () => {
+
+        reminderSound.play()
+        .then(()=>{
+
+            reminderSound.pause();
+
+            reminderSound.currentTime = 0;
+
+        })
+        .catch(()=>{});
+
+    },
+
+    { once:true }
+);    
 
 /* ================= FILE INDEX ================= */
 
@@ -1895,19 +2024,45 @@ function recommendFiles(currentFile){
 
 function closePlayer(){
 
-    const modal = document.getElementById("aiPlayerModal");
+    const modal =
+        document.getElementById(
+            "aiPlayerModal"
+        );
 
-    const container = document.getElementById("playerContainer");
+    const container =
+        document.getElementById(
+            "playerContainer"
+        );
 
-    if(modal){
-        modal.style.display = "none";
+    const media =
+        document.getElementById(
+            "activeMedia"
+        );
+
+    if(media){
+
+        media.pause();
+
+        media.src = "";
     }
 
-    if(container){
-        container.innerHTML = "";
-    }
+    aiMemory.currentPlayer = null;
 
+    container.innerHTML = "";
+
+    modal.style.display = "none";
 }
+
+/* ================= ESC CLOSE ================= */
+
+document.addEventListener("keydown",(e)=>{
+
+    if(e.key === "Escape"){
+
+        closePlayer();
+    }
+});
+
 /* ================= VOLUME CONTROL ================= */
 
 function changeVolume(action){
@@ -2122,26 +2277,38 @@ function openFile(file){
 
     if(lower.endsWith(".pdf")){
 
-        loadPdfText(
-            "/media/" + encodeURIComponent(file)
-        );
+        const pdfUrl =
+            "/media/" +
+            encodeURIComponent(file);
+
+        loadPdfText(pdfUrl);
 
         document.getElementById(
             "textReaderControls"
         ).style.display = "flex";
 
+        window.open(
+            pdfUrl,
+            "_blank"
+        );
+
         return;
     }
 
-    else if(lower.endsWith(".txt")){
+    if(lower.endsWith(".txt")){
 
-        fetch(
-            "/media/" + encodeURIComponent(file)
-        )
+        const textUrl =
+            "/media/" +
+            encodeURIComponent(file);
+
+        fetch(textUrl)
+
         .then(res => res.text())
+
         .then(content => {
 
-            textLines = content.split(/\r?\n/);
+            textLines =
+                content.split(/\r?\n/);
 
             currentLineIndex = 0;
 
@@ -2149,9 +2316,21 @@ function openFile(file){
                 "textReaderControls"
             ).style.display = "flex";
 
-            alert("Text file loaded for reading");
-            speak("Text file loaded for reading");
-            
+            speak("Text file loaded");
+
+            window.open(
+                textUrl,
+                "_blank"
+            );
+
+        })
+
+        .catch(err => {
+
+            console.error(err);
+
+            speak("Failed to load text file");
+
         });
 
         return;
@@ -2180,47 +2359,7 @@ function openFile(file){
 
     ){
 
-        const existing =
-            document.getElementById("videoPlayer");
-
-        if(existing){
-
-            existing.remove();
-        }
-
-        const player =
-            document.createElement("video");
-
-        player.id = "videoPlayer";
-
-        player.src =
-            "/stream/" +
-            encodeURIComponent(file);
-
-        player.controls = true;
-
-        player.autoplay = true;
-
-        player.style.position = "fixed";
-
-        player.style.top = "50%";
-
-        player.style.left = "50%";
-
-        player.style.transform =
-            "translate(-50%, -50%)";
-
-        player.style.width = "80%";
-
-        player.style.height = "80%";
-
-        player.style.background = "black";
-
-        player.style.zIndex = "999999";
-
-        player.style.borderRadius = "18px";
-
-        document.body.appendChild(player);
+        openMediaPlayer(file,"video");
 
         return;
     }
@@ -2236,13 +2375,7 @@ function openFile(file){
 
     ){
 
-        const audio =
-            new Audio(
-                "/media/" +
-                encodeURIComponent(file)
-            );
-
-        audio.play();
+        openMediaPlayer(file,"audio");
 
         return;
     }
@@ -2257,6 +2390,94 @@ function openFile(file){
         "_blank"
     );
 }
+
+/* ================= MEDIA PLAYER ================= */
+
+function openMediaPlayer(file,type){
+
+    const modal =
+        document.getElementById(
+            "aiPlayerModal"
+        );
+
+    const container =
+        document.getElementById(
+            "playerContainer"
+        );
+
+    modal.style.display = "flex";
+
+    let mediaHtml = "";
+
+    if(type === "video"){
+
+        mediaHtml = `
+            <video
+                id="activeMedia"
+                controls
+                autoplay
+                playsinline
+                style="
+                    width:90%;
+                    max-height:80vh;
+                    border-radius:18px;
+                    background:black;
+                "
+            >
+                <source
+                    src="/stream/${encodeURIComponent(file)}">
+            </video>
+        `;
+    }
+
+    if(type === "audio"){
+
+        mediaHtml = `
+            <div style="
+                background:#111827;
+                padding:30px;
+                border-radius:20px;
+                text-align:center;
+                color:white;
+                width:400px;
+            ">
+
+                <h2 style="
+                    margin-bottom:20px;
+                ">
+                    🎵 Audio Player
+                </h2>
+
+                <p style="
+                    margin-bottom:20px;
+                    word-break:break-word;
+                ">
+                    ${file}
+                </p>
+
+                <audio
+                    id="activeMedia"
+                    controls
+                    autoplay
+                    playsinline
+                    style="width:100%;"
+                >
+                    <source
+                        src="/media/${encodeURIComponent(file)}">
+                </audio>
+
+            </div>
+        `;
+    }
+
+    container.innerHTML = mediaHtml;
+
+    aiMemory.currentPlayer =
+    document.getElementById(
+        "activeMedia"
+    );
+}
+
 
 /* ================= LOAD PDF TEXT ================= */
 
@@ -2295,7 +2516,6 @@ async function loadPdfText(pdfUrl){
         textLines =
             fullText.split(/\r?\n/);
         
-        alert('PDF loaded for reading');    
         speak('PDF loaded for reading');
     
     } 
@@ -2303,8 +2523,7 @@ async function loadPdfText(pdfUrl){
     catch(err){
 
         console.error(err);
-        
-        alert('Failed to load PDF');
+
         speak("Failed to load PDF");
 
     }
@@ -2331,7 +2550,6 @@ function readNextLine(){
 
     if(currentLineIndex >= textLines.length){
 
-        alert('Completed reading file'); 
         speak('Completed reading file');
 
         return;
@@ -2374,7 +2592,10 @@ function readNextLine(){
         },500);
     };
 
-    speechSynthesis.speak(currentSpeech);
+    if(!speechSynthesis.speaking){
+
+        speechSynthesis.speak(currentSpeech);
+    }
 }
 
 /* ================= PAUSE ================= */
@@ -2398,6 +2619,8 @@ function stopTextReading(){
     isReadingStopped = true;
 
     currentSpeech = null;
+
+    currentLineIndex = 0;
 
     speechSynthesis.cancel();
 }
@@ -2621,18 +2844,22 @@ const SpeechRecognition =
     window.SpeechRecognition ||
     window.webkitSpeechRecognition;
 
-function speak(text) {
+    function speak(text){
 
-    if(!speechSynthesis.paused){
-
-        window.speechSynthesis.cancel();
+    if(
+        currentSpeech &&
+        speechSynthesis.speaking
+    ){
+        return;
     }
 
     const speech =
         new SpeechSynthesisUtterance(text);
 
     speech.lang = 'en-US';
+
     speech.rate = 1;
+
     speech.pitch = 1;
 
     const voices =
@@ -2734,6 +2961,7 @@ if(SpeechRecognition){
 }
 
 /* ================= START VOICE ================= */
+/* ================= START VOICE ================= */
 
 function startVoice(){
 
@@ -2741,10 +2969,15 @@ function startVoice(){
         return;
     }
 
-    /* STOP OLD SPEECH */
-    window.speechSynthesis.cancel();
+    /* DO NOT INTERRUPT ACTIVE FILE READING */
+
+    if(!currentSpeech){
+
+        window.speechSynthesis.cancel();
+    }
 
     /* SPEAK FIRST */
+
     const speech =
         new SpeechSynthesisUtterance(
             "Listening"
@@ -2752,7 +2985,6 @@ function startVoice(){
 
     speech.onend = () => {
 
-        /* START MIC AFTER SPEAK ENDS */
         recognition.start();
 
     };
