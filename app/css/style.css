@@ -621,16 +621,19 @@ body.light .dateLabel {
     border-radius:12px;
 
     margin-bottom:20px;
+
+    display:block;
 }
 
 #pdfViewer span{
 
     position:absolute;
 
-    transform-origin:0 0;
-
     white-space:pre;
+
+    transform-origin:0 0;
 
     line-height:1;
 
+    cursor:pointer;
 }
