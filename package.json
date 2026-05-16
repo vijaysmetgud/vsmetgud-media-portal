@@ -9,20 +9,13 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-<<<<<<< Updated upstream
     "express": "^4.21.2",
     "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5"
   },
 
   "devDependencies": {
-    "jest": "^30.0.0"
-=======
-    "better-sqlite3": "^12.2.0",
-    "express": "^4.21.2"
-  },
-  "devDependencies": {
+    "jest": "^30.0.0",
     "jest": "^30.4.2"
->>>>>>> Stashed changes
   }
 }

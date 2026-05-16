@@ -5,6 +5,27 @@ const fs = require('fs');
 const Database = require('better-sqlite3');
 
 const app = express();
+
+app.use(
+
+    express.static(
+
+        path.join(__dirname,"app")
+    )
+);
+
+app.get("/",(req,res)=>{
+
+    res.sendFile(
+
+        path.join(
+            __dirname,
+            "app",
+            "index.html"
+        )
+    );
+});
+
 const PORT = process.env.PORT || 8080;
 
 const DATA_DIR = path.join(__dirname, 'data');
@@ -242,6 +263,8 @@ app.get('/api/visitor-stats', (req, res) => {
 
 app.get('/api/visitors', (req, res) => {
 
+    console.log("VISITOR API HIT");
+    console.log(req.body);
   try {
 
     const limit =
