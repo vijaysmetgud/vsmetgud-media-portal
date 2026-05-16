@@ -83,11 +83,13 @@ nav button:hover {
 
 #textReaderControls{
 
-    position:fixed;
+    position:absolute;
 
-    top:190px;
+    top:12px;
 
-    right:20px;
+    right:12px;
+
+    left:auto;
 
     display:none;
 
@@ -671,4 +673,13 @@ body.light .dateLabel {
     cursor:pointer;
 
     user-select:text;
+}
+/* ================= READER POSITION FIX ================= */
+
+.fileCard,
+#pdfViewer,
+#textViewer{
+
+    position:relative;
+
 }
