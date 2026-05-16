@@ -1303,7 +1303,31 @@ PYTHON PRACTICE
         z-index:999999;
         box-shadow:
             0 0 40px rgba(0,0,0,0.6);
-    "></div>
+    ">
+
+        <!-- PDF CLOSE BUTTON -->
+
+        <button
+            onclick="closePdfViewer()"
+            style="
+                position:sticky;
+                top:0;
+                float:right;
+                background:red;
+                color:white;
+                border:none;
+                padding:10px 18px;
+                border-radius:10px;
+                cursor:pointer;
+                z-index:999999;
+                margin-bottom:10px;
+                font-weight:bold;
+            "
+        >
+            CLOSE
+        </button>
+
+    </div>
 
 </div>
 
@@ -2579,7 +2603,28 @@ async function renderPdfViewer(pdfUrl){
 
     viewer.style.display = "block";
 
-    viewer.innerHTML = "";
+    viewer.innerHTML = `
+        <button
+            onclick="closePdfViewer()"
+            style="
+                position:sticky;
+                top:0;
+                float:right;
+                background:red;
+                color:white;
+                border:none;
+                padding:10px 18px;
+                border-radius:10px;
+                cursor:pointer;
+                z-index:999999;
+                margin-bottom:10px;
+                font-weight:bold;
+            "
+        >
+            CLOSE
+        </button>
+    `;
+
 
     textLines = [];
 
@@ -2784,6 +2829,42 @@ async function renderPdfViewer(pdfUrl){
             "Failed to render PDF"
         );
     }
+}
+
+/* ================= CLOSE PDF VIEWER ================= */
+
+function closePdfViewer(){
+
+    const viewer =
+        document.getElementById(
+            "pdfViewer"
+        );
+
+    viewer.style.display = "none";
+
+    viewer.innerHTML = `
+        <button
+            onclick="closePdfViewer()"
+            style="
+                position:sticky;
+                top:0;
+                float:right;
+                background:red;
+                color:white;
+                border:none;
+                padding:10px 18px;
+                border-radius:10px;
+                cursor:pointer;
+                z-index:999999;
+                margin-bottom:10px;
+                font-weight:bold;
+            "
+        >
+            CLOSE
+        </button>
+    `;
+
+    stopTextReading();
 }
 
 /* ================= START TEXT READING ================= */
