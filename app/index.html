@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>VSMETGUD MEDIA PORTAL</title>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 
 <link rel="stylesheet" href="style.css">
@@ -955,7 +957,7 @@ async function setReminder(){
 
     if(!time){
 
-        alert("Please select reminder time");
+        speak("Please select reminder time");
 
         return;
     }
@@ -979,7 +981,8 @@ async function setReminder(){
             );
 
             reminderSound.play();
-
+            
+            alert(text || "Reminder Alert!");
             speak(text || "Reminder Alert");
 
             const chatBody =
@@ -997,7 +1000,7 @@ async function setReminder(){
                     chatBody.scrollHeight;
             }              
 
-            alert(text || "Reminder Alert!");
+            speak(text || "Reminder Alert!");
 
             clearInterval(interval);
         }
@@ -1005,6 +1008,8 @@ async function setReminder(){
     },1000);
 
     alert("Reminder set successfully");
+
+    speak("Reminder set successfully");
 
     reminderPopup.style.display =
         "none";
@@ -1128,6 +1133,33 @@ PYTHON PRACTICE
 </div>    
 
 <div id="fileContainer"></div>
+
+<!-- ================= TEXT READER CONTROLS ================= -->
+
+<div id="textReaderControls"
+     style="
+        display:none;
+        margin-top:15px;
+        text-align:center;
+">
+
+    <button onclick="startTextReading()">
+        ▶ Start Reading
+    </button>
+
+    <button onclick="pauseTextReading()">
+        ⏸ Pause
+    </button>
+
+    <button onclick="resumeTextReading()">
+        ⏯ Resume
+    </button>
+
+    <button onclick="stopTextReading()">
+        ⏹ Stop
+    </button>
+
+</div>
 
 <div id="metricsWindow">
 
@@ -1766,6 +1798,7 @@ function levenshtein(a, b) {
 }
 
 
+
 /* ================= AI INTENT DETECTION ================= */
 
 function detectIntent(query){
@@ -1790,6 +1823,16 @@ function detectIntent(query){
 
     return "search";
 }
+
+/* ================= TEXT READER VARIABLES ================= */
+
+let textLines = [];
+
+let currentLineIndex = 0;
+
+let currentSpeech = null;
+
+let isReadingStopped = false;
 
 /* ================= FILE TYPE DETECTION ================= */
 
@@ -2075,6 +2118,52 @@ function openFile(file){
 
     speak("Opening " + file);
 
+    /* ================= TEXT/PDF READER ================= */
+
+    if(lower.endsWith(".pdf")){
+
+        loadPdfText(
+            "/media/" + encodeURIComponent(file)
+        );
+
+        document.getElementById(
+            "textReaderControls"
+        ).style.display = "flex";
+
+        return;
+    }
+
+    else if(lower.endsWith(".txt")){
+
+        fetch(
+            "/media/" + encodeURIComponent(file)
+        )
+        .then(res => res.text())
+        .then(content => {
+
+            textLines = content.split(/\r?\n/);
+
+            currentLineIndex = 0;
+
+            document.getElementById(
+                "textReaderControls"
+            ).style.display = "flex";
+
+            alert("Text file loaded for reading");
+            speak("Text file loaded for reading");
+            
+        });
+
+        return;
+    }
+
+    else{
+
+        document.getElementById(
+            "textReaderControls"
+        ).style.display = "none";
+    }
+
     // ===============================
     // VIDEO FILES
     // ===============================
@@ -2167,6 +2256,150 @@ function openFile(file){
         encodeURIComponent(file),
         "_blank"
     );
+}
+
+/* ================= LOAD PDF TEXT ================= */
+
+async function loadPdfText(pdfUrl){
+
+    try{
+
+        textLines = [];
+
+        currentLineIndex = 0;
+
+        const pdf =
+            await pdfjsLib.getDocument(pdfUrl).promise;
+
+        let fullText = '';
+
+        for(let pageNum = 1;
+            pageNum <= pdf.numPages;
+            pageNum++){
+
+            const page =
+                await pdf.getPage(pageNum);
+
+            const textContent =
+                await page.getTextContent();
+
+            const pageText =
+                textContent.items
+                    .map(item => item.str)
+                    .join('\n');                
+
+            fullText +=
+                pageText + '\n';
+        }
+
+        textLines =
+            fullText.split(/\r?\n/);
+        
+        alert('PDF loaded for reading');    
+        speak('PDF loaded for reading');
+    
+    } 
+    
+    catch(err){
+
+        console.error(err);
+        
+        alert('Failed to load PDF');
+        speak("Failed to load PDF");
+
+    }
+}
+
+/* ================= START TEXT READING ================= */
+
+function startTextReading(){
+
+    stopTextReading();
+
+    currentLineIndex = 0;
+
+    isReadingStopped = false;
+
+    readNextLine();
+}
+
+/* ================= READ NEXT LINE ================= */
+
+function readNextLine(){
+
+    if(isReadingStopped) return;
+
+    if(currentLineIndex >= textLines.length){
+
+        alert('Completed reading file'); 
+        speak('Completed reading file');
+
+        return;
+    }
+
+    const rawLine =
+        textLines[currentLineIndex] || '';
+
+    const line =
+        rawLine.trim();    
+
+    currentLineIndex++;
+
+    if(line === ''){
+
+        setTimeout(() => {
+
+            readNextLine();
+
+        },0);
+
+        return;
+    }
+
+    currentSpeech =
+        new SpeechSynthesisUtterance(line);
+
+    currentSpeech.rate = 1;
+
+    currentSpeech.pitch = 1;
+
+    currentSpeech.volume = 1;
+
+    currentSpeech.onend = ()=>{
+
+        setTimeout(()=>{
+
+            readNextLine();
+
+        },500);
+    };
+
+    speechSynthesis.speak(currentSpeech);
+}
+
+/* ================= PAUSE ================= */
+
+function pauseTextReading(){
+
+    speechSynthesis.pause();
+}
+
+/* ================= RESUME ================= */
+
+function resumeTextReading(){
+
+    speechSynthesis.resume();
+}
+
+/* ================= STOP ================= */
+
+function stopTextReading(){
+
+    isReadingStopped = true;
+
+    currentSpeech = null;
+
+    speechSynthesis.cancel();
 }
 
 /* ================= ENTER KEY ================= */
@@ -2390,7 +2623,10 @@ const SpeechRecognition =
 
 function speak(text) {
 
-    window.speechSynthesis.cancel();
+    if(!speechSynthesis.paused){
+
+        window.speechSynthesis.cancel();
+    }
 
     const speech =
         new SpeechSynthesisUtterance(text);
