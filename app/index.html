@@ -2808,6 +2808,8 @@ function readNextLine(){
 
     currentSpeech.volume = 1;
 
+    speechSynthesis.cancel();
+
     currentSpeech.onend = ()=>{
 
         setTimeout(()=>{
@@ -2817,10 +2819,13 @@ function readNextLine(){
         },10);
     };
 
-    if(!speechSynthesis.speaking){
+    setTimeout(()=>{
 
-        speechSynthesis.speak(currentSpeech);
-    }
+        speechSynthesis.speak(
+            currentSpeech
+        );
+
+    },50);
 }
 
 /* ================= PAUSE ================= */
@@ -3069,45 +3074,51 @@ const SpeechRecognition =
     window.SpeechRecognition ||
     window.webkitSpeechRecognition;
 
-    function speak(text){
-
-    if(
-        currentSpeech &&
-        speechSynthesis.speaking
-    ){
-        return;
-    }
+function speak(text){
 
     const speech =
         new SpeechSynthesisUtterance(text);
 
     speech.lang = 'en-US';
 
-    speech.rate = 1.8;
+    speech.rate = 1.15;
 
-    speech.pitch = 1.15;
+    speech.pitch = 1;
+
+    speech.volume = 1;
 
     const voices =
         window.speechSynthesis.getVoices();
 
-    const preferred = voices.find(v =>
+    const preferred =
+        voices.find(v =>
 
-        v.name.includes('Google UK English Female') ||
+            v.name.includes(
+                'Google UK English Female'
+            ) ||
 
-        v.name.includes('Microsoft David') ||
+            v.name.includes(
+                'Microsoft David'
+            ) ||
 
-        v.name.includes('Microsoft Zira') ||
+            v.name.includes(
+                'Microsoft Zira'
+            ) ||
 
-        v.name.includes('Google US English')
-
-    );
+            v.name.includes(
+                'Google US English'
+            )
+        );
 
     if(preferred){
+
         speech.voice = preferred;
     }
 
-    window.speechSynthesis.speak(speech);
-}
+    window.speechSynthesis.speak(
+        speech
+    );
+}    
 
 let recognition;
 

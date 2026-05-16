@@ -636,4 +636,6 @@ body.light .dateLabel {
     line-height:1;
 
     cursor:pointer;
+
+    user-select:text;
 }
