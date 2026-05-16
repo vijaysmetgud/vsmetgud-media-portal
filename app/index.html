@@ -1268,6 +1268,16 @@ PYTHON PRACTICE
 
     <div id="fileContainer"></div>
 
+    <div id="pdfViewer" style="
+        display:none;
+        padding:20px;
+        background:#111827;
+        border-radius:18px;
+        margin:20px;
+        overflow:auto;
+        max-height:80vh;
+    "></div>
+
 </div>
 
 <div id="metricsWindow">
@@ -1964,6 +1974,10 @@ let currentSpeech = null;
 
 let isReadingStopped = false;
 
+let fullTextContent = "";
+
+let clickedStartIndex = 0;
+
 /* ================= FILE TYPE DETECTION ================= */
 
 function getFileType(file){
@@ -2282,16 +2296,11 @@ function openFile(file){
             "/media/" +
             encodeURIComponent(file);
 
-        loadPdfText(pdfUrl);
-
         document.getElementById(
             "textReaderControls"
         ).style.display = "flex";
 
-        window.open(
-            pdfUrl,
-            "_blank"
-        );
+        renderPdfViewer(pdfUrl);
 
         return;
     }
@@ -2319,11 +2328,42 @@ function openFile(file){
 
             speak("Text file loaded");
 
-            window.open(
-                textUrl,
-                "_blank"
-            );
+            const viewer =
+                document.getElementById(
+                    "textViewer"
+                );
 
+            viewer.style.display = "block";
+
+            viewer.innerHTML = "";
+
+            textLines.forEach((line,index)=>{
+
+                const div =
+                    document.createElement("div");
+
+                div.innerText =
+                    line;
+
+                div.style.padding =
+                    "4px";
+
+                div.style.cursor =
+                    "pointer";
+
+                div.onclick = ()=>{
+
+                    stopTextReading();
+
+                    currentLineIndex = index;
+
+                    isReadingStopped = false;
+
+                    readNextLine();
+                };
+
+                viewer.appendChild(div);
+            });
         })
 
         .catch(err => {
@@ -2486,51 +2526,219 @@ function openMediaPlayer(file,type){
 
 /* ================= LOAD PDF TEXT ================= */
 
-async function loadPdfText(pdfUrl){
+async function renderPdfViewer(pdfUrl){
+
+    const viewer =
+        document.getElementById(
+            "pdfViewer"
+        );
+
+    viewer.style.display = "block";
+
+    viewer.innerHTML = "";
+
+    textLines = [];
+
+    currentLineIndex = 0;
 
     try{
 
-        textLines = [];
-
-        currentLineIndex = 0;
-
         const pdf =
-            await pdfjsLib.getDocument(pdfUrl).promise;
+            await pdfjsLib
+                .getDocument(pdfUrl)
+                .promise;
 
-        let fullText = '';
-
-        for(let pageNum = 1;
+        for(
+            let pageNum = 1;
             pageNum <= pdf.numPages;
-            pageNum++){
+            pageNum++
+        ){
 
             const page =
                 await pdf.getPage(pageNum);
 
+            const viewport =
+                page.getViewport({
+                    scale:1.5
+                });
+
+            /* PAGE CONTAINER */
+
+            const pageDiv =
+                document.createElement("div");
+
+            pageDiv.style.position =
+                "relative";
+
+            pageDiv.style.marginBottom =
+                "30px";
+
+            /* CANVAS */
+
+            const canvas =
+                document.createElement("canvas");
+
+            const ctx =
+                canvas.getContext("2d");
+
+            canvas.width =
+                viewport.width;
+
+            canvas.height =
+                viewport.height;
+
+            pageDiv.appendChild(canvas);
+
+            viewer.appendChild(pageDiv);
+
+            await page.render({
+
+                canvasContext:ctx,
+
+                viewport:viewport
+
+            }).promise;
+
+            /* TEXT LAYER */
+
+            const textLayer =
+                document.createElement("div");
+
+            textLayer.style.position =
+                "absolute";
+
+            textLayer.style.left = "0";
+
+            textLayer.style.top = "0";
+
+            textLayer.style.width =
+                canvas.width + "px";
+
+            textLayer.style.height =
+                canvas.height + "px";
+
+            textLayer.style.opacity = "0.01";    
+
+            textLayer.style.pointerEvents =
+                "auto";
+
+            textLayer.style.zIndex = "999";    
+
+            pageDiv.appendChild(textLayer);
+
             const textContent =
                 await page.getTextContent();
 
+            await pdfjsLib.renderTextLayer({
+
+                textContentSource:
+                    textContent,
+
+                container:
+                    textLayer,
+
+                viewport:
+                    viewport,
+
+                textDivs:[]
+
+            }).promise;
+
+            /* STORE TEXT */
+
             const pageText =
                 textContent.items
-                    .map(item => item.str)
-                    .join(' ');                
+                    .map(item=>item.str)
+                    .join(" ");
 
-            fullText +=
-                pageText + ' ';
+            const pageLines =
+                pageText.match(
+                    /[^.!?]+[.!?]+/g
+                ) || [];
+
+            textLines.push(...pageLines);
+
+            /* CLICK TO READ */
+
+            setTimeout(()=>{
+
+                const spans =
+                    textLayer.querySelectorAll(
+                        "span"
+                    );
+
+                spans.forEach(span=>{
+
+                    span.style.cursor =
+                        "pointer";
+
+                    span.addEventListener(
+                        "click",
+                        ()=>{
+
+                            const clicked =
+                                span.innerText
+                                    .trim();
+
+                            if(!clicked)
+                                return;
+
+                            let foundIndex =
+                                textLines.findIndex(
+                                    line =>
+                                        line.includes(
+                                            clicked
+                                        )
+                                );
+
+                            if(foundIndex < 0){
+
+                                foundIndex = 0;
+                            }
+
+                            stopTextReading();
+
+                            currentLineIndex =
+                                foundIndex;
+
+                            isReadingStopped =
+                                false;
+
+                            /* HIGHLIGHT */
+
+                            spans.forEach(s=>{
+
+                                s.style.background =
+                                    "transparent";
+                            });
+
+                            span.style.background =
+                                "yellow";
+
+                            span.style.color =
+                                "black";
+
+                            readNextLine();
+                        }
+                    );
+                });
+
+            },500);
         }
-        
-        textLines =
-            fullText
-                .replace(/\s+/g,' ')
-                .match(/[^.!?]+[.!?]+/g) || [];
-    
-    } 
-    
+
+        speak(
+            "PDF loaded successfully"
+        );
+
+    }
+
     catch(err){
 
         console.error(err);
 
-        speak("Failed to load PDF");
-
+        speak(
+            "Failed to render PDF"
+        );
     }
 }
 
@@ -2584,9 +2792,9 @@ function readNextLine(){
     currentSpeech =
         new SpeechSynthesisUtterance(line);
 
-    currentSpeech.rate = 1.05;
+    currentSpeech.rate = 1;
 
-    currentSpeech.pitch = 1.1;
+    currentSpeech.pitch = 1;
 
     currentSpeech.volume = 1;
 
@@ -2596,7 +2804,7 @@ function readNextLine(){
 
             readNextLine();
 
-        },line.length > 120 ? 180 : 80);
+        },10);
     };
 
     if(!speechSynthesis.speaking){

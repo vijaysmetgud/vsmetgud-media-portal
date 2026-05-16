@@ -612,3 +612,25 @@ body.light .dateLabel {
     margin-top: -5px;
 }
 
+#pdfViewer canvas{
+
+    width:100%;
+
+    height:auto;
+
+    border-radius:12px;
+
+    margin-bottom:20px;
+}
+
+#pdfViewer span{
+
+    position:absolute;
+
+    transform-origin:0 0;
+
+    white-space:pre;
+
+    line-height:1;
+
+}
