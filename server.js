@@ -12,6 +12,12 @@ const DB_PATH = path.join(DATA_DIR, 'visitors.db');
 
 const { spawn } = require("child_process");
 
+const cors = require("cors");
+
+app.use(cors());
+
+app.use(express.json());
+
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
@@ -31,6 +37,8 @@ db.prepare(`
     userAgent TEXT,
     platform TEXT,
     language TEXT,
+    screen TEXT,
+    timezone TEXT,
     referrer TEXT,
     timestamp TEXT
   )
@@ -38,7 +46,7 @@ db.prepare(`
 
 app.use(express.json());
 app.set('trust proxy', true);
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'app')));
 
 const MEDIA_DIR = path.join(__dirname, "media");
 
@@ -109,7 +117,9 @@ app.post('/api/visitor', (req, res) => {
       url = '/',
       userAgent = '',
       platform = '',
-      language = ''
+      language = '',
+      screen = '',
+      timezone = ''
     } = req.body || {};
 
     const referrer =
@@ -129,10 +139,12 @@ app.post('/api/visitor', (req, res) => {
         userAgent,
         platform,
         language,
+        screen,
+        timezone,
         referrer,
         timestamp
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
@@ -144,6 +156,8 @@ app.post('/api/visitor', (req, res) => {
       userAgent,
       platform,
       language,
+      screen,
+      timezone,
       referrer,
       timestamp
     );
@@ -176,9 +190,17 @@ app.get('/api/visitor-stats', (req, res) => {
       ).get();
 
     const uniqueRow =
-      db.prepare(
-        'SELECT COUNT(DISTINCT ip) AS uniqueIps FROM visitors'
-      ).get();
+      db.prepare(`
+        SELECT COUNT(
+          DISTINCT
+              ip ||
+              userAgent ||
+              platform ||
+              screen ||
+              timezone
+        ) AS uniqueIps
+        FROM visitors
+      `).get();
 
     const rows =
       db.prepare(`
@@ -581,7 +603,7 @@ app.get("/api/metrics", (req, res) => {
 });
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'app', 'index.html'));
 });
 
 app.listen(PORT, () => {

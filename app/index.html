@@ -911,6 +911,8 @@ window.addEventListener("DOMContentLoaded", () => {
     
     startReminderChecker();
 
+    fetchVisitorStats();
+
     fetchMetrics();
 
     if(window.metricsInterval){
@@ -1048,8 +1050,24 @@ function startReminderChecker(){
 
         /* ================= IMPORTANT MOBILE FIX ================= */
 
-        if(current === reminder.time
-            && reminder.active){
+        // if(current >= reminder.time
+        //     && reminder.active)        
+
+        const nowMinutes =
+            now.getHours() * 60 +
+            now.getMinutes();
+
+        const reminderParts =
+            reminder.time.split(":");
+
+        const reminderMinutes =
+            parseInt(reminderParts[0]) * 60 +
+            parseInt(reminderParts[1]);
+
+        if(
+            nowMinutes >= reminderMinutes &&
+            reminder.active
+        ){    
 
             /* NOTIFICATION */
 
@@ -1267,7 +1285,7 @@ PYTHON PRACTICE
     <!-- FILES -->
 
     <div id="fileContainer"></div>
-
+    
     <div id="textViewer" style="
         display:none;
         position:fixed;
@@ -1286,7 +1304,31 @@ PYTHON PRACTICE
             0 0 40px rgba(0,0,0,0.6);
         font-size:18px;
         line-height:1.8;
-    "></div>
+    ">
+
+        <!-- TEXT CLOSE BUTTON -->
+
+        <button
+            onclick="closeTextViewer()"
+            style="
+                position:sticky;
+                top:0;
+                float:right;
+                background:red;
+                color:white;
+                border:none;
+                padding:10px 18px;
+                border-radius:10px;
+                cursor:pointer;
+                z-index:999999;
+                margin-bottom:10px;
+                font-weight:bold;
+            "
+        >
+            CLOSE
+        </button>
+
+    </div>
 
     <div id="pdfViewer" style="
         display:none;
@@ -1599,17 +1641,43 @@ function renderVisitorDetails(hits) {
     }).join('');
 }
 
+/* ================= LOG VISITOR ================= */
+
 async function recordVisitorHit() {
     const payload = {
-        username: currentUser?.username || '',
-        email: currentUser?.email || '',
-        authMethod: currentUser?.authMethod || 'anonymous',
-        url: window.location.pathname,
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        language: navigator.language
-    };
 
+        username:
+            currentUser?.username || '',
+
+        email:
+            currentUser?.email || '',
+
+        authMethod:
+            currentUser?.authMethod || 'anonymous',
+
+        url:
+            window.location.pathname,
+
+        userAgent:
+            navigator.userAgent,
+
+        platform:
+            navigator.platform,
+
+        language:
+            navigator.language,
+
+        screen:
+            window.screen.width +
+            "x" +
+            window.screen.height,
+
+        timezone:
+            Intl.DateTimeFormat()
+                .resolvedOptions()
+                .timeZone
+    };     
+            
     try {
         const response = await fetch('/api/visitor', {
             method: 'POST',
@@ -1703,7 +1771,13 @@ function initAuth() {
 
     if(savedSignature !== currentSignature){
 
-        localStorage.clear();
+        localStorage.removeItem(
+            'portalUser'
+        );
+
+        localStorage.removeItem(
+            'sessionSignature'
+        );
 
         showLoginScreen();
 
@@ -1818,13 +1892,52 @@ function renderFiles(files){
         card.onmouseout = () => card.style.background="#1e293b";
 
         card.innerHTML = `
-            <div style="font-size:13px;word-break:break-word">
+            <div style="
+                font-size:13px;
+                word-break:break-word;
+                margin-bottom:10px;
+            ">
                 ${file}
             </div>
+
+            <button
+                onclick="
+                    event.stopPropagation();
+
+                    window.open(
+                        '/media/${encodeURIComponent(file)}',
+                        '_blank'
+                    );
+                "
+                style="
+                    padding:6px 12px;
+                    border:none;
+                    border-radius:8px;
+                    background:#2563eb;
+                    color:white;
+                    cursor:pointer;
+                "
+            >
+                Open In New Tab
+            </button>
         `;
 
         card.onclick = () => {
+
             openFile(file);
+        };
+
+        /* DOUBLE CLICK = NEW TAB */
+
+        card.ondblclick = () => {
+
+            window.open(
+
+                "/media/" +
+                encodeURIComponent(file),
+
+                "_blank"
+            );
         };
 
         container.appendChild(card);
@@ -1903,24 +2016,25 @@ function findMatchingFiles(query){
         const lower = file.toLowerCase();
         /* RESET VIEWERS */
 
-        document.getElementById(
-            "textViewer"
-        ).style.display = "none";
+        // document.getElementById(
+        //     "textViewer"
+        // ).style.display = "none";
 
-        document.getElementById(
-            "pdfViewer"
-        ).style.display = "none";
+        // document.getElementById(
+        //     "pdfViewer"
+        // ).style.display = "none";
 
-        document.getElementById(
-            "textViewer"
-        ).innerHTML = "";
+        // document.getElementById(
+        //     "textViewer"
+        // ).innerHTML = "";
 
-        document.getElementById(
-            "pdfViewer"
-        ).innerHTML = "";
+        // document.getElementById(
+        //     "pdfViewer"
+        // ).innerHTML = "";
         return terms.every(term => lower.includes(term));
     });
 }
+
 function renderSearchResults(files, query){
 
     const body = document.getElementById('chatBody');
@@ -2403,7 +2517,27 @@ function openFile(file){
 
             viewer.style.display = "block";
 
-            viewer.innerHTML = "";
+            viewer.innerHTML = `
+                <button
+                    onclick="closeTextViewer()"
+                    style="
+                        position:sticky;
+                        top:0;
+                        float:right;
+                        background:red;
+                        color:white;
+                        border:none;
+                        padding:10px 18px;
+                        border-radius:10px;
+                        cursor:pointer;
+                        z-index:999999;
+                        margin-bottom:10px;
+                        font-weight:bold;
+                    "
+                >
+                    CLOSE
+                </button>
+            `;
 
             textLines.forEach((line,index)=>{
 
@@ -2468,7 +2602,11 @@ function openFile(file){
 
     ){
 
-        openMediaPlayer(file,"video");
+        window.open(
+            "/stream/" +
+            encodeURIComponent(file),
+            "_blank"
+        );
 
         return;
     }
@@ -2483,8 +2621,12 @@ function openFile(file){
         lower.endsWith(".wav")
 
     ){
-
-        openMediaPlayer(file,"audio");
+       
+        window.open(
+            "/media/" +
+            encodeURIComponent(file),
+            "_blank"
+        );
 
         return;
     }
@@ -2706,10 +2848,15 @@ async function renderPdfViewer(pdfUrl){
             textLayer.style.height =
                 canvas.height + "px";
 
-            textLayer.style.opacity = "0.01";    
+            textLayer.style.opacity = "1";    
+
+            textLayer.style.color = "transparent";
 
             textLayer.style.pointerEvents =
                 "auto";
+
+            textLayer.style.userSelect = 
+                "text";    
 
             textLayer.style.zIndex = "999";    
 
@@ -2749,68 +2896,74 @@ async function renderPdfViewer(pdfUrl){
 
             /* CLICK TO READ */
 
-            setTimeout(()=>{
+            requestAnimationFrame(()=>{    
 
                 const spans =
                     textLayer.querySelectorAll(
                         "span"
                     );
 
-                spans.forEach(span=>{
 
-                    span.style.cursor =
-                        "pointer";
+                textLayer.addEventListener("click",(e)=>{
 
-                    span.addEventListener(
-                        "click",
-                        ()=>{
+                    if(e.target.tagName !== "SPAN"){
+                        return;
+                    }
 
-                            const clicked =
-                                span.innerText
-                                    .trim();
+                    const span = e.target;
 
-                            if(!clicked)
-                                return;
+                    span.style.cursor = "pointer";
 
-                            let foundIndex =
-                                textLines.findIndex(
-                                    line =>
-                                        line.includes(
-                                            clicked
-                                        )
-                                );
+                    const clicked =
+                        span.innerText.trim();
 
-                            if(foundIndex < 0){
+                    if(!clicked){
+                        return;
+                    }
 
-                                foundIndex = 0;
-                            }
+                    let foundIndex =
+                        textLines.findIndex(
+                            line =>
+                                line.includes(clicked)
+                        );
 
-                            stopTextReading();
+                    if(foundIndex < 0){
 
-                            currentLineIndex =
-                                foundIndex;
+                        foundIndex = 0;
+                    }
 
-                            isReadingStopped =
-                                false;
+                    stopTextReading();
 
-                            /* HIGHLIGHT */
+                    currentLineIndex =
+                        foundIndex;
 
-                            spans.forEach(s=>{
+                    isReadingStopped =
+                        false;
 
-                                s.style.background =
-                                    "transparent";
-                            });
+                    /* REMOVE OLD HIGHLIGHTS */
 
-                            span.style.background =
-                                "yellow";
+                    textLayer
+                        .querySelectorAll("span")
+                        .forEach(s=>{
 
-                            span.style.color =
-                                "black";
+                            s.style.background =
+                                "transparent";
 
-                            readNextLine();
-                        }
-                    );
-                });
+                            s.style.color =
+                                "transparent";
+                        });
+
+                    /* CURRENT HIGHLIGHT */
+
+                    span.style.background =
+                        "yellow";
+
+                    span.style.color =
+                        "black";
+
+                    readNextLine();
+
+                });    
 
             },500);
         }
@@ -2842,9 +2995,49 @@ function closePdfViewer(){
 
     viewer.style.display = "none";
 
+    viewer.replaceChildren();
+
     viewer.innerHTML = `
         <button
             onclick="closePdfViewer()"
+            style="
+                position:sticky;
+                top:0;
+                float:right;
+                background:red;
+                color:white;
+                border:none;
+                padding:10px 18px;
+                border-radius:10px;
+                cursor:pointer;
+                z-index:999999;
+                margin-bottom:10px;
+                font-weight:bold;
+            "
+        >
+            CLOSE
+        </button>
+    `;
+
+    stopTextReading();
+}
+
+/* ================= CLOSE TEXT VIEWER ================= */
+
+function closeTextViewer(){
+
+    const viewer =
+        document.getElementById(
+            "textViewer"
+        );
+
+    viewer.style.display = "none";
+
+    viewer.replaceChildren();
+
+    viewer.innerHTML = `
+        <button
+            onclick="closeTextViewer()"
             style="
                 position:sticky;
                 top:0;
@@ -2871,7 +3064,7 @@ function closePdfViewer(){
 
 function startTextReading(){
 
-    stopTextReading();
+    speechSynthesis.cancel();
 
     if(currentLineIndex < 0){
 
@@ -2936,6 +3129,8 @@ function readNextLine(){
     };
 
     setTimeout(()=>{
+
+        speechSynthesis.cancel();
 
         speechSynthesis.speak(
             currentSpeech
@@ -3190,6 +3385,8 @@ const SpeechRecognition =
 
 function speak(text){
 
+    window.speechSynthesis.cancel();
+
     const speech =
         new SpeechSynthesisUtterance(text);
 
@@ -3327,10 +3524,7 @@ function startVoice(){
 
     /* DO NOT INTERRUPT ACTIVE FILE READING */
 
-    if(!currentSpeech){
-
-        window.speechSynthesis.cancel();
-    }
+    window.speechSynthesis.cancel();
 
     /* SPEAK FIRST */
 
