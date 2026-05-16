@@ -2419,10 +2419,14 @@ function openMediaPlayer(file,type){
                 autoplay
                 playsinline
                 style="
-                    width:90%;
-                    max-height:80vh;
+                    width:95vw;
+                    height:85vh;
+                    max-width:1600px;
                     border-radius:18px;
                     background:black;
+                    object-fit:contain;
+                    box-shadow:
+                        0 0 40px rgba(0,0,0,0.7);
                 "
             >
                 <source
@@ -2508,16 +2512,16 @@ async function loadPdfText(pdfUrl){
             const pageText =
                 textContent.items
                     .map(item => item.str)
-                    .join('\n');                
+                    .join(' ');                
 
             fullText +=
-                pageText + '\n';
+                pageText + ' ';
         }
-
-        textLines =
-            fullText.split(/\r?\n/);
         
-        speak('PDF loaded for reading');
+        textLines =
+            fullText
+                .replace(/\s+/g,' ')
+                .match(/[^.!?]+[.!?]+/g) || [];
     
     } 
     
@@ -2560,7 +2564,9 @@ function readNextLine(){
         textLines[currentLineIndex] || '';
 
     const line =
-        rawLine.trim();    
+        rawLine
+            .replace(/\s+/g, ' ')
+            .trim();    
 
     currentLineIndex++;
 
@@ -2578,9 +2584,9 @@ function readNextLine(){
     currentSpeech =
         new SpeechSynthesisUtterance(line);
 
-    currentSpeech.rate = 1;
+    currentSpeech.rate = 1.05;
 
-    currentSpeech.pitch = 1;
+    currentSpeech.pitch = 1.1;
 
     currentSpeech.volume = 1;
 
@@ -2590,7 +2596,7 @@ function readNextLine(){
 
             readNextLine();
 
-        },500);
+        },line.length > 120 ? 180 : 80);
     };
 
     if(!speechSynthesis.speaking){
@@ -2859,16 +2865,23 @@ const SpeechRecognition =
 
     speech.lang = 'en-US';
 
-    speech.rate = 1;
+    speech.rate = 1.8;
 
-    speech.pitch = 1;
+    speech.pitch = 1.15;
 
     const voices =
         window.speechSynthesis.getVoices();
 
     const preferred = voices.find(v =>
-        v.name.includes('Google') ||
-        v.name.includes('Microsoft')
+
+        v.name.includes('Google UK English Female') ||
+
+        v.name.includes('Microsoft David') ||
+
+        v.name.includes('Microsoft Zira') ||
+
+        v.name.includes('Google US English')
+
     );
 
     if(preferred){
