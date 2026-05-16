@@ -12,7 +12,7 @@ COPY package*.json ./
 
 RUN npm ci --omit=dev
 
-COPY app/ .
+COPY app/ ./app/
 COPY server.js ./
 
 # ================= RUNTIME STAGE =================
