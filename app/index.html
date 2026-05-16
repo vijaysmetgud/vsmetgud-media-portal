@@ -1270,22 +1270,39 @@ PYTHON PRACTICE
 
     <div id="textViewer" style="
         display:none;
-        padding:20px;
-        background:#111827;
-        border-radius:18px;
-        margin:20px;
+        position:fixed;
+        top:80px;
+        left:50%;
+        transform:translateX(-50%);
+        width:92vw;
+        height:82vh;
         overflow:auto;
-        max-height:80vh;
+        background:#111827;
+        color:white;
+        border-radius:20px;
+        padding:20px;
+        z-index:999999;
+        box-shadow:
+            0 0 40px rgba(0,0,0,0.6);
+        font-size:18px;
+        line-height:1.8;
     "></div>
 
     <div id="pdfViewer" style="
         display:none;
-        padding:20px;
-        background:#111827;
-        border-radius:18px;
-        margin:20px;
+        position:fixed;
+        top:80px;
+        left:50%;
+        transform:translateX(-50%);
+        width:92vw;
+        height:82vh;
         overflow:auto;
-        max-height:80vh;
+        background:white;
+        border-radius:20px;
+        padding:20px;
+        z-index:999999;
+        box-shadow:
+            0 0 40px rgba(0,0,0,0.6);
     "></div>
 
 </div>
@@ -2775,7 +2792,10 @@ function startTextReading(){
 
     stopTextReading();
 
-    currentLineIndex = 0;
+    if(currentLineIndex < 0){
+
+        currentLineIndex = 0;
+    }
 
     isReadingStopped = false;
 
@@ -2864,10 +2884,6 @@ function stopTextReading(){
     isReadingStopped = true;
 
     currentSpeech = null;
-
-    currentLineIndex = 0;
-
-    textLines = [];
 
     speechSynthesis.cancel();
 }
