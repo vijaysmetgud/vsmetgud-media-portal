@@ -1,0 +1,169 @@
+body{
+
+    margin:0;
+    padding:20px;
+    font-family:Arial;
+    background:#111827;
+    color:white;
+
+}
+
+.container{
+
+    max-width:900px;
+    margin:auto;
+
+}
+
+h1{
+
+    text-align:center;
+    margin-bottom:20px;
+
+}
+
+.formCard{
+
+    background:#1f2937;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:20px;
+
+}
+
+input{
+
+    width:100%;
+    padding:12px;
+    margin-bottom:10px;
+    border:none;
+    border-radius:8px;
+
+}
+
+.buttonRow{
+
+    display:flex;
+    gap:10px;
+
+}
+
+button{
+
+    flex:1;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+
+}
+
+.summary{
+
+    display:grid;
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(180px,1fr)
+        );
+
+    gap:15px;
+    margin-bottom:20px;
+
+}
+
+.summaryCard{
+
+    background:#374151;
+    padding:20px;
+    border-radius:12px;
+    text-align:center;
+
+}
+
+.expenseList{
+
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+
+}
+
+.expenseItem{
+
+    background:#374151;
+    padding:15px;
+    border-radius:12px;
+
+}
+
+/* ================= GLASS EFFECT ================= */
+
+.formCard,
+.summaryCard,
+.expenseItem{
+
+    backdrop-filter:blur(12px);
+
+    box-shadow:
+        0 0 25px rgba(0,0,0,0.25);
+
+    border:
+        1px solid rgba(255,255,255,0.08);
+}
+
+/* ================= BUTTON COLORS ================= */
+
+button{
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #1d4ed8
+        );
+
+    color:white;
+
+    transition:0.3s;
+}
+
+button:hover{
+
+    transform:scale(1.03);
+
+    box-shadow:
+        0 0 20px rgba(37,99,235,0.5);
+}
+
+/* ================= INPUT DARK ================= */
+
+input{
+
+    background:#0f172a;
+
+    color:white;
+}
+
+/* ================= PAGE ANIMATION ================= */
+
+.container{
+
+    animation:fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+        transform:translateY(20px);
+    }
+
+    to{
+
+        opacity:1;
+        transform:translateY(0);
+    }
+}

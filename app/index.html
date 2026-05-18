@@ -1258,27 +1258,14 @@ PYTHON PRACTICE
 
 </div>    
 
-<!-- TEXT READER CONTROLS -->
+<!-- EXPENSE TRACKER FLOATING BUTTON -->
 
-<div id="textReaderControls">
-
-        <button onclick="startTextReading()">
-            ▶ Start Reading
-        </button>
-
-        <button onclick="pauseTextReading()">
-            ⏸ Pause
-        </button>
-
-        <button onclick="resumeTextReading()">
-            ⏯ Resume
-        </button>
-
-        <button onclick="stopTextReading()">
-            ⏹ Stop
-        </button>
-
-    </div>
+<button
+    id="expenseTrackerBtn"
+    onclick="window.location.href='expense.html'"
+>
+    ----- 💰 EXPENSE TRACKER 💰-----
+</button>
 
 <div id="fileSection">    
 
@@ -2667,25 +2654,49 @@ function openFile(file){
             viewer.style.display = "block";
 
             viewer.innerHTML = `
-                <button
-                    onclick="closeTextViewer()"
-                    style="
-                        position:sticky;
-                        top:0;
-                        float:right;
-                        background:red;
-                        color:white;
-                        border:none;
-                        padding:10px 18px;
-                        border-radius:10px;
-                        cursor:pointer;
-                        z-index:999999;
-                        margin-bottom:10px;
-                        font-weight:bold;
-                    "
-                >
-                    CLOSE
-                </button>
+
+                <div style="
+                    position:sticky;
+                    top:0;
+                    background:#111827;
+                    padding:15px;
+                    z-index:99999;
+                    display:flex;
+                    gap:10px;
+                    flex-wrap:wrap;
+                    border-bottom:
+                        1px solid rgba(255,255,255,0.1);
+                ">
+
+                    <button onclick="startTextReading()">
+                        ▶ Start Reading
+                    </button>
+
+                    <button onclick="pauseTextReading()">
+                        ⏸ Pause
+                    </button>
+
+                    <button onclick="resumeTextReading()">
+                        ⏯ Resume
+                    </button>
+
+                    <button onclick="stopTextReading()">
+                        ⏹ Stop
+                    </button>
+
+                    <button
+                        onclick="closeTextViewer()"
+                        style="
+                            margin-left:auto;
+                            background:red;
+                            color:white;
+                        "
+                    >
+                        CLOSE
+                    </button>
+
+                </div>
+
             `;
 
             textLines.forEach((line,index)=>{
@@ -2887,27 +2898,50 @@ async function renderPdfViewer(pdfUrl){
     viewer.style.display = "block";
 
     viewer.innerHTML = `
-        <button
-            onclick="closePdfViewer()"
-            style="
-                position:sticky;
-                top:0;
-                float:right;
-                background:red;
-                color:white;
-                border:none;
-                padding:10px 18px;
-                border-radius:10px;
-                cursor:pointer;
-                z-index:999999;
-                margin-bottom:10px;
-                font-weight:bold;
-            "
-        >
-            CLOSE
-        </button>
-    `;
 
+        <div style="
+            position:sticky;
+            top:0;
+            background:white;
+            padding:15px;
+            z-index:99999;
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            border-bottom:
+                1px solid rgba(0,0,0,0.1);
+        ">
+
+            <button onclick="startTextReading()">
+                ▶ Start Reading
+            </button>
+
+            <button onclick="pauseTextReading()">
+                ⏸ Pause
+            </button>
+
+            <button onclick="resumeTextReading()">
+                ⏯ Resume
+            </button>
+
+            <button onclick="stopTextReading()">
+                ⏹ Stop
+            </button>
+
+            <button
+                onclick="closePdfViewer()"
+                style="
+                    margin-left:auto;
+                    background:red;
+                    color:white;
+                "
+            >
+                CLOSE
+            </button>
+
+        </div>
+
+    `;
 
     textLines = [];
 
@@ -2934,8 +2968,6 @@ async function renderPdfViewer(pdfUrl){
                     scale:1.5
                 });
 
-            /* PAGE CONTAINER */
-
             const pageDiv =
                 document.createElement("div");
 
@@ -2944,8 +2976,6 @@ async function renderPdfViewer(pdfUrl){
 
             pageDiv.style.marginBottom =
                 "30px";
-
-            /* CANVAS */
 
             const canvas =
                 document.createElement("canvas");
@@ -2971,8 +3001,6 @@ async function renderPdfViewer(pdfUrl){
 
             }).promise;
 
-            /* TEXT LAYER */
-
             const textLayer =
                 document.createElement("div");
 
@@ -2989,17 +3017,19 @@ async function renderPdfViewer(pdfUrl){
             textLayer.style.height =
                 canvas.height + "px";
 
-            textLayer.style.opacity = "1";    
+            textLayer.style.opacity = "1";
 
-            textLayer.style.color = "transparent";
+            textLayer.style.color =
+                "transparent";
 
             textLayer.style.pointerEvents =
                 "auto";
 
-            textLayer.style.userSelect = 
-                "text";    
+            textLayer.style.userSelect =
+                "text";
 
-            textLayer.style.zIndex = "999";    
+            textLayer.style.zIndex =
+                "999";
 
             pageDiv.appendChild(textLayer);
 
@@ -3021,23 +3051,23 @@ async function renderPdfViewer(pdfUrl){
 
             }).promise;
 
-            /* STORE TEXT */
-
             const pageText =
                 textContent.items
                     .map(item=>item.str)
                     .join(" ");
 
             const pageLines =
-            pageText
-                .split(/(?<=[.!?])\s+/)
-                .filter(line => line.trim());
+                pageText
+                    .split(
+                        /(?<=[.!?])\s+/
+                    )
+                    .filter(
+                        line => line.trim()
+                    );
 
             textLines.push(...pageLines);
 
-            /* CLICK TO READ */
-
-            requestAnimationFrame(()=>{    
+            requestAnimationFrame(()=>{
 
                 const spans =
                     textLayer.querySelectorAll(
@@ -3046,39 +3076,43 @@ async function renderPdfViewer(pdfUrl){
 
                 spans.forEach((span,index)=>{
 
-                    span.dataset.index = index;
+                    span.dataset.index =
+                        index;
 
                 });
 
-                textLayer.addEventListener("click",(e)=>{
+                textLayer.addEventListener(
+                    "click",
+                    (e)=>{
 
-                    if(e.target.tagName !== "SPAN"){
+                    if(
+                        e.target.tagName !==
+                        "SPAN"
+                    ){
                         return;
                     }
 
-                    const span = e.target;
-
-                    span.style.cursor = "pointer";
+                    const span =
+                        e.target;
 
                     const clickedIndex =
-                        parseInt(span.dataset.index || "0");
+                        parseInt(
+                            span.dataset.index
+                            || "0"
+                        );
 
                     stopTextReading();
 
                     currentLineIndex =
                         clickedIndex;
 
-                    isReadingStopped = false;
-
-                    readNextLine();
-
                     isReadingStopped =
                         false;
 
-                    /* REMOVE OLD HIGHLIGHTS */
-
                     textLayer
-                        .querySelectorAll("span")
+                        .querySelectorAll(
+                            "span"
+                        )
                         .forEach(s=>{
 
                             s.style.background =
@@ -3088,8 +3122,6 @@ async function renderPdfViewer(pdfUrl){
                                 "transparent";
                         });
 
-                    /* CURRENT HIGHLIGHT */
-
                     span.style.background =
                         "yellow";
 
@@ -3098,7 +3130,7 @@ async function renderPdfViewer(pdfUrl){
 
                     readNextLine();
 
-                });    
+                });
 
             },500);
         }

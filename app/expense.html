@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+/>
+
+<title>Expense Tracker</title>
+
+<link
+    rel="stylesheet"
+    href="css/expense.css"
+/>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>
+🎤 Expense Tracker
+</h1>
+
+<div class="formCard">
+
+<input
+    type="date"
+    id="date"
+/>
+
+<input
+    type="text"
+    id="item"
+    placeholder="Item"
+/>
+
+<input
+    type="number"
+    id="price"
+    placeholder="Price"
+/>
+
+<div class="buttonRow">
+
+<button onclick="addExpense()">
+Add Expense
+</button>
+
+<button onclick="startVoice()">
+🎤 Speak
+</button>
+
+</div>
+
+<p id="voiceStatus"></p>
+
+</div>
+
+<div class="summary">
+
+<div class="summaryCard">
+
+<h3>Today</h3>
+
+<p id="dailyTotal">₹0</p>
+
+</div>
+
+<div class="summaryCard">
+
+<h3>Month</h3>
+
+<p id="monthlyTotal">₹0</p>
+
+</div>
+
+<div class="summaryCard">
+
+<h3>Year</h3>
+
+<p id="yearlyTotal">₹0</p>
+
+</div>
+
+<div class="summaryCard">
+
+<h3>Overall</h3>
+
+<p id="overallTotal">₹0</p>
+
+</div>
+
+</div>
+
+<div
+    class="expenseList"
+    id="expenseList"
+></div>
+
+</div>
+
+<script src="js/expense.js"></script>
+
+</body>
+
+</html>
