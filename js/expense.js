@@ -1,18 +1,40 @@
 let expenses =
+
     JSON.parse(
         localStorage.getItem(
             "expenses"
         )
     ) || [];
 
-document.getElementById(
-    "date"
-).value =
-    new Date()
-    .toISOString()
-    .split("T")[0];
+/* ================= SAVE ================= */
 
-renderExpenses();
+function saveExpenses(){
+
+    localStorage.setItem(
+
+        "expenses",
+
+        JSON.stringify(expenses)
+    );
+}
+
+/* ================= SPEAK ================= */
+
+function speak(text){
+
+    speechSynthesis.cancel();
+
+    const speech =
+        new SpeechSynthesisUtterance(
+            text
+        );
+
+    speech.lang = "en-IN";
+
+    speechSynthesis.speak(speech);
+}
+
+/* ================= ADD EXPENSE ================= */
 
 function addExpense(){
 
@@ -27,14 +49,17 @@ function addExpense(){
         ).value;
 
     const price =
-        document.getElementById(
-            "price"
-        ).value;
+        Number(
 
-    if(!item || !price){
+            document.getElementById(
+                "price"
+            ).value
+        );
 
-        alert(
-            "Fill all fields"
+    if(!date || !item || !price){
+
+        speak(
+            "Please fill all fields"
         );
 
         return;
@@ -48,8 +73,7 @@ function addExpense(){
 
         item,
 
-        price:Number(price)
-
+        price
     });
 
     saveExpenses();
@@ -57,150 +81,19 @@ function addExpense(){
     renderExpenses();
 
     speak(
-        `${item} added`
+        "Expense added successfully"
     );
 
-}
-
-function saveExpenses(){
-
-    localStorage.setItem(
-
-        "expenses",
-
-        JSON.stringify(expenses)
-
-    );
-
-}
-
-function renderExpenses(){
-
-    const expenseList =
-        document.getElementById(
-            "expenseList"
-        );
-
-    expenseList.innerHTML = "";
-
-    expenses
-    .slice()
-    .reverse()
-    .forEach(exp => {
-
-        expenseList.innerHTML += `
-
-        <div class="expenseItem">
-
-            <h3>${exp.item}</h3>
-
-            <p>${exp.date}</p>
-
-            <h2>₹${exp.price}</h2>
-
-        </div>
-
-        `;
-
-    });
-
-    calculateTotals();
-
-}
-
-function calculateTotals(){
-
-    const today =
-        new Date()
-        .toISOString()
-        .split("T")[0];
-
-    const currentMonth =
-        new Date().getMonth();
-
-    const currentYear =
-        new Date().getFullYear();
-
-    let daily = 0;
-    let monthly = 0;
-    let yearly = 0;
-    let overall = 0;
-
-    expenses.forEach(exp => {
-
-        overall += exp.price;
-
-        const expDate =
-            new Date(exp.date);
-
-        if(exp.date === today){
-
-            daily += exp.price;
-
-        }
-
-        if(
-
-            expDate.getMonth()
-            === currentMonth &&
-
-            expDate.getFullYear()
-            === currentYear
-
-        ){
-
-            monthly += exp.price;
-
-        }
-
-        if(
-
-            expDate.getFullYear()
-            === currentYear
-
-        ){
-
-            yearly += exp.price;
-
-        }
-
-    });
+    document.getElementById(
+        "item"
+    ).value = "";
 
     document.getElementById(
-        "dailyTotal"
-    ).innerText = `₹${daily}`;
-
-    document.getElementById(
-        "monthlyTotal"
-    ).innerText = `₹${monthly}`;
-
-    document.getElementById(
-        "yearlyTotal"
-    ).innerText = `₹${yearly}`;
-
-    document.getElementById(
-        "overallTotal"
-    ).innerText = `₹${overall}`;
-
+        "price"
+    ).value = "";
 }
 
-function speak(text){
- 
-
-    speechSynthesis.cancel();
-
-    const speech =
-        new SpeechSynthesisUtterance(
-            text
-        );
-
-    speech.lang = "en-IN";
-
-    speechSynthesis.speak(
-        speech
-    );
-
-}
+/* ================= VOICE ================= */
 
 function startVoice(){
 
@@ -228,55 +121,68 @@ function startVoice(){
 
     recognition.interimResults = false;
 
-    recognition.start();
+    recognition.maxAlternatives = 1;
 
     document.getElementById(
         "voiceStatus"
     ).innerText =
         "🎤 Listening...";
 
-    recognition.onresult = (event) => {
+    recognition.start();
 
-        const speech =
+    recognition.onresult =
+    (event)=>{
+
+        const text =
+
             event.results[0][0]
             .transcript
             .toLowerCase();
 
         console.log(
             "Voice:",
-            speech
+            text
         );
 
         document.getElementById(
             "voiceStatus"
         ).innerText =
-            "You said: " + speech;
+            "You said: " + text;
 
-        processVoiceExpense(speech);
-
+        processVoiceExpense(
+            text
+        );
     };
 
-    recognition.onerror = (err) => {
+    recognition.onerror =
+    (event)=>{
 
-        console.error(err);
+        console.error(event);
 
         document.getElementById(
             "voiceStatus"
         ).innerText =
             "Voice recognition failed";
+
+        speak(
+            "Voice recognition failed"
+        );
     };
 }
 
+/* ================= PROCESS VOICE ================= */
+
 function processVoiceExpense(text){
 
-    text = text.toLowerCase();
+    text =
+        text.toLowerCase();
 
     /* ================= TODAY ================= */
 
     if(
-        text.includes("today expenses") ||
-
-        text.includes("show today")
+        text.includes(
+            "today expenses"
+        )
     ){
 
         showTodayExpenses();
@@ -287,9 +193,9 @@ function processVoiceExpense(text){
     /* ================= MONTH ================= */
 
     if(
-        text.includes("monthly expenses") ||
-
-        text.includes("show month")
+        text.includes(
+            "monthly expenses"
+        )
     ){
 
         showMonthlyExpenses();
@@ -300,136 +206,12 @@ function processVoiceExpense(text){
     /* ================= YEAR ================= */
 
     if(
-        text.includes("yearly expenses") ||
-
-        text.includes("show year")
+        text.includes(
+            "yearly expenses"
+        )
     ){
 
         showYearlyExpenses();
-
-        return;
-    }
-
-    /* ================= TOTAL CALCULATION FOR ANY SPECIFIC DAY, DATE, WEEK, MONTH,YEAR  ================= */
-
-    if(
-        text.includes("today total")
-    ){
-
-        const today =
-            new Date()
-            .toISOString()
-            .split("T")[0];
-
-        const total =
-            expenses
-
-            .filter(
-                exp => exp.date === today
-            )
-
-            .reduce(
-                (sum, exp) =>
-                    sum + exp.price,
-                0
-            );
-
-        speak(
-            `Today's total is ${total} rupees`
-        );
-
-        return;
-    }
-
-    /* ================= MONTH TOTAL ================= */
-
-    if(
-        text.includes("month total")
-    ){
-
-        const now =
-            new Date();
-
-        const total =
-            expenses
-
-            .filter(exp => {
-
-                const d =
-                    new Date(exp.date);
-
-                return(
-
-                    d.getMonth() ===
-                    now.getMonth()
-
-                    &&
-
-                    d.getFullYear() ===
-                    now.getFullYear()
-
-                );
-
-            })
-
-            .reduce(
-                (sum, exp) =>
-                    sum + exp.price,
-                0
-            );
-
-        speak(
-            `Monthly total is ${total} rupees`
-        );
-
-        return;
-    }
-
-    /* ================= YEAR TOTAL ================= */
-
-    if(
-        text.includes("year total")
-    ){
-
-        const year =
-            new Date()
-            .getFullYear();
-
-        const total =
-            expenses
-
-            .filter(exp =>
-
-                new Date(exp.date)
-                .getFullYear() === year
-
-            )
-
-            .reduce(
-                (sum, exp) =>
-                    sum + exp.price,
-                0
-            );
-
-        speak(
-            `Yearly total is ${total} rupees`
-        );
-
-        return;
-    }
-
-    /* ================= SPECIFIC DATE ================= */
-
-    const dateMatch =
-        text.match(
-            /\d{4}-\d{2}-\d{2}/
-        );
-
-    if(dateMatch){
-
-        showExpensesByDate(
-            dateMatch[0]
-        );
 
         return;
     }
@@ -443,7 +225,7 @@ function processVoiceExpense(text){
 
     let itemWords = [];
 
-    words.forEach(word => {
+    words.forEach(word=>{
 
         const num =
             Number(word);
@@ -452,12 +234,12 @@ function processVoiceExpense(text){
 
             amount = num;
 
-        } else {
-
-            itemWords.push(word);
-
         }
 
+        else{
+
+            itemWords.push(word);
+        }
     });
 
     const item =
@@ -477,7 +259,7 @@ function processVoiceExpense(text){
         .toISOString()
         .split("T")[0];
 
-    const expense = {
+    expenses.push({
 
         id:Date.now(),
 
@@ -486,19 +268,128 @@ function processVoiceExpense(text){
         item:item,
 
         price:Number(amount)
-
-    };
-
-    expenses.push(expense);
+    });
 
     saveExpenses();
 
     renderExpenses();
 
     speak(
+
         `${item} expense of ${amount} rupees added`
     );
 }
+
+/* ================= RENDER ================= */
+
+function renderExpenses(){
+
+    const expenseList =
+        document.getElementById(
+            "expenseList"
+        );
+
+    expenseList.innerHTML = "";
+
+    let daily = 0;
+
+    let monthly = 0;
+
+    let yearly = 0;
+
+    let overall = 0;
+
+    const now =
+        new Date();
+
+    const today =
+        now.toISOString()
+        .split("T")[0];
+
+    expenses
+    .slice()
+    .reverse()
+
+    .forEach(exp=>{
+
+        const d =
+            new Date(exp.date);
+
+        overall += exp.price;
+
+        if(exp.date === today){
+
+            daily += exp.price;
+        }
+
+        if(
+
+            d.getMonth() ===
+            now.getMonth()
+
+            &&
+
+            d.getFullYear() ===
+            now.getFullYear()
+
+        ){
+
+            monthly += exp.price;
+        }
+
+        if(
+
+            d.getFullYear() ===
+            now.getFullYear()
+
+        ){
+
+            yearly += exp.price;
+        }
+
+        expenseList.innerHTML += `
+
+            <div class="expenseItem">
+
+                <h3>
+                    ${exp.item}
+                </h3>
+
+                <p>
+                    ${exp.date}
+                </p>
+
+                <h2>
+                    ₹${exp.price}
+                </h2>
+
+            </div>
+
+        `;
+    });
+
+    document.getElementById(
+        "dailyTotal"
+    ).innerText =
+        "₹" + daily;
+
+    document.getElementById(
+        "monthlyTotal"
+    ).innerText =
+        "₹" + monthly;
+
+    document.getElementById(
+        "yearlyTotal"
+    ).innerText =
+        "₹" + yearly;
+
+    document.getElementById(
+        "overallTotal"
+    ).innerText =
+        "₹" + overall;
+}
+
+/* ================= TODAY ================= */
 
 function showTodayExpenses(){
 
@@ -512,11 +403,13 @@ function showTodayExpenses(){
             exp => exp.date === today
         );
 
-    renderExpenseHistory(
+    renderFilteredExpenses(
         filtered,
         "Today's Expenses"
     );
 }
+
+/* ================= MONTH ================= */
 
 function showMonthlyExpenses(){
 
@@ -524,7 +417,7 @@ function showMonthlyExpenses(){
         new Date();
 
     const filtered =
-        expenses.filter(exp => {
+        expenses.filter(exp=>{
 
             const d =
                 new Date(exp.date);
@@ -538,15 +431,17 @@ function showMonthlyExpenses(){
 
                 d.getFullYear() ===
                 now.getFullYear()
-            );
 
+            );
         });
 
-    renderExpenseHistory(
+    renderFilteredExpenses(
         filtered,
         "Monthly Expenses"
     );
 }
+
+/* ================= YEAR ================= */
 
 function showYearlyExpenses(){
 
@@ -555,35 +450,25 @@ function showYearlyExpenses(){
         .getFullYear();
 
     const filtered =
-        expenses.filter(exp => {
+        expenses.filter(exp=>{
 
             return(
+
                 new Date(exp.date)
                 .getFullYear() === year
-            );
 
+            );
         });
 
-    renderExpenseHistory(
+    renderFilteredExpenses(
         filtered,
         "Yearly Expenses"
     );
 }
 
-function showExpensesByDate(date){
+/* ================= FILTERED RENDER ================= */
 
-    const filtered =
-        expenses.filter(
-            exp => exp.date === date
-        );
-
-    renderExpenseHistory(
-        filtered,
-        `Expenses for ${date}`
-    );
-}
-
-function renderExpenseHistory(
+function renderFilteredExpenses(
     list,
     title
 ){
@@ -596,24 +481,9 @@ function renderExpenseHistory(
     expenseList.innerHTML =
         `<h2>${title}</h2>`;
 
-    if(list.length === 0){
-
-        expenseList.innerHTML += `
-            <p>
-                No expenses found
-            </p>
-        `;
-
-        speak(
-            "No expenses found"
-        );
-
-        return;
-    }
-
     let total = 0;
 
-    list.forEach(exp => {
+    list.forEach(exp=>{
 
         total += exp.price;
 
@@ -655,18 +525,7 @@ function renderExpenseHistory(
     );
 }
 
-window.addEventListener(
-
-    "DOMContentLoaded",
-
-    ()=>{
-
-        speak(
-            "Expense tracker ready"
-        );
-
-    }
-);
+/* ================= DOWNLOAD ================= */
 
 function downloadTextFile(){
 
@@ -680,19 +539,22 @@ function downloadTextFile(){
     }
 
     let text =
+
 `
 Expense Report
+
 ========================
 
 `;
 
     let total = 0;
 
-    expenses.forEach(exp => {
+    expenses.forEach(exp=>{
 
         total += exp.price;
 
         text +=
+
 `
 Date : ${exp.date}
 
@@ -703,13 +565,11 @@ Price : ₹${exp.price}
 ------------------------
 
 `;
-
     });
 
     text +=
-`
-========================
 
+`
 TOTAL = ₹${total}
 `;
 
@@ -724,22 +584,30 @@ TOTAL = ₹${total}
 
         );
 
-    const url =
-        URL.createObjectURL(blob);
-
     const a =
         document.createElement("a");
 
-    a.href = url;
+    a.href =
+        URL.createObjectURL(blob);
 
     a.download =
         "expense-report.txt";
 
     a.click();
 
-    URL.revokeObjectURL(url);
-
     speak(
         "Expense report downloaded"
     );
 }
+
+/* ================= INIT ================= */
+
+document.getElementById(
+    "date"
+).value =
+
+    new Date()
+    .toISOString()
+    .split("T")[0];
+
+renderExpenses();
