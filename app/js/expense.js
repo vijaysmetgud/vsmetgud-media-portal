@@ -1,3 +1,55 @@
+let currentUser =
+
+    localStorage.getItem(
+        "expenseUser"
+    ) || "";
+
+function askUserName(){
+
+    if(currentUser){
+
+        document.getElementById(
+            "currentUserName"
+        ).innerText =
+
+            "User : " + currentUser;
+
+        return;
+    }
+
+    const name =
+
+        prompt(
+            "Enter your name"
+        );
+
+    if(!name){
+
+        askUserName();
+
+        return;
+    }
+
+    currentUser = name;
+
+    localStorage.setItem(
+
+        "expenseUser",
+
+        name
+    );
+
+    document.getElementById(
+        "currentUserName"
+    ).innerText =
+
+        "User : " + name;
+
+    speak(
+        `Welcome ${name}`
+    );
+}    
+
 let expenses =
 
     JSON.parse(
@@ -69,11 +121,13 @@ function addExpense(){
 
         id:Date.now(),
 
-        date,
+        user:currentUser,
 
-        item,
+        date:today,
 
-        price
+        item:item,
+
+        price:Number(amount)
     });
 
     saveExpenses();
@@ -139,14 +193,17 @@ function startVoice(){
             );
         };
 
-        recognition.onresult = (event)=>{
+        recognition.onresult =
+        (event)=>{
 
             const text =
+
                 event.results[0][0]
-                .transcript;
+                .transcript
+                .toLowerCase();
 
             console.log(
-                "Recognized:",
+                "Voice:",
                 text
             );
 
@@ -155,9 +212,7 @@ function startVoice(){
             ).innerText =
                 "You said: " + text;
 
-            alert(
-                "You said: " + text
-            );
+            processVoiceExpense(text);
         };
 
         recognition.onerror = (event)=>{
@@ -193,6 +248,70 @@ function startVoice(){
 
         alert(err.message);
     }
+}
+
+function processVoiceExpense(text){
+
+    const words =
+        text.split(" ");
+
+    let amount = null;
+
+    let itemWords = [];
+
+    words.forEach(word=>{
+
+        const num =
+            Number(word);
+
+        if(!isNaN(num)){
+
+            amount = num;
+
+        }
+
+        else{
+
+            itemWords.push(word);
+        }
+    });
+
+    const item =
+        itemWords.join(" ");
+
+    if(!item || !amount){
+
+        speak(
+            "Could not understand expense"
+        );
+
+        return;
+    }
+
+    const today =
+        new Date()
+        .toISOString()
+        .split("T")[0];
+
+    expenses.push({
+
+        id:Date.now(),
+
+        date:today,
+
+        item:item,
+
+        price:Number(amount)
+    });
+
+    saveExpenses();
+
+    renderExpenses();
+
+    speak(
+
+        `${item} expense of ${amount} rupees added`
+    );
 }
 
 /* ================= PROCESS VOICE ================= */
@@ -381,6 +500,10 @@ function renderExpenses(){
                 </h3>
 
                 <p>
+                    👤 ${exp.user}
+                </p>
+
+                <p>
                     ${exp.date}
                 </p>
 
@@ -412,6 +535,8 @@ function renderExpenses(){
         "overallTotal"
     ).innerText =
         "₹" + overall;
+    
+    renderChart();    
 }
 
 /* ================= TODAY ================= */
@@ -636,3 +761,100 @@ document.getElementById(
     .split("T")[0];
 
 renderExpenses();
+
+askUserName();
+
+renderExpenses();
+
+
+let expenseChart;
+
+function renderChart(){
+
+    const totals = {};
+
+    expenses.forEach(exp=>{
+
+        if(!totals[exp.date]){
+
+            totals[exp.date] = 0;
+        }
+
+        totals[exp.date] += exp.price;
+    });
+
+    const labels =
+        Object.keys(totals);
+
+    const data =
+        Object.values(totals);
+
+    const ctx =
+        document.getElementById(
+            "expenseChart"
+        );
+
+    if(expenseChart){
+
+        expenseChart.destroy();
+    }
+
+    expenseChart =
+        new Chart(ctx,{
+
+            type:"bar",
+
+            data:{
+
+                labels:labels,
+
+                datasets:[{
+
+                    label:
+                        "Daily Expenses",
+
+                    data:data,
+
+                    backgroundColor:
+                        "#2563eb",
+
+                    borderRadius:10
+                }]
+            },
+
+            options:{
+
+                responsive:true,
+
+                plugins:{
+
+                    legend:{
+
+                        labels:{
+
+                            color:"white"
+                        }
+                    }
+                },
+
+                scales:{
+
+                    x:{
+
+                        ticks:{
+
+                            color:"white"
+                        }
+                    },
+
+                    y:{
+
+                        ticks:{
+
+                            color:"white"
+                        }
+                    }
+                }
+            }
+        });
+}
