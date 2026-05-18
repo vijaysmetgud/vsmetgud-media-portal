@@ -2454,6 +2454,145 @@ function handleChatQuery(query){
 
 }
 
+/* ================= MEDIA WINDOW ================= */
+
+function openMediaWindow(file,type){
+
+    let mediaHtml = "";
+
+    if(type === "video"){
+
+        mediaHtml = `
+            <video
+                controls
+                autoplay
+                style="
+                    width:100%;
+                    height:calc(100vh - 70px);
+                    background:black;
+                "
+            >
+                <source src="/stream/${encodeURIComponent(file)}">
+            </video>
+        `;
+    }
+
+    if(type === "audio"){
+
+        mediaHtml = `
+            <div style="
+                display:flex;
+                justify-content:center;
+                align-items:center;
+                height:calc(100vh - 70px);
+                background:#111827;
+                color:white;
+                flex-direction:column;
+                gap:20px;
+            ">
+
+                <h2>🎵 Audio Player</h2>
+
+                <audio
+                    controls
+                    autoplay
+                    style="width:80%;"
+                >
+                    <source src="/media/${encodeURIComponent(file)}">
+                </audio>
+
+            </div>
+        `;
+    }
+
+    const newWindow = window.open(
+        "",
+        "_blank"
+    );
+
+    newWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+
+            <title>Media Player</title>
+
+            <style>
+
+                body{
+
+                    margin:0;
+
+                    background:black;
+
+                    overflow:hidden;
+
+                    font-family:Segoe UI;
+                }
+
+                .topBar{
+
+                    height:60px;
+
+                    background:#111827;
+
+                    display:flex;
+
+                    justify-content:flex-end;
+
+                    align-items:center;
+
+                    padding:0 20px;
+                }
+
+                .closeBtn{
+
+                    background:red;
+
+                    color:white;
+
+                    border:none;
+
+                    padding:10px 18px;
+
+                    border-radius:10px;
+
+                    cursor:pointer;
+
+                    font-size:15px;
+
+                    font-weight:bold;
+                }
+
+            </style>
+
+        </head>
+
+        <body>
+
+            <div class="topBar">
+
+                <button
+                    class="closeBtn"
+                    onclick="
+                        window.open('','_self');
+                        window.close();
+                    "
+                >
+                    ✖ CLOSE
+                </button>
+
+            </div>
+
+            ${mediaHtml}
+
+        </body>
+        </html>
+    `);
+
+    newWindow.document.close();
+}
+
 /* ================= OPEN FILE ================= */
 
 function openFile(file){
@@ -2602,11 +2741,7 @@ function openFile(file){
 
     ){
 
-        window.open(
-            "/stream/" +
-            encodeURIComponent(file),
-            "_blank"
-        );
+        openMediaWindow(file,"video");
 
         return;
     }
@@ -2622,11 +2757,7 @@ function openFile(file){
 
     ){
        
-        window.open(
-            "/media/" +
-            encodeURIComponent(file),
-            "_blank"
-        );
+        openMediaWindow(file,"audio");
 
         return;
     }
@@ -2888,9 +3019,9 @@ async function renderPdfViewer(pdfUrl){
                     .join(" ");
 
             const pageLines =
-                pageText.match(
-                    /[^.!?]+[.!?]+/g
-                ) || [];
+            pageText
+                .split(/(?<=[.!?])\s+/)
+                .filter(line => line.trim());
 
             textLines.push(...pageLines);
 
@@ -2903,6 +3034,11 @@ async function renderPdfViewer(pdfUrl){
                         "span"
                     );
 
+                spans.forEach((span,index)=>{
+
+                    span.dataset.index = index;
+
+                });
 
                 textLayer.addEventListener("click",(e)=>{
 
@@ -2914,28 +3050,17 @@ async function renderPdfViewer(pdfUrl){
 
                     span.style.cursor = "pointer";
 
-                    const clicked =
-                        span.innerText.trim();
-
-                    if(!clicked){
-                        return;
-                    }
-
-                    let foundIndex =
-                        textLines.findIndex(
-                            line =>
-                                line.includes(clicked)
-                        );
-
-                    if(foundIndex < 0){
-
-                        foundIndex = 0;
-                    }
+                    const clickedIndex =
+                        parseInt(span.dataset.index || "0");
 
                     stopTextReading();
 
                     currentLineIndex =
-                        foundIndex;
+                        clickedIndex;
+
+                    isReadingStopped = false;
+
+                    readNextLine();
 
                     isReadingStopped =
                         false;

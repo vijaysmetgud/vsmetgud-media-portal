@@ -155,3 +155,10 @@ Requests that the installing user grants access to their identity during install
 
 
 -------------------------THANK YOU GOOD BYE----------------------------------
+
+
+TO RUN THE SQLITE DATABASE (To know the ubique visitors count)
+
+
+sudo systemctl start sqlite
+sudo systemctl enable sqlite
