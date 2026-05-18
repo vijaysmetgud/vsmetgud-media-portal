@@ -1258,11 +1258,9 @@ PYTHON PRACTICE
 
 </div>    
 
-<div id="fileSection">
+<!-- TEXT READER CONTROLS -->
 
-    <!-- TEXT READER CONTROLS -->
-
-    <div id="textReaderControls">
+<div id="textReaderControls">
 
         <button onclick="startTextReading()">
             ▶ Start Reading
@@ -1281,6 +1279,8 @@ PYTHON PRACTICE
         </button>
 
     </div>
+
+<div id="fileSection">    
 
     <!-- FILES -->
 
@@ -1614,6 +1614,16 @@ async function fetchVisitorStats() {
         if (hitsEl) hitsEl.innerText = data.totalHits;
         if (uniqueEl) uniqueEl.innerText = data.uniqueIps;
         renderVisitorDetails(data.latest || []);
+        console.log("VISITOR API:", data);
+
+        console.log(
+            document.getElementById("hits")
+        );
+
+        console.log(
+            document.getElementById("uniqueVisitors")
+        );
+
     } catch (err) {
         console.warn('Visitor stats fetch failed:', err);
         updateLocalVisitorMetrics();
