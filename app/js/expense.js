@@ -97,77 +97,102 @@ function addExpense(){
 
 function startVoice(){
 
-    const SpeechRecognition =
+    try{
 
-        window.SpeechRecognition ||
+        const SpeechRecognition =
 
-        window.webkitSpeechRecognition;
+            window.SpeechRecognition ||
 
-    if(!SpeechRecognition){
+            window.webkitSpeechRecognition;
 
-        alert(
-            "Speech Recognition not supported"
-        );
+        if(!SpeechRecognition){
 
-        return;
+            alert(
+                "Speech Recognition not supported in this browser"
+            );
+
+            return;
+        }
+
+        const recognition =
+            new SpeechRecognition();
+
+        recognition.lang = "en-IN";
+
+        recognition.continuous = false;
+
+        recognition.interimResults = false;
+
+        recognition.maxAlternatives = 1;
+
+        document.getElementById(
+            "voiceStatus"
+        ).innerText =
+            "🎤 Listening...";
+
+        recognition.start();
+
+        recognition.onstart = ()=>{
+
+            console.log(
+                "Voice recognition started"
+            );
+        };
+
+        recognition.onresult = (event)=>{
+
+            const text =
+                event.results[0][0]
+                .transcript;
+
+            console.log(
+                "Recognized:",
+                text
+            );
+
+            document.getElementById(
+                "voiceStatus"
+            ).innerText =
+                "You said: " + text;
+
+            alert(
+                "You said: " + text
+            );
+        };
+
+        recognition.onerror = (event)=>{
+
+            console.error(
+                "Speech error:",
+                event.error
+            );
+
+            document.getElementById(
+                "voiceStatus"
+            ).innerText =
+                "Error: " + event.error;
+
+            alert(
+                "Speech Error: " +
+                event.error
+            );
+        };
+
+        recognition.onend = ()=>{
+
+            console.log(
+                "Speech ended"
+            );
+        };
+
     }
 
-    const recognition =
-        new SpeechRecognition();
+    catch(err){
 
-    recognition.lang = "en-IN";
+        console.error(err);
 
-    recognition.continuous = false;
-
-    recognition.interimResults = false;
-
-    recognition.maxAlternatives = 1;
-
-    document.getElementById(
-        "voiceStatus"
-    ).innerText =
-        "🎤 Listening...";
-
-    recognition.start();
-
-    recognition.onresult =
-    (event)=>{
-
-        const text =
-
-            event.results[0][0]
-            .transcript
-            .toLowerCase();
-
-        console.log(
-            "Voice:",
-            text
-        );
-
-        document.getElementById(
-            "voiceStatus"
-        ).innerText =
-            "You said: " + text;
-
-        processVoiceExpense(
-            text
-        );
-    };
-
-    recognition.onerror =
-    (event)=>{
-
-        console.error(event);
-
-        document.getElementById(
-            "voiceStatus"
-        ).innerText =
-            "Voice recognition failed";
-
-        speak(
-            "Voice recognition failed"
-        );
-    };
+        alert(err.message);
+    }
 }
 
 /* ================= PROCESS VOICE ================= */
