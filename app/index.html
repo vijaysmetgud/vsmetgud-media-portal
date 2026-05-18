@@ -2614,10 +2614,6 @@ function openFile(file){
             "/media/" +
             encodeURIComponent(file);
 
-        document.getElementById(
-            "textReaderControls"
-        ).style.display = "flex";
-
         renderPdfViewer(pdfUrl);
 
         return;
@@ -2639,10 +2635,6 @@ function openFile(file){
                 content.split(/\r?\n/);
 
             currentLineIndex = 0;
-
-            document.getElementById(
-                "textReaderControls"
-            ).style.display = "flex";
 
             speak("Text file loaded");
 
