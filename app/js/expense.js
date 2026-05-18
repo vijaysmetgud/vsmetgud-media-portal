@@ -90,6 +90,13 @@ function speak(text){
 
 function addExpense(){
 
+    if(!currentUser){
+
+        askUserName();
+
+        return;
+    }
+
     const date =
         document.getElementById(
             "date"
@@ -123,11 +130,11 @@ function addExpense(){
 
         user:currentUser,
 
-        date:today,
+        date:date,
 
         item:item,
 
-        price:Number(amount)
+        price:price
     });
 
     saveExpenses();
@@ -150,6 +157,13 @@ function addExpense(){
 /* ================= VOICE ================= */
 
 function startVoice(){
+
+    if(!currentUser){
+
+        askUserName();
+
+        return;
+    }
 
     try{
 
@@ -250,70 +264,6 @@ function startVoice(){
     }
 }
 
-function processVoiceExpense(text){
-
-    const words =
-        text.split(" ");
-
-    let amount = null;
-
-    let itemWords = [];
-
-    words.forEach(word=>{
-
-        const num =
-            Number(word);
-
-        if(!isNaN(num)){
-
-            amount = num;
-
-        }
-
-        else{
-
-            itemWords.push(word);
-        }
-    });
-
-    const item =
-        itemWords.join(" ");
-
-    if(!item || !amount){
-
-        speak(
-            "Could not understand expense"
-        );
-
-        return;
-    }
-
-    const today =
-        new Date()
-        .toISOString()
-        .split("T")[0];
-
-    expenses.push({
-
-        id:Date.now(),
-
-        date:today,
-
-        item:item,
-
-        price:Number(amount)
-    });
-
-    saveExpenses();
-
-    renderExpenses();
-
-    speak(
-
-        `${item} expense of ${amount} rupees added`
-    );
-}
-
 /* ================= PROCESS VOICE ================= */
 
 function processVoiceExpense(text){
@@ -406,6 +356,8 @@ function processVoiceExpense(text){
     expenses.push({
 
         id:Date.now(),
+
+        user:currentUser,
 
         date:today,
 
@@ -857,4 +809,6 @@ function renderChart(){
                 }
             }
         });
-}
+    
+
+}    
