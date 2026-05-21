@@ -1093,10 +1093,21 @@ function renderPieChart(){
         totals[exp.item] += exp.price;
     });
 
+    const labels =
+        Object.keys(totals);
+
+    const data =
+        Object.values(totals);
+
     const ctx =
         document.getElementById(
             "expensePieChart"
         );
+
+    if(!ctx){
+
+        return;
+    }
 
     if(pieChart){
 
@@ -1111,14 +1122,24 @@ function renderPieChart(){
             data:{
 
                 labels:
-                    Object.keys(totals),
+                    labels.length
+                    ? labels
+                    : ["No Data"],
 
                 datasets:[{
 
                     data:
-                        Object.values(totals)
+                        data.length
+                        ? data
+                        : [1]
                 }]
+            },
+
+            options:{
+
+                responsive:true,
+
+                maintainAspectRatio:false
             }
         });
 }
-
