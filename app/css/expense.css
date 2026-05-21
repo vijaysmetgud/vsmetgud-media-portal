@@ -184,11 +184,13 @@ input{
 
 .chartContainer{
 
-    height: 400px;
-
     width: 100%;
 
+    height: 400px;
+
     margin-top: 20px;
+
+    position: relative;
 }
 
 canvas{

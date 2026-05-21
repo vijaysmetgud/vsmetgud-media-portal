@@ -1013,6 +1013,15 @@ function renderChart(){
 
     if(!ctx){
 
+        console.log(
+            "Chart canvas not found"
+        );
+
+        return;
+    }
+
+    if(!ctx){
+
         return;
     }
 
@@ -1021,6 +1030,12 @@ function renderChart(){
         expenseChart.destroy();
     }
 
+    console.log(
+        "Chart Data:",
+        labels,
+        data
+    );  
+    
     expenseChart =
         new Chart(ctx,{
 
