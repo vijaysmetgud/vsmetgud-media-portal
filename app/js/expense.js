@@ -599,6 +599,21 @@ function processVoiceExpense(text){
         return;
     }
 
+    /* ================= SPLIT SHARE ================= */
+
+    if(
+        text.startsWith(
+            "split "
+        )
+    ){
+
+        processSplitVoice(
+            text
+        );
+
+        return;
+    }
+
     /* TODAY */
 
     if(
@@ -778,6 +793,8 @@ function renderExpenses(){
 
     renderPieChart();
 
+    renderSplitHistory();
+
     return;
 }
 
@@ -883,8 +900,9 @@ function renderExpenses(){
     
     renderChart();    
 
-    renderPieChart();
+    renderPieChart();    
 
+    renderSplitHistory();
 }
 
 /* ================= TODAY ================= */
@@ -1144,7 +1162,21 @@ function splitExpense(){
     const today =
         new Date()
         .toISOString()
-        .split("T")[0];
+        .split("T")[0];    
+
+    saveSplitHistory({
+
+        item:item,
+
+        total:totalAmount,
+
+        users:selectedUsers,
+
+        each:splitAmount,
+
+        date:today
+    });    
+    
 
     selectedUsers.forEach(user=>{
 
@@ -1203,16 +1235,315 @@ function splitExpense(){
 
     alert(
 
-`Split Successful
+    `Split Successful
 
-Item: ${item}
+        Item: ${item}
 
-Total: ₹${totalAmount}
+        Total: ₹${totalAmount}
 
-Users: ${selectedUsers.join(", ")}
+        Users: ${selectedUsers.join(", ")}
 
-Each Pays: ₹${splitAmount}`
+        Each Pays: ₹${splitAmount}`
     );
+}
+
+function processSplitVoice(text){
+
+    text =
+        text.toLowerCase()
+        .trim();
+
+    console.log(
+        "Split Voice:",
+        text
+    );
+
+    const words =
+        text.split(" ");
+
+    let amount = null;
+
+    let item = "";
+
+    let selectedUsers = [];
+
+    /* REMOVE split */
+
+    words.shift();
+
+    /* FIND AMOUNT */
+
+    words.forEach(word=>{
+
+        const num =
+            Number(word);
+
+        if(!isNaN(num) && num > 0){
+
+            amount = num;
+        }
+    });
+
+    if(!amount){
+
+        speak(
+            "Could not understand amount"
+        );
+
+        return;
+    }
+
+    /* ITEM = WORDS BEFORE AMOUNT */
+
+    const amountIndex =
+        words.findIndex(
+
+            word =>
+
+            Number(word) === amount
+        );
+
+    item =
+        words
+        .slice(
+            0,
+            amountIndex
+        )
+        .join(" ");
+
+    /* USERS = AFTER AMOUNT */
+
+    selectedUsers =
+        words.slice(
+            amountIndex + 1
+        );
+
+    if(
+        !item ||
+        selectedUsers.length === 0
+    ){
+
+        speak(
+            "Could not understand split expense"
+        );
+
+        return;
+    }
+
+    /* AUTO ADD USERS */
+
+    selectedUsers.forEach(user=>{
+
+        const exists =
+            users.some(
+
+                u =>
+
+                u.toLowerCase() ===
+                user.toLowerCase()
+            );
+
+        if(!exists){
+
+            users.push(user);
+        }
+    });
+
+    localStorage.setItem(
+
+        "expenseUsers",
+
+        JSON.stringify(
+            users
+        )
+    );
+
+    loadUsers();
+
+    const splitAmount =
+        Math.round(
+
+            amount /
+
+            selectedUsers.length
+        );
+
+    const today =
+        new Date()
+        .toISOString()
+        .split("T")[0];
+
+    saveSplitHistory({
+
+        item:item,
+
+        total:amount,
+
+        users:selectedUsers,
+
+        each:splitAmount,
+
+        date:today
+    });    
+
+    selectedUsers.forEach(user=>{
+
+        const key =
+            getExpenseKey(
+                user
+            );
+
+        let personExpenses =
+            JSON.parse(
+
+                localStorage.getItem(
+                    key
+                )
+
+            ) || [];
+
+        personExpenses.push({
+
+            id:
+                Date.now()
+                + Math.random(),
+
+            user:
+                user,
+
+            date:
+                today,
+
+            item:
+                `${item} (Split)`,
+
+            price:
+                splitAmount
+        });
+
+        localStorage.setItem(
+
+            key,
+
+            JSON.stringify(
+                personExpenses
+            )
+        );
+    });
+
+    loadExpenses();
+
+    renderExpenses();
+
+    speak(
+
+        `${item} split between ${selectedUsers.length} people. Each pays ${splitAmount} rupees`
+    );
+}
+
+function saveSplitHistory(splitData){
+
+    let splitHistory =
+        JSON.parse(
+
+            localStorage.getItem(
+                "splitHistory"
+            )
+
+        ) || [];
+
+    splitHistory.push(
+        splitData
+    );
+
+    localStorage.setItem(
+
+        "splitHistory",
+
+        JSON.stringify(
+            splitHistory
+        )
+    );
+}
+
+function renderSplitHistory(){
+
+    const container =
+        document.getElementById(
+            "splitExpenseList"
+        );
+
+    if(!container){
+
+        return;
+    }
+
+    let splitHistory =
+        JSON.parse(
+
+            localStorage.getItem(
+                "splitHistory"
+            )
+
+        ) || [];
+
+    container.innerHTML = "";
+
+    if(
+        splitHistory.length === 0
+    ){
+
+        container.innerHTML =
+
+        `
+        <div class="expenseItem">
+
+            No split expenses
+
+        </div>
+        `;
+
+        return;
+    }
+
+    splitHistory
+    .slice()
+    .reverse()
+
+    .forEach(split=>{
+
+        container.innerHTML +=
+
+        `
+        <div class="expenseItem">
+
+            <h3>
+                ${split.item}
+            </h3>
+
+            <p>
+                Total :
+                ₹${split.total}
+            </p>
+
+            <p>
+                Date :
+                ${split.date}
+            </p>
+
+            <p>
+                Split:
+                ${split.users.join(", ")}
+            </p>
+
+            <h2>
+                Each :
+                ₹${split.each}
+            </h2>
+
+        </div>
+        `;
+    });
 }
 
 /* ================= DOWNLOAD ================= */
@@ -1321,6 +1652,8 @@ else{
     loadExpenses();
 
     renderExpenses();
+
+    renderSplitHistory();
 }
 
 function deleteUser(){
@@ -1402,6 +1735,9 @@ function deleteUser(){
         loadExpenses();
 
         renderExpenses();
+
+        renderSplitHistory();
+        
     }
 
     else{
