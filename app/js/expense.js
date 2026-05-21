@@ -69,6 +69,75 @@ function speak(text){
     speechSynthesis.speak(speech);
 }
 
+function addUserByVoice(name){
+
+    const cleanName =
+        name.trim();
+
+    if(!cleanName){
+
+        speak(
+            "Invalid user name"
+        );
+
+        return;
+    }
+
+    const exists =
+        users.some(
+
+            user =>
+
+            user.toLowerCase() ===
+            cleanName.toLowerCase()
+        );
+
+    if(exists){
+
+        speak(
+            `${cleanName} already exists`
+        );
+
+        return;
+    }
+
+    users.push(
+        cleanName
+    );
+
+    localStorage.setItem(
+
+        "expenseUsers",
+
+        JSON.stringify(
+            users
+        )
+    );
+
+    currentUser =
+        cleanName;
+
+    localStorage.setItem(
+        "expenseUser",
+        currentUser
+    );
+
+    document.getElementById(
+        "currentUserName"
+    ).innerText =
+        "User : " + currentUser;
+
+    loadUsers();
+
+    loadExpenses();
+
+    renderExpenses();
+
+    speak(
+        `${cleanName} added successfully`
+    );
+}
+
 function addNewUser(){
 
     const name = prompt(
@@ -165,7 +234,7 @@ function loadUsers(){
             option
         );
     });
-
+    
     select.value =
         currentUser;
 }
@@ -360,7 +429,13 @@ function editExpense(id){
 
 function startVoice(){
 
-    if(!currentUser){
+    if(
+
+        !currentUser &&
+
+        users.length > 0
+
+    ){
 
         alert(
             "Please add/select a user"
@@ -481,6 +556,48 @@ function processVoiceExpense(text){
         "Voice Raw:",
         text
     );
+
+    /* ================= ADD USER ================= */
+
+    if(
+
+        text.includes("add user")
+
+        ||
+
+        text.includes("new user")
+
+    ){
+
+        let userName = text
+
+            .replace(
+                "add user",
+                ""
+            )
+
+            .replace(
+                "new user",
+                ""
+            )
+
+            .trim();
+
+        if(!userName){
+
+            speak(
+                "Please say user name"
+            );
+
+            return;
+        }
+
+        addUserByVoice(
+            userName
+        );
+
+        return;
+    }
 
     /* TODAY */
 
@@ -906,6 +1023,198 @@ function renderFilteredExpenses(
     );
 }
 
+/* ================= SPLIT EXPENSES ================= */
+
+function splitExpense(){
+
+    if(users.length === 0){
+
+        alert(
+            "Please add users first"
+        );
+
+        return;
+    }
+
+    const item =
+        prompt(
+            "Expense item?"
+        );
+
+    if(!item){
+
+        return;
+    }
+
+    const totalAmount =
+        Number(
+
+            prompt(
+                "Total amount?"
+            )
+        );
+
+    if(!totalAmount){
+
+        return;
+    }
+
+    /* USER SELECTION */
+
+    let selectedUsers = [];
+
+    users.forEach(user=>{
+
+        const include =
+            confirm(
+
+                `Include ${user} in split?`
+            );
+
+        if(include){
+
+            selectedUsers.push(
+                user
+            );
+        }
+    });
+
+    /* OPTION TO ADD EXTRA USER */
+
+    const newUser =
+        prompt(
+
+            "Add another user? (optional)"
+        );
+
+    if(newUser){
+
+        const cleanName =
+            newUser.trim();
+
+        if(
+
+            !users.some(
+
+                u =>
+
+                u.toLowerCase() ===
+                cleanName.toLowerCase()
+
+            )
+
+        ){
+
+            users.push(
+                cleanName
+            );
+
+            selectedUsers.push(
+                cleanName
+            );
+
+            localStorage.setItem(
+
+                "expenseUsers",
+
+                JSON.stringify(
+                    users
+                )
+            );
+        }
+    }
+
+    if(
+        selectedUsers.length === 0
+    ){
+
+        alert(
+            "No users selected"
+        );
+
+        return;
+    }
+
+    const splitAmount =
+        Math.round(
+            totalAmount /
+            selectedUsers.length
+        );
+
+    const today =
+        new Date()
+        .toISOString()
+        .split("T")[0];
+
+    selectedUsers.forEach(user=>{
+
+        const key =
+            getExpenseKey(
+                user
+            );
+
+        let personExpenses =
+            JSON.parse(
+
+                localStorage.getItem(
+                    key
+                )
+
+            ) || [];
+
+        personExpenses.push({
+
+            id:
+                Date.now()
+                + Math.random(),
+
+            user:
+                user,
+
+            date:
+                today,
+
+            item:
+                `${item} (Split)`,
+
+            price:
+                splitAmount
+        });
+
+        localStorage.setItem(
+
+            key,
+
+            JSON.stringify(
+                personExpenses
+            )
+        );
+    });
+
+    loadUsers();
+
+    loadExpenses();
+
+    renderExpenses();
+
+    speak(
+        "Expense split successfully"
+    );
+
+    alert(
+
+`Split Successful
+
+Item: ${item}
+
+Total: ₹${totalAmount}
+
+Users: ${selectedUsers.join(", ")}
+
+Each Pays: ₹${splitAmount}`
+    );
+}
+
 /* ================= DOWNLOAD ================= */
 
 function downloadTextFile(){
@@ -1014,6 +1323,113 @@ else{
     renderExpenses();
 }
 
+function deleteUser(){
+
+    if(!currentUser){
+
+        alert(
+            "No user selected"
+        );
+
+        return;
+    }
+
+    const confirmed =
+        confirm(
+
+            `Delete ${currentUser} and all expense data?`
+
+        );
+
+    if(!confirmed){
+
+        return;
+    }
+
+    /* DELETE USER DATA */
+
+    localStorage.removeItem(
+
+        getExpenseKey(
+            currentUser
+        )
+    );
+
+    /* REMOVE USER */
+
+    users =
+        users.filter(
+
+            user =>
+
+            user !== currentUser
+        );
+
+    localStorage.setItem(
+
+        "expenseUsers",
+
+        JSON.stringify(
+            users
+        )
+    );
+
+    speak(
+        `${currentUser} deleted`
+    );
+
+    /* SWITCH TO NEXT USER */
+
+    if(users.length > 0){
+
+        currentUser =
+            users[0];
+
+        localStorage.setItem(
+
+            "expenseUser",
+
+            currentUser
+        );
+
+        document.getElementById(
+            "currentUserName"
+        ).innerText =
+            "User : " + currentUser;
+
+        loadUsers();
+
+        loadExpenses();
+
+        renderExpenses();
+    }
+
+    else{
+
+        currentUser = "";
+
+        localStorage.removeItem(
+            "expenseUser"
+        );
+
+        document.getElementById(
+            "currentUserName"
+        ).innerText =
+            "User : Not Selected";
+
+        document.getElementById(
+            "userSelect"
+        ).innerHTML = "";
+
+        expenses = [];
+
+        renderExpenses();
+    }
+
+    alert(
+        "User deleted successfully"
+    );
+}
 
 let expenseChart;
 
