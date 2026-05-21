@@ -473,11 +473,16 @@ function startVoice(){
 function processVoiceExpense(text){
 
     text =
-        text.toLowerCase();
+        text.toLowerCase().trim();
 
-    loadExpenses();    
+    loadExpenses();
 
-    /* ================= TODAY ================= */
+    console.log(
+        "Voice Raw:",
+        text
+    );
+
+    /* TODAY */
 
     if(
         text.includes(
@@ -490,7 +495,7 @@ function processVoiceExpense(text){
         return;
     }
 
-    /* ================= MONTH ================= */
+    /* MONTH */
 
     if(
         text.includes(
@@ -503,7 +508,7 @@ function processVoiceExpense(text){
         return;
     }
 
-    /* ================= YEAR ================= */
+    /* YEAR */
 
     if(
         text.includes(
@@ -516,7 +521,13 @@ function processVoiceExpense(text){
         return;
     }
 
-    /* ================= ADD EXPENSE ================= */
+    /* CLEAN EXTRA SPACES */
+
+    text =
+        text.replace(
+            /\s+/g,
+            " "
+        );
 
     const words =
         text.split(" ");
@@ -527,13 +538,23 @@ function processVoiceExpense(text){
 
     words.forEach(word=>{
 
-        const num =
-            Number(word);
+        const cleanedWord =
+            word.replace(
+                /[^0-9]/g,
+                ""
+            );
 
-        if(!isNaN(num)){
+        const num =
+            Number(cleanedWord);
+
+        if(
+
+            cleanedWord &&
+            !isNaN(num)
+
+        ){
 
             amount = num;
-
         }
 
         else{
@@ -542,10 +563,20 @@ function processVoiceExpense(text){
         }
     });
 
+    /* REMOVE DUPLICATE WORDS */
+
+    itemWords =
+        [...new Set(itemWords)];
+
     const item =
         itemWords.join(" ");
 
     if(!item || !amount){
+
+        console.log(
+            "Could not parse:",
+            text
+        );
 
         speak(
             "Could not understand expense"
@@ -988,6 +1019,23 @@ let expenseChart;
 
 function renderChart(){
 
+    const canvas =
+        document.getElementById(
+            "expenseChart"
+        );
+
+    if(!canvas){
+
+        console.log(
+            "Chart canvas not found"
+        );
+
+        return;
+    }
+
+    const ctx =
+        canvas.getContext("2d");
+
     const totals = {};
 
     expenses.forEach(exp=>{
@@ -1006,36 +1054,11 @@ function renderChart(){
     const data =
         Object.values(totals);
 
-    const ctx =
-        document.getElementById(
-            "expenseChart"
-        );
-
-    if(!ctx){
-
-        console.log(
-            "Chart canvas not found"
-        );
-
-        return;
-    }
-
-    if(!ctx){
-
-        return;
-    }
-
     if(expenseChart){
 
         expenseChart.destroy();
     }
 
-    console.log(
-        "Chart Data:",
-        labels,
-        data
-    );  
-    
     expenseChart =
         new Chart(ctx,{
 
@@ -1044,7 +1067,6 @@ function renderChart(){
             data:{
 
                 labels:
-
                     labels.length
                     ? labels
                     : ["No Data"],
@@ -1055,7 +1077,6 @@ function renderChart(){
                         "Daily Expenses",
 
                     data:
-
                         data.length
                         ? data
                         : [0],
@@ -1073,14 +1094,6 @@ function renderChart(){
 
                 maintainAspectRatio:false,
 
-                plugins:{
-
-                    legend:{
-
-                        display:true
-                    }
-                },
-
                 scales:{
 
                     y:{
@@ -1090,11 +1103,32 @@ function renderChart(){
                 }
             }
         });
+
+    console.log(
+        "Bar chart rendered"
+    );
 }
 
 let pieChart;
 
 function renderPieChart(){
+
+    const canvas =
+        document.getElementById(
+            "expensePieChart"
+        );
+
+    if(!canvas){
+
+        console.log(
+            "Pie chart canvas not found"
+        );
+
+        return;
+    }
+
+    const ctx =
+        canvas.getContext("2d");
 
     const totals = {};
 
@@ -1113,16 +1147,6 @@ function renderPieChart(){
 
     const data =
         Object.values(totals);
-
-    const ctx =
-        document.getElementById(
-            "expensePieChart"
-        );
-
-    if(!ctx){
-
-        return;
-    }
 
     if(pieChart){
 
@@ -1157,4 +1181,8 @@ function renderPieChart(){
                 maintainAspectRatio:false
             }
         });
+
+    console.log(
+        "Pie chart rendered"
+    );
 }
