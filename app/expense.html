@@ -44,7 +44,7 @@
     placeholder="Item"
 />
 
-<input
+<inputswitchUser(
     type="number"
     id="price"
     placeholder="Price"
@@ -115,6 +115,49 @@
 
     <canvas id="expenseChart"></canvas>
 
+</div>
+
+<!-- USER SECTION -->
+
+<div class="userSection">
+
+    <select
+        id="userSelect"
+        onchange="switchUser()"
+    ></select>
+
+    <button onclick="addNewUser()">
+        + Add User
+    </button>
+
+</div>
+
+<!-- FILTERS -->
+
+<div class="filterButtons">
+
+    <button onclick="showTodayExpenses()">
+        Today
+    </button>
+
+    <button onclick="showMonthlyExpenses()">
+        Month
+    </button>
+
+    <button onclick="showYearlyExpenses()">
+        Year
+    </button>
+
+    <button onclick="showAllExpenses()">
+        All
+    </button>
+
+</div>
+
+<!-- PIE CHART -->
+
+<div class="chartContainer">
+    <canvas id="expensePieChart"></canvas>
 </div>
 
 </div>

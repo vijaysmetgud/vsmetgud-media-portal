@@ -1,70 +1,53 @@
 let currentUser =
-
     localStorage.getItem(
         "expenseUser"
     ) || "";
 
-function askUserName(){
-
-    if(currentUser){
-
-        document.getElementById(
-            "currentUserName"
-        ).innerText =
-
-            "User : " + currentUser;
-
-        return;
-    }
-
-    const name =
-
-        prompt(
-            "Enter your name"
-        );
-
-    if(!name){
-
-        askUserName();
-
-        return;
-    }
-
-    currentUser = name;
-
-    localStorage.setItem(
-
-        "expenseUser",
-
-        name
-    );
-
-    document.getElementById(
-        "currentUserName"
-    ).innerText =
-
-        "User : " + name;
-
-    speak(
-        `Welcome ${name}`
-    );
-}    
-
-let expenses =
-
+let users =
     JSON.parse(
         localStorage.getItem(
-            "expenses"
+            "expenseUsers"
         )
     ) || [];
 
+let expenses = [];
+
 /* ================= SAVE ================= */
+
+function getExpenseKey(user){
+
+    return `expenses_${user}`;
+}
+
+function loadExpenses(){
+
+    if(!currentUser){
+
+        expenses = [];
+
+        return;
+    }
+
+    expenses =
+        JSON.parse(
+
+            localStorage.getItem(
+
+                getExpenseKey(
+                    currentUser
+                )
+            )
+
+        ) || [];
+}
 
 function saveExpenses(){
 
     localStorage.setItem(
 
-        "expenses",
+        getExpenseKey(
+            currentUser
+        ),
 
         JSON.stringify(expenses)
     );
@@ -86,13 +69,162 @@ function speak(text){
     speechSynthesis.speak(speech);
 }
 
+function addNewUser(){
+
+    const name = prompt(
+        "Enter new user name"
+    );
+
+    if(!name){
+
+        return;
+    }
+
+    const cleanName =
+        name.trim();
+
+    if(
+
+        users.some(
+
+            user =>
+
+            user.toLowerCase() ===
+            cleanName.toLowerCase()
+
+        )
+
+    ){
+        alert(
+            "User already exists"
+        );
+
+        return;
+    }
+
+    users.push(
+        cleanName
+    );
+
+    localStorage.setItem(
+
+        "expenseUsers",
+
+        JSON.stringify(
+            users
+        )
+    );
+
+    currentUser =
+        cleanName;
+
+    document.getElementById(
+        "currentUserName"
+    ).innerText =
+        "User : " + currentUser;    
+
+    localStorage.setItem(
+        "expenseUser",
+        currentUser
+    );
+
+    loadUsers();
+
+    loadExpenses();
+
+    renderExpenses();
+
+    speak(
+        `${cleanName} added`
+    );
+}
+
+function loadUsers(){
+
+    const select =
+        document.getElementById(
+            "userSelect"
+        );
+
+    select.innerHTML = "";
+
+    users.forEach(user=>{
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value =
+            user;
+
+        option.innerText =
+            user;
+
+        select.appendChild(
+            option
+        );
+    });
+
+    select.value =
+        currentUser;
+}
+
+function switchUser(){
+
+    const selectedUser =
+        document.getElementById(
+            "userSelect"
+        ).value;
+
+    const confirmed =
+        confirm(
+            `Switch to ${selectedUser}?`
+        );
+
+    if(!confirmed){
+
+        document.getElementById(
+            "userSelect"
+        ).value =
+            currentUser;
+
+        return;
+    }
+
+    currentUser =
+        selectedUser;
+
+    document.getElementById(
+        "currentUserName"
+    ).innerText =
+        "User : " + currentUser;
+
+    localStorage.setItem(
+        "expenseUser",
+        currentUser
+    );
+
+    loadExpenses();
+
+    renderExpenses();
+
+    speak(
+        `Switched to ${currentUser}`
+    );
+}
+
 /* ================= ADD EXPENSE ================= */
 
 function addExpense(){
 
+    loadExpenses();
+
     if(!currentUser){
 
-        askUserName();
+        alert(
+            "Please add/select a user"
+        );
 
         return;
     }
@@ -154,13 +286,85 @@ function addExpense(){
     ).value = "";
 }
 
+function showAllExpenses(){
+
+    renderExpenses();
+
+    speak(
+        "Showing all expenses"
+    );
+}
+
+function deleteExpense(id){
+
+    const confirmDelete =
+        confirm("Delete expense?");
+
+    if(!confirmDelete){
+        return;
+    }
+
+    expenses =
+        expenses.filter(
+            exp => exp.id !== id
+        );
+
+    saveExpenses();
+
+    renderExpenses();
+
+    speak("Expense deleted");
+}
+
+function editExpense(id){
+
+    const expense =
+        expenses.find(
+            exp => exp.id === id
+        );
+
+    if(!expense){
+        return;
+    }
+
+    const newItem =
+        prompt(
+            "Edit item",
+            expense.item
+        );
+
+    const newPrice =
+        prompt(
+            "Edit price",
+            expense.price
+        );
+
+    if(!newItem || !newPrice){
+        return;
+    }
+
+    expense.item =
+        newItem;
+
+    expense.price =
+        Number(newPrice);
+
+    saveExpenses();
+
+    renderExpenses();
+
+    speak("Expense updated");
+}
+
 /* ================= VOICE ================= */
 
 function startVoice(){
 
     if(!currentUser){
 
-        askUserName();
+        alert(
+            "Please add/select a user"
+        );
 
         return;
     }
@@ -270,6 +474,8 @@ function processVoiceExpense(text){
 
     text =
         text.toLowerCase();
+
+    loadExpenses();    
 
     /* ================= TODAY ================= */
 
@@ -387,6 +593,46 @@ function renderExpenses(){
 
     expenseList.innerHTML = "";
 
+    if(!expenses || expenses.length === 0){
+
+    expenseList.innerHTML = `
+
+        <div class="expenseItem">
+
+            <h3>
+                No expenses found
+            </h3>
+
+            <p>
+                Add your first expense
+            </p>
+
+        </div>
+    `;
+
+    document.getElementById(
+        "dailyTotal"
+    ).innerText = "₹0";
+
+    document.getElementById(
+        "monthlyTotal"
+    ).innerText = "₹0";
+
+    document.getElementById(
+        "yearlyTotal"
+    ).innerText = "₹0";
+
+    document.getElementById(
+        "overallTotal"
+    ).innerText = "₹0";
+
+    renderChart();
+
+    renderPieChart();
+
+    return;
+}
+
     let daily = 0;
 
     let monthly = 0;
@@ -445,26 +691,25 @@ function renderExpenses(){
 
         expenseList.innerHTML += `
 
-            <div class="expenseItem">
+        <div class="expenseItem">
 
-                <h3>
-                    ${exp.item}
-                </h3>
+            <h3>${exp.item}</h3>
 
-                <p>
-                    👤 ${exp.user}
-                </p>
+            <p>👤 ${exp.user}</p>
 
-                <p>
-                    ${exp.date}
-                </p>
+            <p>${exp.date}</p>
 
-                <h2>
-                    ₹${exp.price}
-                </h2>
+            <h2>₹${exp.price}</h2>
 
-            </div>
+            <button onclick="editExpense(${exp.id})">
+                Edit
+            </button>
 
+            <button onclick="deleteExpense(${exp.id})">
+                Delete
+            </button>
+
+        </div>
         `;
     });
 
@@ -489,6 +734,9 @@ function renderExpenses(){
         "₹" + overall;
     
     renderChart();    
+
+    renderPieChart();
+
 }
 
 /* ================= TODAY ================= */
@@ -693,7 +941,9 @@ TOTAL = ₹${total}
         URL.createObjectURL(blob);
 
     a.download =
-        "expense-report.txt";
+        `${currentUser}-expense-report-${new Date()
+            .toISOString()
+            .split("T")[0]}.txt`;
 
     a.click();
 
@@ -712,11 +962,26 @@ document.getElementById(
     .toISOString()
     .split("T")[0];
 
-renderExpenses();
+loadUsers();
 
-askUserName();
+if(users.length === 0){
 
-renderExpenses();
+    addNewUser();
+}
+
+else{
+
+    document.getElementById(
+        "currentUserName"
+    ).innerText =
+        "User : " + currentUser;
+
+    loadUsers();
+
+    loadExpenses();
+
+    renderExpenses();
+}
 
 
 let expenseChart;
@@ -812,3 +1077,49 @@ function renderChart(){
     
 
 }    
+
+let pieChart;
+
+function renderPieChart(){
+
+    const totals = {};
+
+    expenses.forEach(exp=>{
+
+        if(!totals[exp.item]){
+
+            totals[exp.item] = 0;
+        }
+
+        totals[exp.item] += exp.price;
+    });
+
+    const ctx =
+        document.getElementById(
+            "expensePieChart"
+        );
+
+    if(pieChart){
+
+        pieChart.destroy();
+    }
+
+    pieChart =
+        new Chart(ctx,{
+
+            type:"pie",
+
+            data:{
+
+                labels:
+                    Object.keys(totals),
+
+                datasets:[{
+
+                    data:
+                        Object.values(totals)
+                }]
+            }
+        });
+}
+
