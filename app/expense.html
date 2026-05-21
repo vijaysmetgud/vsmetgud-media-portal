@@ -23,149 +23,161 @@
 
 <div class="container">
 
-<h1>
-🎤 Expense Tracker
-</h1>
+    <h1>
+        🎤 Expense Tracker
+    </h1>
 
-<div class="formCard">
+    <!-- USER SECTION -->
 
-<h3 id="currentUserName">
-    User : Not Selected
-</h3>
+    <div class="userSection">
 
-<input
-    type="date"
-    id="date"
-/>
+        <select
+            id="userSelect"
+            onchange="switchUser()"
+        ></select>
 
-<input
-    type="text"
-    id="item"
-    placeholder="Item"
-/>
+        <button onclick="addNewUser()">
+            + Add User
+        </button>
 
-<inputswitchUser(
-    type="number"
-    id="price"
-    placeholder="Price"
-/>
+    </div>
 
-<div class="buttonRow">
+    <div class="formCard">
 
-    <button onclick="addExpense()">
-    Add Expense
-    </button>
+        <h3 id="currentUserName">
+            User : Not Selected
+        </h3>
 
-    <button onclick="startVoice()">
-    🎤 Speak
-    </button>
+        <input
+            type="date"
+            id="date"
+        />
 
-    <button onclick="downloadTextFile()">
-    📄 Convert To Text
-    </button>
+        <input
+            type="text"
+            id="item"
+            placeholder="Item"
+        />
 
-</div>
+        <input
+            type="number"
+            id="price"
+            placeholder="Price"
+        />
 
-<p id="voiceStatus"></p>
+        <div class="buttonRow">
 
-</div>
+            <button onclick="addExpense()">
+                Add Expense
+            </button>
 
-<div class="summary">
+            <button onclick="startVoice()">
+                🎤 Speak
+            </button>
 
-<div class="summaryCard">
+            <button onclick="downloadTextFile()">
+                📄 Convert To Text
+            </button>
 
-<h3>Today</h3>
+        </div>
 
-<p id="dailyTotal">₹0</p>
+        <p id="voiceStatus"></p>
 
-</div>
+    </div>
 
-<div class="summaryCard">
+    <!-- FILTERS -->
 
-<h3>Month</h3>
+    <div class="filterButtons">
 
-<p id="monthlyTotal">₹0</p>
+        <button onclick="showTodayExpenses()">
+            Today
+        </button>
 
-</div>
+        <button onclick="showMonthlyExpenses()">
+            Month
+        </button>
 
-<div class="summaryCard">
+        <button onclick="showYearlyExpenses()">
+            Year
+        </button>
 
-<h3>Year</h3>
+        <button onclick="showAllExpenses()">
+            All
+        </button>
 
-<p id="yearlyTotal">₹0</p>
+    </div>
 
-</div>
+    <!-- SUMMARY -->
 
-<div class="summaryCard">
+    <div class="summary">
 
-<h3>Overall</h3>
+        <div class="summaryCard">
 
-<p id="overallTotal">₹0</p>
+            <h3>Today</h3>
 
-</div>
+            <p id="dailyTotal">
+                ₹0
+            </p>
 
-</div>
+        </div>
 
-<div
-    class="expenseList"
-    id="expenseList"
-></div>
+        <div class="summaryCard">
 
-<div class="chartContainer">
+            <h3>Month</h3>
 
-    <canvas id="expenseChart"></canvas>
+            <p id="monthlyTotal">
+                ₹0
+            </p>
 
-</div>
+        </div>
 
-<!-- USER SECTION -->
+        <div class="summaryCard">
 
-<div class="userSection">
+            <h3>Year</h3>
 
-    <select
-        id="userSelect"
-        onchange="switchUser()"
-    ></select>
+            <p id="yearlyTotal">
+                ₹0
+            </p>
 
-    <button onclick="addNewUser()">
-        + Add User
-    </button>
+        </div>
 
-</div>
+        <div class="summaryCard">
 
-<!-- FILTERS -->
+            <h3>Overall</h3>
 
-<div class="filterButtons">
+            <p id="overallTotal">
+                ₹0
+            </p>
 
-    <button onclick="showTodayExpenses()">
-        Today
-    </button>
+        </div>
 
-    <button onclick="showMonthlyExpenses()">
-        Month
-    </button>
+    </div>
 
-    <button onclick="showYearlyExpenses()">
-        Year
-    </button>
+    <!-- EXPENSE LIST -->
 
-    <button onclick="showAllExpenses()">
-        All
-    </button>
+    <div
+        class="expenseList"
+        id="expenseList"
+    ></div>
 
-</div>
+    <!-- BAR CHART -->
 
-<!-- PIE CHART -->
+    <div class="chartContainer">
 
-<div class="chartContainer">
-    <canvas id="expensePieChart"></canvas>
-</div>
+        <canvas
+            id="expenseChart"
+        ></canvas>
 
-</div>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PIE CHART -->
 
-<script src="js/expense.js"></script>
+    <div class="chartContainer">
 
-</body>
+        <canvas
+            id="expensePieChart"
+        ></canvas>
 
-</html>
+    </div>
+
+</div>    
