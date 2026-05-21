@@ -1011,6 +1011,11 @@ function renderChart(){
             "expenseChart"
         );
 
+    if(!ctx){
+
+        return;
+    }
+
     if(expenseChart){
 
         expenseChart.destroy();
@@ -1023,14 +1028,22 @@ function renderChart(){
 
             data:{
 
-                labels:labels,
+                labels:
+
+                    labels.length
+                    ? labels
+                    : ["No Data"],
 
                 datasets:[{
 
                     label:
                         "Daily Expenses",
 
-                    data:data,
+                    data:
+
+                        data.length
+                        ? data
+                        : [0],
 
                     backgroundColor:
                         "#2563eb",
@@ -1043,40 +1056,26 @@ function renderChart(){
 
                 responsive:true,
 
+                maintainAspectRatio:false,
+
                 plugins:{
 
                     legend:{
 
-                        labels:{
-
-                            color:"white"
-                        }
+                        display:true
                     }
                 },
 
                 scales:{
 
-                    x:{
-
-                        ticks:{
-
-                            color:"white"
-                        }
-                    },
-
                     y:{
 
-                        ticks:{
-
-                            color:"white"
-                        }
+                        beginAtZero:true
                     }
                 }
             }
         });
-    
-
-}    
+}
 
 let pieChart;
 

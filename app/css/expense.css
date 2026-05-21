@@ -181,3 +181,19 @@ input{
     box-shadow:
         0 0 25px rgba(0,0,0,0.25);
 }
+
+.chartContainer{
+
+    height: 400px;
+
+    width: 100%;
+
+    margin-top: 20px;
+}
+
+canvas{
+
+    width: 100% !important;
+
+    height: 100% !important;
+}
