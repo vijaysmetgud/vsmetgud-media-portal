@@ -359,3 +359,47 @@ canvas{
         width:100%;
     }
 }
+
+/* ================= CLOSE BUTTON ================= */
+
+.closeSettlementBtn{
+
+    float:right;
+
+    border:none;
+
+    padding:10px 18px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    font-size:14px;
+
+    font-weight:bold;
+
+    color:white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #dc2626,
+            #b91c1c
+        );
+
+    box-shadow:
+        0 0 20px
+        rgba(220,38,38,0.35);
+
+    transition:0.3s;
+}
+
+.closeSettlementBtn:hover{
+
+    transform:
+        scale(1.05);
+
+    box-shadow:
+        0 0 30px
+        rgba(220,38,38,0.5);
+}

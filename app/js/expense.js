@@ -61,6 +61,8 @@ function saveExpenses(){
 
 function speak(text){
 
+    speechSynthesis.cancel();
+
     const speech =
         new SpeechSynthesisUtterance(
             text
@@ -77,6 +79,13 @@ function speak(text){
 
     speech.volume =
         1;
+
+    speech.onend = ()=>{
+
+        console.log(
+            "Speech finished"
+        );
+    };
 
     speechSynthesis.speak(
         speech
@@ -503,6 +512,8 @@ function startVoice(){
         recognition.onresult =
         (event)=>{
 
+            recognition.stop();
+
             const text =
 
                 event.results[0][0]
@@ -551,7 +562,7 @@ function startVoice(){
 
                 voiceLock = false;
 
-            },1000);
+            },2000);
         };
 
         recognition.onerror = (event)=>{
@@ -577,6 +588,11 @@ function startVoice(){
             console.log(
                 "Speech ended"
             );
+
+            document.getElementById(
+                "voiceStatus"
+            ).innerText =
+                "🎤 Voice stopped";
         };
 
     }
@@ -1247,6 +1263,9 @@ function splitExpense(){
     dateInput.onchange =
     function(){
 
+        dateInput.onchange =
+            null;
+
         const selectedDate =
             dateInput.value;
 
@@ -1604,6 +1623,9 @@ function startSplitVoice(){
         selectedDate.onchange =
         ()=>{
 
+            selectedDate.onchange =
+                null;
+
             startSplitVoice();
         };
 
@@ -1666,6 +1688,8 @@ function startSplitVoice(){
         userRecognition.onresult =
         function(event){
 
+            userRecognition.stop();
+
             const userText =
 
                 event.results[0][0]
@@ -1722,6 +1746,8 @@ function startSplitVoice(){
                 itemRecognition.onresult =
                 function(itemEvent){
 
+                    itemRecognition.stop();
+
                     const item =
 
                         itemEvent
@@ -1769,6 +1795,8 @@ function startSplitVoice(){
                         amountRecognition.onresult =
                         function(amountEvent){
 
+                            amountRecognition.stop();
+
                             const amount =
 
                                 Number(
@@ -1811,6 +1839,8 @@ function startSplitVoice(){
 
                                 payerRecognition.onresult =
                                 function(payEvent){
+
+                                    payerRecognition.stop();
 
                                     const paidBy =
 
@@ -2023,6 +2053,19 @@ function showSettlement(){
     const result =
         getSettlementData();
 
+    if(result.total === 0){
+
+        alert(
+            "No split settlements found"
+        );
+
+        speak(
+            "No split settlements found"
+        );
+
+        return;
+    }    
+
     const settlementDiv =
         document.createElement(
             "div"
@@ -2035,6 +2078,19 @@ function showSettlement(){
 
     <div class="settlementCard">
 
+        <button
+            class="closeSettlementBtn"
+            onclick="
+                document
+                .querySelector(
+                    '.settlementModal'
+                )
+                ?.remove()
+            "
+        >
+            ✖ Close
+        </button>
+
         <h1>
             💰 Final Settlement
         </h1>
@@ -2045,8 +2101,8 @@ function showSettlement(){
         </h3>
 
         <h3>
-            Each Share :
-            ₹${result.eachShare}
+            Share Type :
+            Dynamic Split
         </h3>
 
         <hr>
@@ -2065,12 +2121,6 @@ function showSettlement(){
 
         ${result.oweHtml}
 
-        <button
-            onclick="this.parentElement.parentElement.remove()"
-        >
-            Close
-        </button>
-
     </div>
     `;
 
@@ -2079,9 +2129,10 @@ function showSettlement(){
     );
 
     speak(
-        "Settlement ready"
+
+    `Settlement ready.
+    Total split expense ${result.total} rupees`
     );
-}
 
 function getSettlementData(){
 
