@@ -602,10 +602,24 @@ function processVoiceExpense(text){
         "Voice Raw:",
         text
     );
+    
 
     if(
+
         text.includes(
             "show settlement"
+        )
+
+        ||
+
+        text.includes(
+            "final settlement"
+        )
+
+        ||
+
+        text.includes(
+            "who owes"
         )
     ){
 
@@ -2052,15 +2066,46 @@ function getSettlementData(){
 
     users.forEach(user=>{
 
+        const userExpenses =
+
+            allExpenses.filter(
+
+                exp =>
+                    exp.user === user
+            );
+
+        let itemsHtml = "";
+
+        userExpenses.forEach(exp=>{
+
+            itemsHtml += `
+
+            <p>
+
+                🧾 ${exp.item}
+
+                - ₹${exp.price}
+
+            </p>
+            `;
+        });
+
         spentHtml += `
 
         <div class="settlementItem">
 
-            <b>${user}</b>
+            <h3>
+                👤 ${user}
+            </h3>
 
-            spent
+            ${itemsHtml}
 
-            ₹${spent[user]}
+            <hr>
+
+            <b>
+                Total Spent:
+                ₹${spent[user]}
+            </b>
 
         </div>
         `;
@@ -2213,16 +2258,21 @@ function shareSettlementWhatsApp(){
     const result =
         getSettlementData();
 
-    const text = encodeURIComponent(
+    const text =
+        encodeURIComponent(
 
 `💰 FINAL SETTLEMENT
 
-Total:
+TOTAL:
 ₹${result.total}
 
-Each Share:
-₹${result.eachShare}`
-    );
+EACH SHARE:
+₹${result.eachShare}
+
+${result.oweHtml
+.replace(/<[^>]*>/g,"")}
+`
+        );
 
     window.open(
 
@@ -2238,22 +2288,24 @@ function sendSettlementEmail(){
         getSettlementData();
 
     const subject =
-
         encodeURIComponent(
             "Expense Settlement"
         );
 
     const body =
-
         encodeURIComponent(
 
 `FINAL SETTLEMENT
 
-Total:
+TOTAL:
 ₹${result.total}
 
-Each Share:
-₹${result.eachShare}`
+EACH SHARE:
+₹${result.eachShare}
+
+${result.oweHtml
+.replace(/<[^>]*>/g,"")}
+`
         );
 
     window.location.href =
