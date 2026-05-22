@@ -655,27 +655,31 @@ body.light .dateLabel {
 
 /* ================= EXPENSE TRACKER BUTTON ================= */
 
+/* ================= EXPENSE TRACKER BUTTON ================= */
+
 #expenseTrackerBtn{
 
     position:fixed;
 
-    bottom:30px;
+    bottom:35px;
 
-    right:30px;
+    right:35px;
 
     z-index:99999;
 
-    padding:16px 24px;
+    padding:22px 36px;
 
     border:none;
 
-    border-radius:50px;
+    border-radius:70px;
 
     cursor:pointer;
 
-    font-size:16px;
+    font-size:20px;
 
-    font-weight:bold;
+    font-weight:800;
+
+    letter-spacing:1px;
 
     color:white;
 
@@ -683,21 +687,82 @@ body.light .dateLabel {
         linear-gradient(
             135deg,
             #16a34a,
-            #22c55e
+            #22c55e,
+            #4ade80
         );
 
     box-shadow:
-        0 0 25px rgba(34,197,94,0.6);
+        0 0 20px rgba(34,197,94,0.35),
+        0 0 40px rgba(34,197,94,0.45),
+        0 0 70px rgba(34,197,94,0.25);
 
-    transition:0.3s;
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease,
+        filter 0.3s ease;
+
+    backdrop-filter:blur(12px);
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    overflow:hidden;
 }
+
+/* HOVER EFFECT */
 
 #expenseTrackerBtn:hover{
 
-    transform:scale(1.08);
+    transform:
+        translateY(-4px)
+        scale(1.08);
 
     box-shadow:
-        0 0 40px rgba(34,197,94,0.9);
+        0 0 30px rgba(34,197,94,0.5),
+        0 0 60px rgba(34,197,94,0.6),
+        0 0 100px rgba(34,197,94,0.35);
+
+    filter:brightness(1.1);
+}
+
+/* CLICK EFFECT */
+
+#expenseTrackerBtn:active{
+
+    transform:
+        scale(0.96);
+}
+
+/* FLOATING ANIMATION */
+
+@keyframes floatButton{
+
+    0%{
+
+        transform:
+            translateY(0px);
+    }
+
+    50%{
+
+        transform:
+            translateY(-6px);
+    }
+
+    100%{
+
+        transform:
+            translateY(0px);
+    }
+}
+
+#expenseTrackerBtn{
+
+    animation:
+        floatButton 3s ease-in-out infinite;
 }
 
 /* MOBILE */
@@ -710,8 +775,8 @@ body.light .dateLabel {
 
         right:15px;
 
-        padding:12px 18px;
+        padding:16px 24px;
 
-        font-size:13px;
+        font-size:14px;
     }
 }

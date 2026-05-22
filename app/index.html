@@ -1260,12 +1260,21 @@ PYTHON PRACTICE
 
 <!-- EXPENSE TRACKER FLOATING BUTTON -->
 
-<button
-    id="expenseTrackerBtn"
-    onclick="window.location.href='/expense.html'"
->
-    ----- 💰 EXPENSE TRACKER 💰-----
-</button>
+<div class="expenseTrackerWrapper">
+
+    <button
+        id="expenseTrackerBtn"
+        onclick="
+            window.open(
+                '/expense.html',
+                '_blank'
+            )
+        "
+    >
+        💰💰---EXPENSE TRACKER-- 💰💰
+    </button>
+
+</div>
 
 <div id="fileSection">    
 

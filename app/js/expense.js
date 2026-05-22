@@ -601,11 +601,26 @@ function processVoiceExpense(text){
 
     /* ================= SPLIT SHARE ================= */
 
+    if(text === "split"){
+
+        console.log(
+            "Guided split voice"
+        );
+
+        startSplitVoice();
+
+        return;
+    }
+
     if(
         text.startsWith(
             "split "
         )
     ){
+
+        console.log(
+            "Fast split voice"
+        );
 
         processSplitVoice(
             text
@@ -1153,97 +1168,32 @@ function splitExpense(){
         return;
     }
 
+    saveSplitExpense(
+
+        item,
+
+        totalAmount,
+
+        selectedUsers
+    );
+
     const splitAmount =
         Math.round(
+
             totalAmount /
             selectedUsers.length
         );
 
-    const today =
-        new Date()
-        .toISOString()
-        .split("T")[0];    
-
-    saveSplitHistory({
-
-        item:item,
-
-        total:totalAmount,
-
-        users:selectedUsers,
-
-        each:splitAmount,
-
-        date:today
-    });    
-    
-
-    selectedUsers.forEach(user=>{
-
-        const key =
-            getExpenseKey(
-                user
-            );
-
-        let personExpenses =
-            JSON.parse(
-
-                localStorage.getItem(
-                    key
-                )
-
-            ) || [];
-
-        personExpenses.push({
-
-            id:
-                Date.now()
-                + Math.random(),
-
-            user:
-                user,
-
-            date:
-                today,
-
-            item:
-                `${item} (Split)`,
-
-            price:
-                splitAmount
-        });
-
-        localStorage.setItem(
-
-            key,
-
-            JSON.stringify(
-                personExpenses
-            )
-        );
-    });
-
-    loadUsers();
-
-    loadExpenses();
-
-    renderExpenses();
-
-    speak(
-        "Expense split successfully"
-    );
-
     alert(
-
     `Split Successful
 
-        Item: ${item}
+    Item: ${item}
 
-        Total: ₹${totalAmount}
+    Total: ₹${totalAmount}
 
-        Users: ${selectedUsers.join(", ")}
+    Users: ${selectedUsers.join(", ")}
 
-        Each Pays: ₹${splitAmount}`
+    Each Pays: ₹${splitAmount}`
     );
 }
 
@@ -1332,6 +1282,61 @@ function processSplitVoice(text){
 
     /* AUTO ADD USERS */
 
+    saveSplitExpense(
+
+        item,
+
+        amount,
+
+        selectedUsers
+    );
+
+    const splitAmount =
+        Math.round(
+
+            amount /
+            selectedUsers.length
+        );
+
+    alert(
+
+    `Split Successful
+
+    Item: ${item}
+
+    Total: ₹${amount}
+
+    Users: ${selectedUsers.join(", ")}
+
+    Each Pays: ₹${splitAmount}`
+
+    );
+}
+function saveSplitExpense(
+
+    item,
+
+    amount,
+
+    selectedUsers
+){
+
+    if(
+
+        !item ||
+
+        !amount ||
+
+        selectedUsers.length === 0
+    ){
+
+        speak(
+            "Invalid split expense"
+        );
+
+        return;
+    }
+
     selectedUsers.forEach(user=>{
 
         const exists =
@@ -1339,7 +1344,8 @@ function processSplitVoice(text){
 
                 u =>
 
-                u.toLowerCase() ===
+                u.toLowerCase()
+                ===
                 user.toLowerCase()
             );
 
@@ -1353,9 +1359,7 @@ function processSplitVoice(text){
 
         "expenseUsers",
 
-        JSON.stringify(
-            users
-        )
+        JSON.stringify(users)
     );
 
     loadUsers();
@@ -1364,7 +1368,6 @@ function processSplitVoice(text){
         Math.round(
 
             amount /
-
             selectedUsers.length
         );
 
@@ -1384,14 +1387,12 @@ function processSplitVoice(text){
         each:splitAmount,
 
         date:today
-    });    
+    });
 
     selectedUsers.forEach(user=>{
 
         const key =
-            getExpenseKey(
-                user
-            );
+            getExpenseKey(user);
 
         let personExpenses =
             JSON.parse(
@@ -1399,7 +1400,6 @@ function processSplitVoice(text){
                 localStorage.getItem(
                     key
                 )
-
             ) || [];
 
         personExpenses.push({
@@ -1408,17 +1408,14 @@ function processSplitVoice(text){
                 Date.now()
                 + Math.random(),
 
-            user:
-                user,
+            user:user,
 
-            date:
-                today,
+            date:today,
 
             item:
                 `${item} (Split)`,
 
-            price:
-                splitAmount
+            price:splitAmount
         });
 
         localStorage.setItem(
@@ -1435,12 +1432,265 @@ function processSplitVoice(text){
 
     renderExpenses();
 
+    renderChart();
+
+    renderPieChart();
+
+    renderSplitHistory();
+
     speak(
 
-        `${item} split between ${selectedUsers.length} people. Each pays ${splitAmount} rupees`
+`${item} split among ${selectedUsers.length} users`
     );
 }
 
+function startSplitVoice(){
+
+    const SpeechRecognition =
+
+        window.SpeechRecognition ||
+
+        window.webkitSpeechRecognition;
+
+    if(!SpeechRecognition){
+
+        alert(
+            "Speech Recognition not supported"
+        );
+
+        return;
+    }
+
+    /* ================= ASK USERS ================= */
+
+    const speech1 =
+
+        new SpeechSynthesisUtterance(
+            "Please say users"
+        );
+
+    speech1.lang = "en-IN";
+
+    speech1.onend = ()=>{
+
+        const userRecognition =
+            new SpeechRecognition();
+
+        userRecognition.lang =
+            "en-IN";
+
+        userRecognition.continuous =
+            false;
+
+        userRecognition.interimResults =
+            false;
+
+        userRecognition.maxAlternatives =
+            1;
+
+        userRecognition.start();
+
+        userRecognition.onerror =
+        (event)=>{
+
+            console.error(
+                event.error
+            );
+
+            speak(
+                "Could not hear users"
+            );
+        };
+
+        userRecognition.onresult =
+        function(event){
+
+            const userText =
+
+                event
+                .results[0][0]
+                .transcript
+                .toLowerCase()
+                .trim();
+
+            const selectedUsers =
+
+                userText
+
+                .replace(/,/g," ")
+
+                .split(" ")
+
+                .filter(Boolean);
+
+            /* ================= ASK ITEM ================= */
+
+            const speech2 =
+
+                new SpeechSynthesisUtterance(
+                    "Please say expense item"
+                );
+
+            speech2.lang =
+                "en-IN";
+
+            speech2.onend = ()=>{
+
+                const itemRecognition =
+                    new SpeechRecognition();
+
+                itemRecognition.lang =
+                    "en-IN";
+
+                itemRecognition.continuous =
+                    false;
+
+                itemRecognition.interimResults =
+                    false;
+
+                itemRecognition.maxAlternatives =
+                    1;
+
+                itemRecognition.start();
+
+                itemRecognition.onerror =
+                (event)=>{
+
+                    console.error(
+                        event.error
+                    );
+
+                    speak(
+                        "Could not hear expense item"
+                    );
+                };
+
+                itemRecognition.onresult =
+                function(itemEvent){
+
+                    const item =
+
+                        itemEvent
+                        .results[0][0]
+                        .transcript
+                        .trim();
+
+                    /* ================= ASK AMOUNT ================= */
+
+                    const speech3 =
+
+                        new SpeechSynthesisUtterance(
+                            "Please say amount"
+                        );
+
+                    speech3.lang =
+                        "en-IN";
+
+                    speech3.onend = ()=>{
+
+                        const amountRecognition =
+                            new SpeechRecognition();
+
+                        amountRecognition.lang =
+                            "en-IN";
+
+                        amountRecognition.continuous =
+                            false;
+
+                        amountRecognition.interimResults =
+                            false;
+
+                        amountRecognition.maxAlternatives =
+                            1;
+
+                        amountRecognition.start();
+                        
+                        amountRecognition.onerror =
+                        (event)=>{
+
+                            console.error(
+                                event.error
+                            );
+
+                            speak(
+                                "Could not hear amount"
+                            );
+                        };
+
+                        amountRecognition.onresult =
+                        function(amountEvent){
+
+                            const amount =
+
+                                Number(
+
+                                    amountEvent
+                                    .results[0][0]
+                                    .transcript
+                                    .replace(
+                                        /[^0-9]/g,
+                                        ""
+                                    )
+                                );
+
+                            if(!amount){
+
+                                speak(
+                                    "Could not understand amount"
+                                );
+
+                                return;
+                            }
+
+                            saveSplitExpense(
+
+                                item,
+
+                                amount,
+
+                                selectedUsers
+                            );
+
+                            const splitAmount =
+
+                                Math.round(
+
+                                    amount /
+
+                                    selectedUsers.length
+                                );
+
+                            alert(
+
+`Split Successful
+
+Item: ${item}
+
+Total: ₹${amount}
+
+Users: ${selectedUsers.join(", ")}
+
+Each Pays: ₹${splitAmount}`
+                            );
+                        };
+                    };
+
+                    speechSynthesis.speak(
+                        speech3
+                    );
+                };
+            };
+
+            speechSynthesis.speak(
+                speech2
+            );
+        };
+    };
+
+    speechSynthesis.speak(
+        speech1
+    );
+}
 function saveSplitHistory(splitData){
 
     let splitHistory =
@@ -1937,4 +2187,256 @@ function renderPieChart(){
     console.log(
         "Pie chart rendered"
     );
+}
+
+/* ================= OPEN BAR GRAPH WINDOW ================= */
+
+function openBarChartWindow(){
+
+    const chartWindow =
+
+        window.open(
+            "",
+            "_blank",
+            "width=1200,height=700"
+        );
+
+    const totals = {};
+
+    expenses.forEach(exp=>{
+
+        if(!totals[exp.date]){
+
+            totals[exp.date] = 0;
+        }
+
+        totals[exp.date] += exp.price;
+    });
+
+    const labels =
+        JSON.stringify(
+            Object.keys(totals)
+        );
+
+    const data =
+        JSON.stringify(
+            Object.values(totals)
+        );
+
+    chartWindow.document.write(`
+
+<html>
+
+<head>
+
+<title>
+Expense Graph
+</title>
+
+<script src=
+"https://cdn.jsdelivr.net/npm/chart.js">
+</script>
+
+<style>
+
+body{
+
+    background:#111827;
+
+    color:white;
+
+    font-family:Arial;
+
+    padding:30px;
+
+    text-align:center;
+}
+
+canvas{
+
+    width:100% !important;
+
+    height:80vh !important;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>
+📊 Expense Graph
+</h1>
+
+<canvas id="graph"></canvas>
+
+<script>
+
+const ctx =
+document.getElementById(
+    "graph"
+).getContext("2d");
+
+new Chart(ctx,{
+
+    type:"bar",
+
+    data:{
+
+        labels:${labels},
+
+        datasets:[{
+
+            label:
+                "Daily Expenses",
+
+            data:${data},
+
+            borderRadius:12
+        }]
+    },
+
+    options:{
+
+        responsive:true,
+
+        maintainAspectRatio:false,
+
+        scales:{
+
+            y:{
+                beginAtZero:true
+            }
+        }
+    }
+});
+
+</script>
+
+</body>
+
+</html>
+
+`);
+}
+
+/* ================= OPEN PIE GRAPH WINDOW ================= */
+
+function openPieChartWindow(){
+
+    const chartWindow =
+
+        window.open(
+            "",
+            "_blank",
+            "width=1200,height=700"
+        );
+
+    const totals = {};
+
+    expenses.forEach(exp=>{
+
+        if(!totals[exp.item]){
+
+            totals[exp.item] = 0;
+        }
+
+        totals[exp.item] += exp.price;
+    });
+
+    const labels =
+        JSON.stringify(
+            Object.keys(totals)
+        );
+
+    const data =
+        JSON.stringify(
+            Object.values(totals)
+        );
+
+    chartWindow.document.write(`
+
+<html>
+
+<head>
+
+<title>
+Expense Pie Graph
+</title>
+
+<script src=
+"https://cdn.jsdelivr.net/npm/chart.js">
+</script>
+
+<style>
+
+body{
+
+    background:#111827;
+
+    color:white;
+
+    font-family:Arial;
+
+    padding:30px;
+
+    text-align:center;
+}
+
+canvas{
+
+    width:100% !important;
+
+    height:80vh !important;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>
+🥧 Expense Pie Graph
+</h1>
+
+<canvas id="pie"></canvas>
+
+<script>
+
+const ctx =
+document.getElementById(
+    "pie"
+).getContext("2d");
+
+new Chart(ctx,{
+
+    type:"pie",
+
+    data:{
+
+        labels:${labels},
+
+        datasets:[{
+
+            data:${data}
+        }]
+    },
+
+    options:{
+
+        responsive:true,
+
+        maintainAspectRatio:false
+    }
+});
+
+</script>
+
+</body>
+
+</html>
+
+`);
 }
