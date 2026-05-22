@@ -2130,9 +2130,11 @@ function showSettlement(){
 
     speak(
 
-    `Settlement ready.
-    Total split expense ${result.total} rupees`
-    );
+`Settlement ready.
+Total split expense ${result.total} rupees`
+);
+
+} // close showSettlement()
 
 function getSettlementData(){
 
