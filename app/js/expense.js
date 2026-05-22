@@ -668,6 +668,48 @@ function processVoiceExpense(text){
         return;
     }
 
+    /* ================= DATE EXPENSES ================= */
+
+    if(
+        text.includes(
+            "expenses on"
+        )
+    ){
+
+        const date =
+
+            text.replace(
+                "expenses on",
+                ""
+            ).trim();
+
+        showExpensesByDate(
+            date
+        );
+
+        return;
+    }
+
+    if(
+        text.includes(
+            "show expenses for"
+        )
+    ){
+
+        const date =
+
+            text.replace(
+                "show expenses for",
+                ""
+            ).trim();
+
+        showExpensesByDate(
+            date
+        );
+
+        return;
+    }
+
     /* CLEAN EXTRA SPACES */
 
     text =
@@ -994,6 +1036,56 @@ function showYearlyExpenses(){
     renderFilteredExpenses(
         filtered,
         "Yearly Expenses"
+    );
+}
+
+/* ================= DATE FILTER ================= */
+
+function showExpensesByDate(date){
+
+    const filtered =
+
+        expenses.filter(
+
+            exp => exp.date === date
+        );
+
+    renderFilteredExpenses(
+
+        filtered,
+
+        `Expenses for ${date}`
+    );
+
+    if(filtered.length === 0){
+
+        speak(
+            `No expenses found for ${date}`
+        );
+
+        return;
+    }
+
+    speak(
+        `Showing expenses for ${date}`
+    );
+}
+
+function getExpensesByDate(){
+
+    const selectedDate =
+        prompt(
+
+            "Enter date (YYYY-MM-DD)"
+        );
+
+    if(!selectedDate){
+
+        return;
+    }
+
+    showExpensesByDate(
+        selectedDate
     );
 }
 
@@ -2194,7 +2286,6 @@ function renderPieChart(){
 function openBarChartWindow(){
 
     const chartWindow =
-
         window.open(
             "",
             "_blank",
@@ -2233,9 +2324,7 @@ function openBarChartWindow(){
 Expense Graph
 </title>
 
-<script src=
-"https://cdn.jsdelivr.net/npm/chart.js">
-</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
@@ -2250,6 +2339,8 @@ body{
     padding:30px;
 
     text-align:center;
+
+    margin:0;
 }
 
 canvas{
@@ -2273,44 +2364,47 @@ canvas{
 
 <script>
 
-const ctx =
-document.getElementById(
-    "graph"
-).getContext("2d");
+window.onload = ()=>{
 
-new Chart(ctx,{
+    const ctx =
+        document.getElementById(
+            "graph"
+        ).getContext("2d");
 
-    type:"bar",
+    new Chart(ctx,{
 
-    data:{
+        type:"bar",
 
-        labels:${labels},
+        data:{
 
-        datasets:[{
+            labels:${labels},
 
-            label:
-                "Daily Expenses",
+            datasets:[{
 
-            data:${data},
+                label:
+                    "Daily Expenses",
 
-            borderRadius:12
-        }]
-    },
+                data:${data},
 
-    options:{
+                borderRadius:12
+            }]
+        },
 
-        responsive:true,
+        options:{
 
-        maintainAspectRatio:false,
+            responsive:true,
 
-        scales:{
+            maintainAspectRatio:false,
 
-            y:{
-                beginAtZero:true
+            scales:{
+
+                y:{
+                    beginAtZero:true
+                }
             }
         }
-    }
-});
+    });
+};
 
 </script>
 
@@ -2319,6 +2413,8 @@ new Chart(ctx,{
 </html>
 
 `);
+
+    chartWindow.document.close();
 }
 
 /* ================= OPEN PIE GRAPH WINDOW ================= */
@@ -2326,7 +2422,6 @@ new Chart(ctx,{
 function openPieChartWindow(){
 
     const chartWindow =
-
         window.open(
             "",
             "_blank",
@@ -2365,9 +2460,7 @@ function openPieChartWindow(){
 Expense Pie Graph
 </title>
 
-<script src=
-"https://cdn.jsdelivr.net/npm/chart.js">
-</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
@@ -2382,6 +2475,8 @@ body{
     padding:30px;
 
     text-align:center;
+
+    margin:0;
 }
 
 canvas{
@@ -2405,32 +2500,35 @@ canvas{
 
 <script>
 
-const ctx =
-document.getElementById(
-    "pie"
-).getContext("2d");
+window.onload = ()=>{
 
-new Chart(ctx,{
+    const ctx =
+        document.getElementById(
+            "pie"
+        ).getContext("2d");
 
-    type:"pie",
+    new Chart(ctx,{
 
-    data:{
+        type:"pie",
 
-        labels:${labels},
+        data:{
 
-        datasets:[{
+            labels:${labels},
 
-            data:${data}
-        }]
-    },
+            datasets:[{
 
-    options:{
+                data:${data}
+            }]
+        },
 
-        responsive:true,
+        options:{
 
-        maintainAspectRatio:false
-    }
-});
+            responsive:true,
+
+            maintainAspectRatio:false
+        }
+    });
+};
 
 </script>
 
@@ -2439,4 +2537,6 @@ new Chart(ctx,{
 </html>
 
 `);
+
+    chartWindow.document.close();
 }
