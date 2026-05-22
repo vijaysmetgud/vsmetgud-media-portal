@@ -845,7 +845,12 @@ function processVoiceExpense(text){
         return;
     }
 
-    const today =
+    const selectedDate =
+
+        document.getElementById(
+            "date"
+        ).value ||
+
         new Date()
         .toISOString()
         .split("T")[0];
@@ -856,7 +861,7 @@ function processVoiceExpense(text){
 
         user:currentUser,
 
-        date:today,
+        date:selectedDate,
 
         item:item,
 
@@ -1223,265 +1228,223 @@ function renderFilteredExpenses(
 
 function splitExpense(){
 
-    if(users.length === 0){
+    const dateInput =
 
-        alert(
-            "Please add users first"
+        document.getElementById(
+            "date"
         );
 
-        return;
-    }
+    /* AUTO OPEN CALENDAR */
 
-    const item =
-        prompt(
-            "Expense item?"
-        );
+    dateInput.showPicker?.();
 
-    if(!item){
+    alert(
+        "Please select split date"
+    );
 
-        return;
-    }
+    /* WAIT FOR DATE */
 
-    const totalAmount =
-        Number(
+    dateInput.onchange =
+    function(){
 
-            prompt(
-                "Total amount?"
-            )
-        );
+        const selectedDate =
+            dateInput.value;
 
-    if(!totalAmount){
+        if(!selectedDate){
 
-        return;
-    }
-
-    /* USER SELECTION */
-
-    let selectedUsers = [];
-
-    users.forEach(user=>{
-
-        const include =
-            confirm(
-
-                `Include ${user} in split?`
+            alert(
+                "Please select date"
             );
 
-        if(include){
-
-            selectedUsers.push(
-                user
-            );
+            return;
         }
-    });
 
-    /* OPTION TO ADD EXTRA USER */
+        if(users.length === 0){
 
-    const newUser =
-        prompt(
-
-            "Add another user? (optional)"
-        );
-
-    if(newUser){
-
-        const cleanName =
-            newUser.trim();
-
-        if(
-
-            !users.some(
-
-                u =>
-
-                u.toLowerCase() ===
-                cleanName.toLowerCase()
-
-            )
-
-        ){
-
-            users.push(
-                cleanName
+            alert(
+                "Please add users first"
             );
 
-            selectedUsers.push(
-                cleanName
+            return;
+        }
+
+        const item =
+            prompt(
+                "Expense item?"
             );
 
-            localStorage.setItem(
+        if(!item){
 
-                "expenseUsers",
+            return;
+        }
 
-                JSON.stringify(
-                    users
+        const totalAmount =
+            Number(
+
+                prompt(
+                    "Total amount?"
                 )
             );
-        }
-    }
 
-    if(
-        selectedUsers.length === 0
-    ){
+        if(!totalAmount){
+
+            return;
+        }
+
+        const paidBy =
+            prompt(
+                "Who paid total amount?"
+            )
+            ?.trim();
+
+        if(!paidBy){
+
+            speak(
+                "Please enter who paid"
+            );
+
+            return;
+        }
+
+        let selectedUsers =
+            [];
+
+        users.forEach(user=>{
+
+            const include =
+                confirm(
+
+                    `Include ${user} in split?`
+                );
+
+            if(include){
+
+                selectedUsers.push(
+                    user
+                );
+            }
+        });
+
+        const newUser =
+            prompt(
+
+                "Add another user? (optional)"
+            );
+
+        if(newUser){
+
+            const cleanName =
+                newUser.trim();
+
+            if(
+
+                !users.some(
+
+                    u =>
+
+                    u.toLowerCase() ===
+                    cleanName.toLowerCase()
+                )
+            ){
+
+                users.push(
+                    cleanName
+                );
+
+                selectedUsers.push(
+                    cleanName
+                );
+
+                localStorage.setItem(
+
+                    "expenseUsers",
+
+                    JSON.stringify(
+                        users
+                    )
+                );
+            }
+        }
+
+        if(
+            selectedUsers.length === 0
+        ){
+
+            alert(
+                "No users selected"
+            );
+
+            return;
+        }
+
+        saveSplitExpense(
+
+            item,
+
+            totalAmount,
+
+            selectedUsers,
+
+            paidBy
+        );
+
+        const splitAmount =
+            Math.round(
+
+                totalAmount /
+
+                selectedUsers.length
+            );
 
         alert(
-            "No users selected"
+
+`Split Successful
+
+Date:
+${selectedDate}
+
+Item:
+${item}
+
+Paid By:
+${paidBy}
+
+Total:
+₹${totalAmount}
+
+Users:
+${selectedUsers.join(", ")}
+
+Each Pays:
+₹${splitAmount}`
+
         );
 
-        return;
-    }
+        /* RESET */
 
-    saveSplitExpense(
-
-        item,
-
-        totalAmount,
-
-        selectedUsers
-    );
-
-    const splitAmount =
-        Math.round(
-
-            totalAmount /
-            selectedUsers.length
-        );
-
-    alert(
-    `Split Successful
-
-    Item: ${item}
-
-    Total: ₹${totalAmount}
-
-    Users: ${selectedUsers.join(", ")}
-
-    Each Pays: ₹${splitAmount}`
-    );
+        dateInput.onchange =
+            null;
+    };
 }
 
-function processSplitVoice(text){
+function processSplitVoice(){
 
-    text =
-        text.toLowerCase()
-        .trim();
-
-    console.log(
-        "Split Voice:",
-        text
+    speak(
+        "Please use split voice button"
     );
 
-    const words =
-        text.split(" ");
-
-    let amount = null;
-
-    let item = "";
-
-    let selectedUsers = [];
-
-    /* REMOVE split */
-
-    words.shift();
-
-    /* FIND AMOUNT */
-
-    words.forEach(word=>{
-
-        const num =
-            Number(word);
-
-        if(!isNaN(num) && num > 0){
-
-            amount = num;
-        }
-    });
-
-    if(!amount){
-
-        speak(
-            "Could not understand amount"
-        );
-
-        return;
-    }
-
-    /* ITEM = WORDS BEFORE AMOUNT */
-
-    const amountIndex =
-        words.findIndex(
-
-            word =>
-
-            Number(word) === amount
-        );
-
-    item =
-        words
-        .slice(
-            0,
-            amountIndex
-        )
-        .join(" ");
-
-    /* USERS = AFTER AMOUNT */
-
-    selectedUsers =
-        words.slice(
-            amountIndex + 1
-        );
-
-    if(
-        !item ||
-        selectedUsers.length === 0
-    ){
-
-        speak(
-            "Could not understand split expense"
-        );
-
-        return;
-    }
-
-    /* AUTO ADD USERS */
-
-    saveSplitExpense(
-
-        item,
-
-        amount,
-
-        selectedUsers
-    );
-
-    const splitAmount =
-        Math.round(
-
-            amount /
-            selectedUsers.length
-        );
-
-    alert(
-
-    `Split Successful
-
-    Item: ${item}
-
-    Total: ₹${amount}
-
-    Users: ${selectedUsers.join(", ")}
-
-    Each Pays: ₹${splitAmount}`
-
-    );
+    startSplitVoice();
 }
+
 function saveSplitExpense(
 
     item,
 
     amount,
 
-    selectedUsers
+    selectedUsers,
+
+    paidBy
 ){
 
     if(
@@ -1534,7 +1497,12 @@ function saveSplitExpense(
             selectedUsers.length
         );
 
-    const today =
+    const selectedDate =
+
+        document.getElementById(
+            "date"
+        ).value ||
+
         new Date()
         .toISOString()
         .split("T")[0];
@@ -1549,47 +1517,57 @@ function saveSplitExpense(
 
         each:splitAmount,
 
-        date:today
+        paidBy:paidBy,
+
+        date:selectedDate
     });
 
-    selectedUsers.forEach(user=>{
-
-        const key =
-            getExpenseKey(user);
-
-        let personExpenses =
-            JSON.parse(
-
-                localStorage.getItem(
-                    key
-                )
-            ) || [];
-
-        personExpenses.push({
-
-            id:
-                Date.now()
-                + Math.random(),
-
-            user:user,
-
-            date:today,
-
-            item:
-                `${item} (Split)`,
-
-            price:splitAmount
-        });
-
-        localStorage.setItem(
-
-            key,
-
-            JSON.stringify(
-                personExpenses
-            )
+    const key =
+        getExpenseKey(
+            paidBy
         );
+
+    let payerExpenses =
+        JSON.parse(
+
+            localStorage.getItem(
+                key
+            )
+
+        ) || [];
+
+    payerExpenses.push({
+
+        id:
+            Date.now()
+            + Math.random(),
+
+        user:paidBy,
+
+        date:selectedDate,
+
+        item:
+            `${item} (Split)`,
+
+        price:amount,
+
+        split:true,
+
+        splitUsers:
+            selectedUsers,
+
+        each:
+            splitAmount
     });
+
+    localStorage.setItem(
+
+        key,
+
+        JSON.stringify(
+            payerExpenses
+        )
+    );
 
     loadExpenses();
 
@@ -1608,6 +1586,29 @@ function saveSplitExpense(
 }
 
 function startSplitVoice(){
+
+    const selectedDate =
+
+        document.getElementById(
+            "date"
+        );
+
+    if(!selectedDate.value){
+
+        selectedDate.showPicker?.();
+
+        alert(
+            "Please select split date"
+        );
+
+        selectedDate.onchange =
+        ()=>{
+
+            startSplitVoice();
+        };
+
+        return;
+    }
 
     speechSynthesis.cancel();
 
@@ -1790,36 +1791,90 @@ function startSplitVoice(){
                                 return;
                             }
 
-                            saveSplitExpense(
-
-                                item,
-
-                                amount,
-
-                                selectedUsers
-                            );
-
-                            const splitAmount =
-
-                                Math.round(
-
-                                    amount /
-
-                                    selectedUsers.length
+                            const speech4 =
+                                new SpeechSynthesisUtterance(
+                                    "Who paid the total amount"
                                 );
 
-                            alert(
+                            speech4.lang =
+                                "en-IN";
 
-`Split Successful
+                            speech4.onend = ()=>{
 
-Item: ${item}
+                                const payerRecognition =
+                                    new SpeechRecognition();
 
-Total: ₹${amount}
+                                payerRecognition.lang =
+                                    "en-IN";
 
-Users: ${selectedUsers.join(", ")}
+                                payerRecognition.start();
 
-Each Pays: ₹${splitAmount}`
-                            );
+                                payerRecognition.onresult =
+                                function(payEvent){
+
+                                    const paidBy =
+
+                                        payEvent
+                                        .results[0][0]
+                                        .transcript
+                                        .trim()
+                                        .toLowerCase();
+
+                                    saveSplitExpense(
+
+                                        item,
+
+                                        amount,
+
+                                        selectedUsers,
+
+                                        paidBy
+                                    );
+
+                                    const splitAmount =
+
+                                        Math.round(
+
+                                            amount /
+                                            selectedUsers.length
+                                        );
+
+                                    alert(
+
+                                `Split Successful
+
+                                Date:
+                                ${document.getElementById("date").value}
+
+                                Item:
+                                ${item}
+
+                                Paid By:
+                                ${paidBy}
+
+                                Total:
+                                ₹${amount}
+
+                                Users:
+                                ${selectedUsers.join(", ")}
+
+                                Each Pays:
+                                ₹${splitAmount}`
+
+                                    );
+
+                                    speak(
+
+                                `${item} split among ${selectedUsers.length} users`
+                                    );
+                                };
+                            };
+
+                            speechSynthesis.speak(
+                                speech4
+                            );                        
+
+                            
                         };
                     };
 
@@ -1929,6 +1984,11 @@ function renderSplitHistory(){
                 Date :
                 ${split.date}
             </p>
+            
+            <p>
+                Paid By :
+                ${split.paidBy || "Unknown"}
+            </p>
 
             <p>
                 Split:
@@ -1948,6 +2008,17 @@ function renderSplitHistory(){
 /* ================= FINAL SETTLEMENT ================= */
 
 function showSettlement(){
+
+    const oldModal =
+
+        document.querySelector(
+            ".settlementModal"
+        );
+
+    if(oldModal){
+
+        oldModal.remove();
+    }
 
     const result =
         getSettlementData();
@@ -2033,6 +2104,12 @@ function getSettlementData(){
         );
     });
 
+    const splitExpenses =
+
+        allExpenses.filter(
+            exp => exp.split
+        );
+
     const spent = {};
 
     users.forEach(user=>{
@@ -2040,26 +2117,44 @@ function getSettlementData(){
         spent[user] = 0;
     });
 
-    allExpenses.forEach(exp=>{
+    /* ONLY SPLIT EXPENSES */
+
+    splitExpenses.forEach(exp=>{
 
         spent[exp.user] +=
             exp.price;
     });
 
-    const total =
+    const balances = {};
 
-        Object.values(spent)
+    users.forEach(user=>{
 
-        .reduce(
-            (a,b)=>a+b,
-            0
-        );
+        balances[user] = 0;
+    });
 
-    const eachShare =
-        Math.round(
-            total / users.length
-        );
+    let total = 0;
 
+    /* SPLIT-WISE CALCULATION */
+
+    splitExpenses.forEach(exp=>{
+
+        total += exp.price;
+
+        const each =
+            exp.each;
+
+        /* payer paid full amount */
+
+        balances[exp.user] +=
+            exp.price;
+
+        /* every participant owes share */
+
+        exp.splitUsers.forEach(user=>{
+
+            balances[user] -= each;
+        });
+    });
     let spentHtml = "";
 
     let oweHtml = "";
@@ -2068,7 +2163,7 @@ function getSettlementData(){
 
         const userExpenses =
 
-            allExpenses.filter(
+            splitExpenses.filter(
 
                 exp =>
                     exp.user === user
@@ -2080,13 +2175,46 @@ function getSettlementData(){
 
             itemsHtml += `
 
-            <p>
+            <div
+                style="
+                    margin-bottom:15px;
+                    padding:12px;
+                    background:#1e293b;
+                    border-radius:12px;
+                "
+            >
 
-                🧾 ${exp.item}
+                <p>
+                    📅 ${exp.date}
+                </p>
 
-                - ₹${exp.price}
+                <p>
+                    🧾 ${exp.item}
+                </p>
 
-            </p>
+                <p>
+                    💰 ₹${exp.price}
+                </p>
+
+                ${
+                    exp.split
+                    ?
+
+                    `<p>
+                        👥 Split:
+                        ${exp.splitUsers.join(", ")}
+                    </p>
+
+                    <p>
+                        💵 Each:
+                        ₹${exp.each}
+                    </p>`
+                    :
+
+                    ""
+                }
+
+            </div>
             `;
         });
 
@@ -2117,9 +2245,7 @@ function getSettlementData(){
     users.forEach(user=>{
 
         const balance =
-
-            spent[user] -
-            eachShare;
+            balances[user];
 
         if(balance > 0){
 
@@ -2164,17 +2290,62 @@ function getSettlementData(){
                     creditor.amount
                 );
 
+            const creditorExpenses =
+
+                splitExpenses.filter(
+
+                    exp =>
+                        exp.user ===
+                        creditor.user
+                );
+
+            let expenseInfo = "";
+
+            creditorExpenses.forEach(exp=>{
+
+                expenseInfo += `
+
+                <p>
+
+                    📅 ${exp.date}
+
+                    —
+
+                    ${exp.item}
+
+                    —
+
+                    ₹${exp.price}
+
+                </p>
+                `;
+            });
+
             oweHtml += `
 
             <div class="settlementItem owe">
 
-                ${debtor.user}
+                <h3>
 
-                owes
+                    💸 ${debtor.user}
 
-                ${creditor.user}
+                    owes
 
-                ₹${payment}
+                    ${creditor.user}
+
+                </h3>
+
+                <h2>
+
+                    ₹${payment}
+
+                </h2>
+
+                <p>
+                    For:
+                </p>
+
+                ${expenseInfo}
 
             </div>
             `;
@@ -2191,7 +2362,8 @@ function getSettlementData(){
 
         total,
 
-        eachShare,
+        eachShare:
+            "Dynamic",
 
         spentHtml,
 

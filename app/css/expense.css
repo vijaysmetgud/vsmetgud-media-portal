@@ -265,3 +265,97 @@ canvas{
 
     background:#991b1b;
 }
+
+/* ================= TOP ACTION BUTTONS ================= */
+
+.topActionButtons{
+
+    position:sticky;
+
+    top:10px;
+
+    z-index:999;
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:12px;
+
+    justify-content:center;
+
+    margin:25px 0;
+
+    padding:18px;
+
+    border-radius:22px;
+
+    background:
+        rgba(31,41,55,0.9);
+
+    backdrop-filter:
+        blur(16px);
+
+    box-shadow:
+        0 0 35px
+        rgba(0,0,0,0.25);
+}
+
+.topActionButtons button{
+
+    min-width:180px;
+
+    padding:18px 22px;
+
+    border:none;
+
+    border-radius:20px;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+    font-weight:bold;
+
+    color:white;
+
+    transition:0.3s ease;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #1d4ed8
+        );
+
+    box-shadow:
+        0 0 25px
+        rgba(37,99,235,0.3);
+}
+
+.topActionButtons button:hover{
+
+    transform:
+        translateY(-4px)
+        scale(1.03);
+
+    box-shadow:
+        0 0 35px
+        rgba(37,99,235,0.45);
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+    .topActionButtons{
+
+        flex-direction:
+            column;
+    }
+
+    .topActionButtons button{
+
+        width:100%;
+    }
+}
