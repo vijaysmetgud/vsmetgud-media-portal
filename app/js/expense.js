@@ -12,6 +12,10 @@ let users =
 
 let expenses = [];
 
+let lastVoiceCommand = "";
+
+let voiceLock = false;
+
 /* ================= SAVE ================= */
 
 function getExpenseKey(user){
@@ -57,16 +61,26 @@ function saveExpenses(){
 
 function speak(text){
 
-    speechSynthesis.cancel();
-
     const speech =
         new SpeechSynthesisUtterance(
             text
         );
 
-    speech.lang = "en-IN";
+    speech.lang =
+        "en-IN";
 
-    speechSynthesis.speak(speech);
+    speech.rate =
+        0.9;
+
+    speech.pitch =
+        1;
+
+    speech.volume =
+        1;
+
+    speechSynthesis.speak(
+        speech
+    );
 }
 
 function addUserByVoice(name){
@@ -493,19 +507,51 @@ function startVoice(){
 
                 event.results[0][0]
                 .transcript
-                .toLowerCase();
+                .toLowerCase()
+                .trim();
 
             console.log(
                 "Voice:",
                 text
             );
 
+            /* IGNORE DUPLICATES */
+
+            if(
+
+                voiceLock ||
+
+                text === lastVoiceCommand
+            ){
+
+                console.log(
+                    "Duplicate voice ignored"
+                );
+
+                return;
+            }
+
+            voiceLock = true;
+
+            lastVoiceCommand =
+                text;
+
             document.getElementById(
                 "voiceStatus"
             ).innerText =
                 "You said: " + text;
 
-            processVoiceExpense(text);
+            processVoiceExpense(
+                text
+            );
+
+            /* RELEASE LOCK */
+
+            setTimeout(()=>{
+
+                voiceLock = false;
+
+            },1000);
         };
 
         recognition.onerror = (event)=>{
@@ -556,6 +602,17 @@ function processVoiceExpense(text){
         "Voice Raw:",
         text
     );
+
+    if(
+        text.includes(
+            "show settlement"
+        )
+    ){
+
+        showSettlement();
+
+        return;
+    }
 
     /* ================= ADD USER ================= */
 
@@ -1538,6 +1595,8 @@ function saveSplitExpense(
 
 function startSplitVoice(){
 
+    speechSynthesis.cancel();
+
     const SpeechRecognition =
 
         window.SpeechRecognition ||
@@ -1556,7 +1615,6 @@ function startSplitVoice(){
     /* ================= ASK USERS ================= */
 
     const speech1 =
-
         new SpeechSynthesisUtterance(
             "Please say users"
         );
@@ -1583,11 +1641,7 @@ function startSplitVoice(){
         userRecognition.start();
 
         userRecognition.onerror =
-        (event)=>{
-
-            console.error(
-                event.error
-            );
+        ()=>{
 
             speak(
                 "Could not hear users"
@@ -1599,8 +1653,7 @@ function startSplitVoice(){
 
             const userText =
 
-                event
-                .results[0][0]
+                event.results[0][0]
                 .transcript
                 .toLowerCase()
                 .trim();
@@ -1608,7 +1661,6 @@ function startSplitVoice(){
             const selectedUsers =
 
                 userText
-
                 .replace(/,/g," ")
 
                 .split(" ")
@@ -1618,7 +1670,6 @@ function startSplitVoice(){
             /* ================= ASK ITEM ================= */
 
             const speech2 =
-
                 new SpeechSynthesisUtterance(
                     "Please say expense item"
                 );
@@ -1646,11 +1697,7 @@ function startSplitVoice(){
                 itemRecognition.start();
 
                 itemRecognition.onerror =
-                (event)=>{
-
-                    console.error(
-                        event.error
-                    );
+                ()=>{
 
                     speak(
                         "Could not hear expense item"
@@ -1670,7 +1717,6 @@ function startSplitVoice(){
                     /* ================= ASK AMOUNT ================= */
 
                     const speech3 =
-
                         new SpeechSynthesisUtterance(
                             "Please say amount"
                         );
@@ -1696,13 +1742,9 @@ function startSplitVoice(){
                             1;
 
                         amountRecognition.start();
-                        
-                        amountRecognition.onerror =
-                        (event)=>{
 
-                            console.error(
-                                event.error
-                            );
+                        amountRecognition.onerror =
+                        ()=>{
 
                             speak(
                                 "Could not hear amount"
@@ -1783,6 +1825,7 @@ Each Pays: ₹${splitAmount}`
         speech1
     );
 }
+
 function saveSplitHistory(splitData){
 
     let splitHistory =
@@ -1886,6 +1929,336 @@ function renderSplitHistory(){
         </div>
         `;
     });
+}
+
+/* ================= FINAL SETTLEMENT ================= */
+
+function showSettlement(){
+
+    const result =
+        getSettlementData();
+
+    const settlementDiv =
+        document.createElement(
+            "div"
+        );
+
+    settlementDiv.className =
+        "settlementModal";
+
+    settlementDiv.innerHTML = `
+
+    <div class="settlementCard">
+
+        <h1>
+            💰 Final Settlement
+        </h1>
+
+        <h3>
+            Total Expense :
+            ₹${result.total}
+        </h3>
+
+        <h3>
+            Each Share :
+            ₹${result.eachShare}
+        </h3>
+
+        <hr>
+
+        <h2>
+            👤 Who Spent
+        </h2>
+
+        ${result.spentHtml}
+
+        <hr>
+
+        <h2>
+            💸 Who Owes
+        </h2>
+
+        ${result.oweHtml}
+
+        <button
+            onclick="this.parentElement.parentElement.remove()"
+        >
+            Close
+        </button>
+
+    </div>
+    `;
+
+    document.body.appendChild(
+        settlementDiv
+    );
+
+    speak(
+        "Settlement ready"
+    );
+}
+
+function getSettlementData(){
+
+    let allExpenses = [];
+
+    users.forEach(user=>{
+
+        const userExpenses =
+
+            JSON.parse(
+
+                localStorage.getItem(
+                    getExpenseKey(user)
+                )
+
+            ) || [];
+
+        allExpenses.push(
+            ...userExpenses
+        );
+    });
+
+    const spent = {};
+
+    users.forEach(user=>{
+
+        spent[user] = 0;
+    });
+
+    allExpenses.forEach(exp=>{
+
+        spent[exp.user] +=
+            exp.price;
+    });
+
+    const total =
+
+        Object.values(spent)
+
+        .reduce(
+            (a,b)=>a+b,
+            0
+        );
+
+    const eachShare =
+        Math.round(
+            total / users.length
+        );
+
+    let spentHtml = "";
+
+    let oweHtml = "";
+
+    users.forEach(user=>{
+
+        spentHtml += `
+
+        <div class="settlementItem">
+
+            <b>${user}</b>
+
+            spent
+
+            ₹${spent[user]}
+
+        </div>
+        `;
+    });
+
+    const creditors = [];
+    const debtors = [];
+
+    users.forEach(user=>{
+
+        const balance =
+
+            spent[user] -
+            eachShare;
+
+        if(balance > 0){
+
+            creditors.push({
+
+                user:user,
+
+                amount:balance
+            });
+        }
+
+        else if(balance < 0){
+
+            debtors.push({
+
+                user:user,
+
+                amount:
+                    Math.abs(balance)
+            });
+        }
+    });
+
+    debtors.forEach(debtor=>{
+
+        creditors.forEach(creditor=>{
+
+            if(
+                debtor.amount <= 0 ||
+
+                creditor.amount <= 0
+            ){
+
+                return;
+            }
+
+            const payment =
+                Math.min(
+
+                    debtor.amount,
+
+                    creditor.amount
+                );
+
+            oweHtml += `
+
+            <div class="settlementItem owe">
+
+                ${debtor.user}
+
+                owes
+
+                ${creditor.user}
+
+                ₹${payment}
+
+            </div>
+            `;
+
+            debtor.amount -=
+                payment;
+
+            creditor.amount -=
+                payment;
+        });
+    });
+
+    return {
+
+        total,
+
+        eachShare,
+
+        spentHtml,
+
+        oweHtml
+    };
+}
+function downloadSettlementReport(){
+
+    const result =
+        getSettlementData();
+
+    let text =
+
+`FINAL SETTLEMENT
+
+=================
+
+TOTAL:
+₹${result.total}
+
+EACH SHARE:
+₹${result.eachShare}
+
+`;
+
+    text +=
+        result.spentHtml
+        .replace(/<[^>]*>/g,"");
+
+    text += "\n";
+
+    text +=
+        result.oweHtml
+        .replace(/<[^>]*>/g,"");
+
+    const blob =
+        new Blob(
+            [text],
+            {type:"text/plain"}
+        );
+
+    const a =
+        document.createElement(
+            "a"
+        );
+
+    a.href =
+        URL.createObjectURL(
+            blob
+        );
+
+    a.download =
+        "settlement-report.txt";
+
+    a.click();
+
+    speak(
+        "Settlement report downloaded"
+    );
+}
+
+function shareSettlementWhatsApp(){
+
+    const result =
+        getSettlementData();
+
+    const text = encodeURIComponent(
+
+`💰 FINAL SETTLEMENT
+
+Total:
+₹${result.total}
+
+Each Share:
+₹${result.eachShare}`
+    );
+
+    window.open(
+
+        `https://wa.me/?text=${text}`,
+
+        "_blank"
+    );
+}
+
+function sendSettlementEmail(){
+
+    const result =
+        getSettlementData();
+
+    const subject =
+
+        encodeURIComponent(
+            "Expense Settlement"
+        );
+
+    const body =
+
+        encodeURIComponent(
+
+`FINAL SETTLEMENT
+
+Total:
+₹${result.total}
+
+Each Share:
+₹${result.eachShare}`
+        );
+
+    window.location.href =
+
+`mailto:?subject=${subject}&body=${body}`;
 }
 
 /* ================= DOWNLOAD ================= */

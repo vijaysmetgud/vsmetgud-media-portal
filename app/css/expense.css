@@ -213,3 +213,55 @@ canvas{
     box-shadow:
         0 0 25px rgba(0,0,0,0.25);
 }
+
+.settlementModal{
+
+    position:fixed;
+
+    inset:0;
+
+    background:
+        rgba(0,0,0,0.8);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:999999;
+}
+
+.settlementCard{
+
+    background:#1f2937;
+
+    padding:30px;
+
+    border-radius:20px;
+
+    width:600px;
+
+    max-width:90%;
+
+    color:white;
+
+    box-shadow:
+        0 0 40px rgba(0,0,0,0.5);
+}
+
+.settlementItem{
+
+    background:#374151;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    margin:10px 0;
+}
+
+.owe{
+
+    background:#991b1b;
+}
