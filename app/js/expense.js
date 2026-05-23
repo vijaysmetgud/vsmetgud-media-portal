@@ -1766,85 +1766,28 @@ function startSplitVoiceFlow(){
     let amount = 0;
     let paidBy = "";
 
-    let isProcessing =
-        false;
-
     askUsers();
 
-    /* ================= USERS ================= */
+    function speakThenListen(
+        message,
+        callback
+    ){
 
-    function askUsers(){
+        speechSynthesis.cancel();
 
-        speak(
-            "Please say users"
-        );
+        const speech =
+            new SpeechSynthesisUtterance(
+                message
+            );
 
-        setTimeout(()=>{
+        speech.lang =
+            "en-IN";
 
-            const recognition =
-                new SpeechRecognition();
+        speech.rate =
+            0.9;
 
-            recognition.lang =
-                "en-IN";
-
-            recognition.continuous =
-                false;
-
-            recognition.interimResults =
-                false;
-
-            recognition.maxAlternatives =
-                1;
-
-            recognition.start();
-
-            recognition.onresult =
-            (event)=>{
-
-                if(isProcessing){
-
-                    return;
-                }
-
-                isProcessing =
-                    true;
-
-                recognition.stop();
-
-                selectedUsers =
-
-                    event
-                    .results[0][0]
-                    .transcript
-                    .toLowerCase()
-                    .trim()
-                    .replace(/,/g," ")
-                    .split(" ")
-                    .filter(Boolean);
-
-                console.log(
-                    "Users:",
-                    selectedUsers
-                );
-
-                isProcessing =
-                    false;
-
-                askItem();
-            };
-
-        },1200);
-    }
-
-    /* ================= ITEM ================= */
-
-    function askItem(){
-
-        speak(
-            "Please say expense item"
-        );
-
-        setTimeout(()=>{
+        speech.onend =
+        ()=>{
 
             const recognition =
                 new SpeechRecognition();
@@ -1866,85 +1809,82 @@ function startSplitVoiceFlow(){
             recognition.onresult =
             (event)=>{
 
-                if(isProcessing){
-
-                    return;
-                }
-
-                isProcessing =
-                    true;
-
                 recognition.stop();
 
-                item =
+                const text =
 
                     event
                     .results[0][0]
                     .transcript
                     .trim();
 
-                console.log(
-                    "Item:",
-                    item
-                );
-
-                isProcessing =
-                    false;
-
-                askAmount();
+                callback(text);
             };
 
-        },1200);
+            recognition.onerror =
+            ()=>{
+
+                speak(
+                    "Could not hear properly"
+                );
+            };
+        };
+
+        speechSynthesis.speak(
+            speech
+        );
     }
 
-    /* ================= AMOUNT ================= */
+    function askUsers(){
+
+        speakThenListen(
+
+            "Please say users",
+
+            (text)=>{
+
+                selectedUsers =
+
+                    text
+                    .toLowerCase()
+                    .replace(/,/g," ")
+                    .split(" ")
+                    .filter(Boolean);
+
+                askItem();
+            }
+        );
+    }
+
+    function askItem(){
+
+        speakThenListen(
+
+            "Please say expense item",
+
+            (text)=>{
+
+                item =
+                    text;
+
+                askAmount();
+            }
+        );
+    }
 
     function askAmount(){
 
-        speak(
-            "Please say amount"
-        );
+        speakThenListen(
 
-        setTimeout(()=>{
+            "Please say amount",
 
-            const recognition =
-                new SpeechRecognition();
-
-            recognition.lang =
-                "en-IN";
-
-            recognition.continuous =
-                false;
-
-            recognition.interimResults =
-                false;
-
-            recognition.maxAlternatives =
-                1;
-
-            recognition.start();
-
-            recognition.onresult =
-            (event)=>{
-
-                if(isProcessing){
-
-                    return;
-                }
-
-                isProcessing =
-                    true;
-
-                recognition.stop();
+            (text)=>{
 
                 amount =
 
                     Number(
 
-                        event
-                        .results[0][0]
-                        .transcript
-                        .replace(
+                        text.replace(
                             /[^0-9]/g,
                             ""
                         )
@@ -1952,77 +1892,30 @@ function startSplitVoiceFlow(){
 
                 if(!amount){
 
-                    isProcessing =
-                        false;
-
                     speak(
-                        "Could not understand amount"
+                        "Invalid amount"
                     );
 
                     return;
                 }
 
-                console.log(
-                    "Amount:",
-                    amount
-                );
-
-                isProcessing =
-                    false;
-
                 askPayer();
-            };
-
-        },1200);
+            }
+        );
     }
-
-    /* ================= PAYER ================= */
 
     function askPayer(){
 
-        speak(
-            "Who paid total amount"
-        );
+        speakThenListen(
 
-        setTimeout(()=>{
+            "Who paid total amount",
 
-            const recognition =
-                new SpeechRecognition();
-
-            recognition.lang =
-                "en-IN";
-
-            recognition.continuous =
-                false;
-
-            recognition.interimResults =
-                false;
-
-            recognition.maxAlternatives =
-                1;
-
-            recognition.start();
-
-            recognition.onresult =
-            (event)=>{
-
-                if(isProcessing){
-
-                    return;
-                }
-
-                isProcessing =
-                    true;
-
-                recognition.stop();
+            (text)=>{
 
                 paidBy =
-
-                    event
-                    .results[0][0]
-                    .transcript
-                    .trim()
-                    .toLowerCase();
+                    text
+                    .toLowerCase()
+                    .trim();
 
                 saveSplitExpense(
 
@@ -2065,12 +1958,8 @@ ${selectedUsers.join(", ")}
 Each Pays:
 ₹${splitAmount}`
                 );
-
-                isProcessing =
-                    false;
-            };
-
-        },1200);
+            }
+        );
     }
 }
 
