@@ -490,7 +490,46 @@ function startVoice(){
     let item = "";
     let amount = 0;
 
-    askUser();
+    const dateInput =
+
+        document.getElementById(
+            "date"
+        );
+
+    /* ================= DATE FIRST ================= */
+
+    try{
+
+        dateInput.focus();
+
+        dateInput.showPicker?.();
+
+    }
+
+    catch(err){
+
+        console.log(
+            "Date picker fallback"
+        );
+    }
+
+    setTimeout(()=>{
+
+        const selectedDate =
+            dateInput.value;
+
+        if(!selectedDate){
+
+            alert(
+                "Please select expense date"
+            );
+
+            return;
+        }
+
+        askUser();
+
+    },800);
 
     /* ================= COMMON ================= */
 
@@ -573,7 +612,7 @@ function startVoice(){
         );
     }
 
-    /* ================= ASK USER ================= */
+    /* ================= USER ================= */
 
     function askUser(){
 
@@ -633,8 +672,45 @@ function startVoice(){
                     );
                 }
 
+                /* AUTO SELECT USER */
+
                 currentUser =
                     selectedUser;
+
+                /* SELECT IN DROPDOWN */
+
+                const userSelect =
+
+                    document.getElementById(
+                        "userSelect"
+                    );
+
+                userSelect.value =
+                    selectedUser;
+
+                /* UPDATE UI */
+
+                document.getElementById(
+                    "currentUserName"
+                ).innerText =
+
+                `User : ${selectedUser}`;
+
+                /* SAVE CURRENT USER */
+
+                localStorage.setItem(
+
+                    "currentExpenseUser",
+
+                    selectedUser
+                );
+
+                console.log(
+                    "Selected User:",
+                    selectedUser
+                );
+
+                /* NEXT STEP */
 
                 setTimeout(()=>{
 
@@ -645,7 +721,7 @@ function startVoice(){
         );
     }
 
-    /* ================= ASK ITEM ================= */
+    /* ================= ITEM ================= */
 
     function askItem(){
 
@@ -663,7 +739,7 @@ function startVoice(){
         );
     }
 
-    /* ================= ASK AMOUNT ================= */
+    /* ================= AMOUNT ================= */
 
     function askAmount(){
 
@@ -692,14 +768,19 @@ function startVoice(){
                     return;
                 }
 
-                saveExpense(
+                /* AUTO FILL DATE */
 
-                    selectedUser,
+                document.getElementById(
+                    "item"
+                ).value =
+                    item;
 
-                    item,
+                document.getElementById(
+                    "price"
+                ).value =
+                    amount;
 
-                    amount
-                );
+                addExpense();
 
                 speak(
                     "Expense added successfully"
@@ -708,6 +789,9 @@ function startVoice(){
                 alert(
 
 `Expense Added
+
+Date:
+${dateInput.value}
 
 User:
 ${selectedUser}
