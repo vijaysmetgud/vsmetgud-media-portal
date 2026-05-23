@@ -12,10 +12,6 @@ let users =
 
 let expenses = [];
 
-let lastVoiceCommand = "";
-
-let voiceLock = false;
-
 /* ================= SAVE ================= */
 
 function getExpenseKey(user){
@@ -80,10 +76,33 @@ function speak(text){
     speech.volume =
         1;
 
-    speech.onend = ()=>{
+    const voices =
+
+        speechSynthesis
+        .getVoices();
+
+    const indianVoice =
+
+        voices.find(
+
+            voice =>
+
+            voice.lang ===
+            "en-IN"
+        );
+
+    if(indianVoice){
+
+        speech.voice =
+            indianVoice;
+    }
+
+    speech.onerror =
+    (e)=>{
 
         console.log(
-            "Speech finished"
+            "Speech error",
+            e
         );
     };
 
@@ -452,156 +471,255 @@ function editExpense(id){
 
 function startVoice(){
 
-    if(
+    const SpeechRecognition =
 
-        !currentUser &&
+        window.SpeechRecognition ||
 
-        users.length > 0
+        window.webkitSpeechRecognition;
 
-    ){
+    if(!SpeechRecognition){
 
         alert(
-            "Please add/select a user"
+            "Speech Recognition not supported"
         );
 
         return;
     }
 
-    try{
+    let selectedUser = "";
+    let item = "";
+    let amount = 0;
 
-        const SpeechRecognition =
+    askUser();
 
-            window.SpeechRecognition ||
+    /* ================= COMMON ================= */
 
-            window.webkitSpeechRecognition;
+    function speakThenListen(
+        message,
+        callback
+    ){
 
-        if(!SpeechRecognition){
+        speechSynthesis.cancel();
 
-            alert(
-                "Speech Recognition not supported in this browser"
+        const speech =
+
+            new SpeechSynthesisUtterance(
+                message
             );
 
-            return;
-        }
+        speech.lang =
+            "en-IN";
 
-        const recognition =
-            new SpeechRecognition();
+        speech.rate =
+            0.9;
 
-        recognition.lang = "en-IN";
+        speech.onend =
+        ()=>{
 
-        recognition.continuous = false;
+            const recognition =
+                new SpeechRecognition();
 
-        recognition.interimResults = false;
+            recognition.lang =
+                "en-IN";
 
-        recognition.maxAlternatives = 1;
+            recognition.continuous =
+                false;
 
-        document.getElementById(
-            "voiceStatus"
-        ).innerText =
-            "🎤 Listening...";
+            recognition.interimResults =
+                false;
 
-        recognition.start();
+            recognition.maxAlternatives =
+                1;
 
-        recognition.onstart = ()=>{
+            recognition.start();
 
-            console.log(
-                "Voice recognition started"
-            );
-        };
+            document.getElementById(
+                "voiceStatus"
+            ).innerText =
+                "🎤 Listening...";
 
-        recognition.onresult =
-        (event)=>{
+            recognition.onresult =
+            (event)=>{
 
-            recognition.stop();
+                recognition.stop();
 
-            const text =
+                const text =
 
-                event.results[0][0]
-                .transcript
-                .toLowerCase()
-                .trim();
+                    event
+                    .results[0][0]
+                    .transcript
+                    .trim();
 
-            console.log(
-                "Voice:",
-                text
-            );
+                document.getElementById(
+                    "voiceStatus"
+                ).innerText =
 
-            /* IGNORE DUPLICATES */
+                    "You said: " + text;
 
-            if(
+                callback(text);
+            };
 
-                voiceLock ||
+            recognition.onerror =
+            ()=>{
 
-                text === lastVoiceCommand
-            ){
-
-                console.log(
-                    "Duplicate voice ignored"
+                speak(
+                    "Could not hear properly"
                 );
-
-                return;
-            }
-
-            voiceLock = true;
-
-            lastVoiceCommand =
-                text;
-
-            document.getElementById(
-                "voiceStatus"
-            ).innerText =
-                "You said: " + text;
-
-            processVoiceExpense(
-                text
-            );
-
-            /* RELEASE LOCK */
-
-            setTimeout(()=>{
-
-                voiceLock = false;
-
-            },2000);
+            };
         };
 
-        recognition.onerror = (event)=>{
-
-            console.error(
-                "Speech error:",
-                event.error
-            );
-
-            document.getElementById(
-                "voiceStatus"
-            ).innerText =
-                "Error: " + event.error;
-
-            alert(
-                "Speech Error: " +
-                event.error
-            );
-        };
-
-        recognition.onend = ()=>{
-
-            console.log(
-                "Speech ended"
-            );
-
-            document.getElementById(
-                "voiceStatus"
-            ).innerText =
-                "🎤 Voice stopped";
-        };
-
+        speechSynthesis.speak(
+            speech
+        );
     }
 
-    catch(err){
+    /* ================= ASK USER ================= */
 
-        console.error(err);
+    function askUser(){
 
-        alert(err.message);
+        speakThenListen(
+
+            "Please add user",
+
+            (text)=>{
+
+                selectedUser =
+                    text.trim();
+
+                const existingUser =
+
+                    users.find(
+
+                        user =>
+
+                        user
+                        .toLowerCase()
+
+                        ===
+
+                        selectedUser
+                        .toLowerCase()
+                    );
+
+                if(existingUser){
+
+                    selectedUser =
+                        existingUser;
+
+                    speak(
+                        "User already exists"
+                    );
+                }
+
+                else{
+
+                    users.push(
+                        selectedUser
+                    );
+
+                    localStorage.setItem(
+
+                        "expenseUsers",
+
+                        JSON.stringify(
+                            users
+                        )
+                    );
+
+                    renderUsers();
+
+                    speak(
+                        "User added successfully"
+                    );
+                }
+
+                currentUser =
+                    selectedUser;
+
+                setTimeout(()=>{
+
+                    askItem();
+
+                },1000);
+            }
+        );
+    }
+
+    /* ================= ASK ITEM ================= */
+
+    function askItem(){
+
+        speakThenListen(
+
+            "Please say expense item",
+
+            (text)=>{
+
+                item =
+                    text.trim();
+
+                askAmount();
+            }
+        );
+    }
+
+    /* ================= ASK AMOUNT ================= */
+
+    function askAmount(){
+
+        speakThenListen(
+
+            "Please say amount",
+
+            (text)=>{
+
+                amount =
+
+                    Number(
+
+                        text.replace(
+                            /[^0-9]/g,
+                            ""
+                        )
+                    );
+
+                if(!amount){
+
+                    speak(
+                        "Invalid amount"
+                    );
+
+                    return;
+                }
+
+                saveExpense(
+
+                    selectedUser,
+
+                    item,
+
+                    amount
+                );
+
+                speak(
+                    "Expense added successfully"
+                );
+
+                alert(
+
+`Expense Added
+
+User:
+${selectedUser}
+
+Item:
+${item}
+
+Amount:
+₹${amount}`
+                );
+            }
+        );
     }
 }
 
