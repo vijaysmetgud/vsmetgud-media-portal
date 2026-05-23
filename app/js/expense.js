@@ -1561,169 +1561,211 @@ function renderFilteredExpenses(
 
 function splitExpense(){
 
-    const dateInput =
+    const selectedDate =
 
         document.getElementById(
             "date"
+        ).value;
+
+    if(!selectedDate){
+
+        alert(
+            "Please select split date from calendar"
         );
 
-    try{
-
-        dateInput.focus();
-
-        dateInput.showPicker?.();
-
+        return;
     }
 
-    catch(err){
+    if(users.length === 0){
 
-        console.log(
-            "Date picker fallback"
+        alert(
+            "Please add users first"
         );
+
+        return;
     }
 
-    /* WAIT FOR USER DATE */
+    const paidBy =
+        prompt(
+            "Who paid total amount?"
+        )
+        ?.trim();
 
-    dateInput.onchange =
-    ()=>{
+    if(!paidBy){
 
-        dateInput.onchange =
-            null;
+        alert(
+            "Please enter payer"
+        );
 
-        const selectedDate =
-            dateInput.value;
+        return;
+    }
 
-        if(!selectedDate){
+    let splitItems = [];
 
-            alert(
-                "Please select split date"
-            );
+    let grandTotal = 0;
 
-            return;
-        }
+    /* ================= MULTIPLE ITEMS ================= */
 
-        if(users.length === 0){
-
-            alert(
-                "Please add users first"
-            );
-
-            return;
-        }
+    while(true){
 
         const item =
             prompt(
-                "Expense item?"
+
+"Expense item? (Cancel to finish)"
+
             );
 
         if(!item){
 
-            return;
+            break;
         }
 
-        const totalAmount =
+        const amount =
             Number(
 
                 prompt(
-                    "Total amount?"
+                    `Amount for ${item}?`
                 )
             );
 
-        if(!totalAmount){
+        if(!amount){
 
             alert(
                 "Invalid amount"
             );
 
-            return;
+            continue;
         }
 
-        const paidBy =
-            prompt(
-                "Who paid total amount?"
-            )
-            ?.trim();
+        splitItems.push({
 
-        if(!paidBy){
-
-            alert(
-                "Please enter payer"
-            );
-
-            return;
-        }
-
-        let selectedUsers =
-            [];
-
-        users.forEach(user=>{
-
-            const include =
-                confirm(
-
-                    `Include ${user} in split?`
-                );
-
-            if(include){
-
-                selectedUsers.push(
-                    user
-                );
-            }
+            item,
+            amount
         });
 
-        if(
-            selectedUsers.length === 0
-        ){
+        grandTotal +=
+            amount;
 
-            alert(
-                "No users selected"
+        const more =
+            confirm(
+
+"Add another item?"
             );
 
-            return;
+        if(!more){
+
+            break;
         }
+    }
+
+    if(splitItems.length === 0){
+
+        alert(
+            "No split items added"
+        );
+
+        return;
+    }
+
+    alert(
+
+`${paidBy}
+
+spent
+
+₹${grandTotal}`
+    );
+
+    /* ================= SELECT USERS ================= */
+
+    let selectedUsers =
+        [];
+
+    users.forEach(user=>{
+
+        const include =
+            confirm(
+
+                `Include ${user} in split?`
+            );
+
+        if(include){
+
+            selectedUsers.push(
+                user
+            );
+        }
+    });
+
+    if(
+        selectedUsers.length === 0
+    ){
+
+        alert(
+            "No users selected"
+        );
+
+        return;
+    }
+
+    /* ================= SAVE EACH ITEM ================= */
+
+    splitItems.forEach(exp=>{
 
         saveSplitExpense(
 
-            item,
+            exp.item,
 
-            totalAmount,
+            exp.amount,
 
             selectedUsers,
 
             paidBy
         );
+    });
 
-        const splitAmount =
-            Math.round(
+    /* ================= SUCCESS ================= */
 
-                totalAmount /
-                selectedUsers.length
-            );
+    let itemsText = "";
 
-        alert(
+    splitItems.forEach(item=>{
+
+        itemsText +=
+
+`${item.item}
+₹${item.amount}
+
+`;
+    });
+
+    alert(
 
 `Split Successful
 
 Date:
 ${selectedDate}
 
-Item:
-${item}
-
 Paid By:
 ${paidBy}
 
+Items:
+
+${itemsText}
+
 Total:
-₹${totalAmount}
+₹${grandTotal}
 
 Users:
 ${selectedUsers.join(", ")}
 
-Each Pays:
-₹${splitAmount}`
-        );
-    };
+Each Split:
+₹${Math.round(
+
+grandTotal /
+selectedUsers.length
+
+)}`
+    );
 }
 
 function startSplitVoice(){
@@ -2010,6 +2052,55 @@ Each Pays:
     }
 }
 
+function saveSplitExpense(
+
+    item,
+
+    totalAmount,
+
+    selectedUsers,
+
+    paidBy
+){
+
+    const splitAmount =
+
+        Math.round(
+
+            totalAmount /
+
+            selectedUsers.length
+        );
+
+    const splitData = {
+
+        date:
+
+            document.getElementById(
+                "date"
+            ).value,
+
+        item,
+
+        total:
+            totalAmount,
+
+        paidBy,
+
+        users:
+            selectedUsers,
+
+        each:
+            splitAmount
+    };
+
+    saveSplitHistory(
+        splitData
+    );
+
+    renderSplitHistory();
+}
+
 function saveSplitHistory(splitData){
 
     let splitHistory =
@@ -2043,11 +2134,11 @@ function renderSplitHistory(){
         );
 
     if(!container){
-
         return;
     }
 
-    let splitHistory =
+    const splitHistory =
+
         JSON.parse(
 
             localStorage.getItem(
@@ -2058,66 +2149,340 @@ function renderSplitHistory(){
 
     container.innerHTML = "";
 
-    if(
-        splitHistory.length === 0
-    ){
+    if(splitHistory.length === 0){
 
         container.innerHTML =
 
         `
         <div class="expenseItem">
-
             No split expenses
-
         </div>
         `;
 
         return;
     }
 
-    splitHistory
-    .slice()
+    /* ================= GROUP BY DATE + USER ================= */
+
+    const grouped = {};
+
+    splitHistory.forEach(split=>{
+
+        const key =
+            `${split.date}_${split.paidBy}`;
+
+        if(!grouped[key]){
+
+            grouped[key] = {
+
+                date:
+                    split.date,
+
+                paidBy:
+                    split.paidBy,
+
+                totalSpent:0,
+
+                items:[],
+
+                rawOwes:[]
+            };
+        }
+
+        grouped[key]
+        .totalSpent +=
+            split.total;
+
+        grouped[key]
+        .items.push({
+
+            item:
+                split.item,
+
+            total:
+                split.total,
+
+            users:
+                split.users,
+
+            each:
+                split.each
+        });
+
+        split.users.forEach(user=>{
+
+            if(
+
+                user.toLowerCase()
+
+                !==
+
+                split.paidBy
+                .toLowerCase()
+
+            ){
+
+                const oweText =
+
+                `${user} owes ${split.paidBy} ₹${split.each}`;
+
+                if(
+
+                    !grouped[key]
+                    .rawOwes.includes(
+                        oweText
+                    )
+
+                ){
+
+                    grouped[key]
+                    .rawOwes.push(
+                        oweText
+                    );
+                }
+            }
+        });
+    });
+
+    /* ================= RENDER GROUPED HISTORY ================= */
+
+    Object.values(grouped)
     .reverse()
 
-    .forEach(split=>{
+    .forEach(group=>{
+
+        let itemsHtml = "";
+
+        group.items.forEach(item=>{
+
+            itemsHtml += `
+
+            <p>
+                🧾 ${item.item}
+                —
+                ₹${item.total}
+            </p>
+            `;
+        });
+
+        let owesHtml = "";
+
+        group.rawOwes.forEach(owe=>{
+
+            owesHtml +=
+
+            `
+            <p>
+                💸 ${owe}
+            </p>
+            `;
+        });
 
         container.innerHTML +=
 
         `
         <div class="expenseItem">
 
+            <h2>
+                📅 ${group.date}
+            </h2>
+
+            <hr>
+
             <h3>
-                ${split.item}
+                👤 ${group.paidBy} spent
             </h3>
 
-            <p>
-                Total :
-                ₹${split.total}
-            </p>
+            ${itemsHtml}
 
-            <p>
-                Date :
-                ${split.date}
-            </p>
-            
-            <p>
-                Paid By :
-                ${split.paidBy || "Unknown"}
-            </p>
+            <h3>
 
-            <p>
-                Split:
-                ${split.users.join(", ")}
-            </p>
+                Total Spent:
 
-            <h2>
-                Each :
-                ₹${split.each}
-            </h2>
+                ₹${group.totalSpent}
+
+            </h3>
+
+            <hr>
+
+            <h3>
+                💸 Raw Owes
+            </h3>
+
+            ${owesHtml}
 
         </div>
         `;
     });
+
+    /* ================= NET OUTSTANDING ================= */
+
+    const balances = {};
+
+    users.forEach(user=>{
+
+        balances[user] = 0;
+    });
+
+    splitHistory.forEach(split=>{
+
+        split.users.forEach(user=>{
+
+            if(
+
+                user.toLowerCase()
+
+                !==
+
+                split.paidBy
+                .toLowerCase()
+
+            ){
+
+                balances[user] -=
+                    split.each;
+
+                balances[
+                    split.paidBy
+                ] += split.each;
+            }
+        });
+    });
+
+    const creditors = [];
+    const debtors = [];
+
+    Object.entries(
+        balances
+    )
+
+    .forEach(([user,balance])=>{
+
+        if(balance > 0){
+
+            creditors.push({
+
+                user,
+
+                amount:
+                    balance
+            });
+        }
+
+        else if(balance < 0){
+
+            debtors.push({
+
+                user,
+
+                amount:
+                    Math.abs(balance)
+            });
+        }
+    });
+
+    let tableHtml =
+
+    `
+    <hr>
+
+    <h2>
+        💰 Net Outstanding Owes
+    </h2>
+
+    <table
+    style="
+        width:100%;
+        border-collapse:collapse;
+        text-align:center;
+    "
+    >
+
+    <tr>
+        <th>From User</th>
+        <th>To User</th>
+        <th>Amount</th>
+    </tr>
+    `;
+
+    debtors.forEach(debtor=>{
+
+        creditors.forEach(creditor=>{
+
+            if(
+
+                debtor.amount <= 0 ||
+
+                creditor.amount <= 0
+            ){
+                return;
+            }
+
+            const payment =
+
+                Math.min(
+
+                    debtor.amount,
+
+                    creditor.amount
+                );
+
+            tableHtml +=
+
+            `
+            <tr>
+
+                <td>
+                    ${debtor.user}
+                </td>
+
+                <td>
+                    ${creditor.user}
+                </td>
+
+                <td>
+                    ₹${payment}
+                </td>
+
+            </tr>
+            `;
+
+            debtor.amount -=
+                payment;
+
+            creditor.amount -=
+                payment;
+        });
+    });
+
+    if(
+
+        creditors.length === 0 ||
+
+        debtors.length === 0
+    ){
+
+        tableHtml +=
+
+        `
+        <tr>
+
+            <td colspan="3">
+
+                ✅ No outstanding balance
+
+            </td>
+
+        </tr>
+        `;
+    }
+
+    tableHtml +=
+        `</table>`;
+
+    container.innerHTML +=
+        tableHtml;
+
 }
 
 /* ================= FINAL SETTLEMENT ================= */
@@ -2201,7 +2566,7 @@ function showSettlement(){
         <hr>
 
         <h2>
-            💸 Who Owes
+            💸 Raw Owes
         </h2>
 
         ${result.oweHtml}
@@ -2223,173 +2588,150 @@ Total split expense ${result.total} rupees`
 
 function getSettlementData(){
 
-    let allExpenses = [];
+    const splitHistory =
 
-    users.forEach(user=>{
+        JSON.parse(
 
-        const userExpenses =
+            localStorage.getItem(
+                "splitHistory"
+            )
 
-            JSON.parse(
+        ) || [];
 
-                localStorage.getItem(
-                    getExpenseKey(user)
-                )
+    if(splitHistory.length === 0){
 
-            ) || [];
+        return {
 
-        allExpenses.push(
-            ...userExpenses
-        );
-    });
+            total:0,
 
-    const splitExpenses =
+            spentHtml:"",
 
-        allExpenses.filter(
-            exp => exp.split
-        );
+            oweHtml:""
+        };
+    }
 
+    const balances = {};
     const spent = {};
 
     users.forEach(user=>{
 
+        balances[user] = 0;
         spent[user] = 0;
     });
 
-    /* ONLY SPLIT EXPENSES */
-
-    splitExpenses.forEach(exp=>{
-
-        spent[exp.user] +=
-            exp.price;
-    });
-
-    const balances = {};
-
-    users.forEach(user=>{
-
-        balances[user] = 0;
-    });
-
     let total = 0;
-
-    /* SPLIT-WISE CALCULATION */
-
-    splitExpenses.forEach(exp=>{
-
-        total += exp.price;
-
-        const each =
-            exp.each;
-
-        /* payer paid full amount */
-
-        balances[exp.user] +=
-            exp.price;
-
-        /* every participant owes share */
-
-        exp.splitUsers.forEach(user=>{
-
-            balances[user] -= each;
-        });
-    });
     let spentHtml = "";
+    let rawOwesHtml = "";
 
-    let oweHtml = "";
+    /* ================= RAW HISTORY ================= */
 
-    users.forEach(user=>{
+    splitHistory.forEach(split=>{
 
-        const userExpenses =
+        total += split.total;
 
-            splitExpenses.filter(
-
-                exp =>
-                    exp.user === user
-            );
-
-        let itemsHtml = "";
-
-        userExpenses.forEach(exp=>{
-
-            itemsHtml += `
-
-            <div
-                style="
-                    margin-bottom:15px;
-                    padding:12px;
-                    background:#1e293b;
-                    border-radius:12px;
-                "
-            >
-
-                <p>
-                    📅 ${exp.date}
-                </p>
-
-                <p>
-                    🧾 ${exp.item}
-                </p>
-
-                <p>
-                    💰 ₹${exp.price}
-                </p>
-
-                ${
-                    exp.split
-                    ?
-
-                    `<p>
-                        👥 Split:
-                        ${exp.splitUsers.join(", ")}
-                    </p>
-
-                    <p>
-                        💵 Each:
-                        ₹${exp.each}
-                    </p>`
-                    :
-
-                    ""
-                }
-
-            </div>
-            `;
-        });
+        spent[split.paidBy] +=
+            split.total;
 
         spentHtml += `
 
         <div class="settlementItem">
 
             <h3>
-                👤 ${user}
+                👤 ${split.paidBy}
             </h3>
 
-            ${itemsHtml}
+            <p>
+                📅 ${split.date}
+            </p>
 
-            <hr>
+            <p>
+                🧾 ${split.item}
+            </p>
 
-            <b>
-                Total Spent:
-                ₹${spent[user]}
-            </b>
+            <p>
+                💰 ₹${split.total}
+            </p>
+
+            <p>
+                👥 ${split.users.join(", ")}
+            </p>
 
         </div>
         `;
+
+        split.users.forEach(user=>{
+
+            if(
+
+                user.toLowerCase()
+
+                !==
+
+                split.paidBy.toLowerCase()
+
+            ){
+
+                rawOwesHtml += `
+
+                <div class="settlementItem owe">
+
+                    <h3>
+
+                        💸 ${user}
+
+                        owes
+
+                        ${split.paidBy}
+
+                    </h3>
+
+                    <h2>
+
+                        ₹${split.each}
+
+                    </h2>
+
+                    <p>
+
+                        📅 ${split.date}
+
+                    </p>
+
+                    <p>
+
+                        🧾 ${split.item}
+
+                    </p>
+
+                </div>
+                `;
+
+                balances[user] -=
+                    split.each;
+
+                balances[
+                    split.paidBy
+                ] += split.each;
+            }
+        });
     });
+
+    /* ================= NET OUTSTANDING ================= */
 
     const creditors = [];
     const debtors = [];
 
-    users.forEach(user=>{
+    Object.entries(
+        balances
+    )
 
-        const balance =
-            balances[user];
+    .forEach(([user,balance])=>{
 
         if(balance > 0){
 
             creditors.push({
 
-                user:user,
+                user,
 
                 amount:balance
             });
@@ -2399,7 +2741,7 @@ function getSettlementData(){
 
             debtors.push({
 
-                user:user,
+                user,
 
                 amount:
                     Math.abs(balance)
@@ -2407,20 +2749,47 @@ function getSettlementData(){
         }
     });
 
+    let netHtml =
+
+    `
+    <hr>
+
+    <h2>
+        💰 Net Outstanding Owes
+    </h2>
+
+    <table
+    style="
+        width:100%;
+        text-align:center;
+        border-collapse:collapse;
+    "
+    >
+
+    <tr>
+        <th>From User</th>
+        <th>To User</th>
+        <th>Amount</th>
+    </tr>
+    `;
+
     debtors.forEach(debtor=>{
 
         creditors.forEach(creditor=>{
 
             if(
+
                 debtor.amount <= 0 ||
 
                 creditor.amount <= 0
+
             ){
 
                 return;
             }
 
             const payment =
+
                 Math.min(
 
                     debtor.amount,
@@ -2428,64 +2797,23 @@ function getSettlementData(){
                     creditor.amount
                 );
 
-            const creditorExpenses =
+            netHtml += `
 
-                splitExpenses.filter(
+            <tr>
 
-                    exp =>
-                        exp.user ===
-                        creditor.user
-                );
+                <td>
+                    ${debtor.user}
+                </td>
 
-            let expenseInfo = "";
-
-            creditorExpenses.forEach(exp=>{
-
-                expenseInfo += `
-
-                <p>
-
-                    📅 ${exp.date}
-
-                    —
-
-                    ${exp.item}
-
-                    —
-
-                    ₹${exp.price}
-
-                </p>
-                `;
-            });
-
-            oweHtml += `
-
-            <div class="settlementItem owe">
-
-                <h3>
-
-                    💸 ${debtor.user}
-
-                    owes
-
+                <td>
                     ${creditor.user}
+                </td>
 
-                </h3>
-
-                <h2>
-
+                <td>
                     ₹${payment}
+                </td>
 
-                </h2>
-
-                <p>
-                    For:
-                </p>
-
-                ${expenseInfo}
-
-            </div>
+            </tr>
             `;
 
             debtor.amount -=
@@ -2496,18 +2824,21 @@ function getSettlementData(){
         });
     });
 
+    netHtml +=
+        `</table>`;
+
     return {
 
         total,
 
-        eachShare:
-            "Dynamic",
-
         spentHtml,
 
-        oweHtml
+        oweHtml:
+            rawOwesHtml +
+            netHtml
     };
 }
+
 function downloadSettlementReport(){
 
     const result =
@@ -2521,9 +2852,6 @@ function downloadSettlementReport(){
 
 TOTAL:
 ₹${result.total}
-
-EACH SHARE:
-₹${result.eachShare}
 
 `;
 
@@ -2576,9 +2904,6 @@ function shareSettlementWhatsApp(){
 TOTAL:
 ₹${result.total}
 
-EACH SHARE:
-₹${result.eachShare}
-
 ${result.oweHtml
 .replace(/<[^>]*>/g,"")}
 `
@@ -2609,9 +2934,6 @@ function sendSettlementEmail(){
 
 TOTAL:
 ₹${result.total}
-
-EACH SHARE:
-₹${result.eachShare}
 
 ${result.oweHtml
 .replace(/<[^>]*>/g,"")}
@@ -2714,7 +3036,14 @@ loadUsers();
 
 if(users.length === 0){
 
-    addNewUser();
+    document.getElementById(
+        "currentUserName"
+    ).innerText =
+        "User : Not Selected";
+
+    speak(
+        "Please add a user"
+    );
 }
 
 else{
