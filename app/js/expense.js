@@ -1585,12 +1585,41 @@ function splitExpense(){
         return;
     }
 
-    const paidBy =
+    let paidBy =
         prompt(
             "Who paid total amount?"
         )
         ?.trim();
 
+    if(!paidBy){
+
+        alert(
+            "Please enter payer"
+        );
+
+        return;
+    }
+
+    /* MATCH EXISTING USER */
+
+    const matchedUser =
+
+        users.find(
+
+            user =>
+
+            user.toLowerCase()
+
+            ===
+
+            paidBy.toLowerCase()
+        );
+
+    if(matchedUser){
+
+        paidBy =
+            matchedUser;
+    }
     if(!paidBy){
 
         alert(
@@ -1765,7 +1794,24 @@ grandTotal /
 selectedUsers.length
 
 )}`
-    );
+);
+
+/* REFRESH UI */
+
+loadExpenses();
+
+renderExpenses();
+
+renderSplitHistory();
+
+/* OPEN RESULT */
+
+setTimeout(()=>{
+
+    showSettlement();
+
+},200);
+
 }
 
 function startSplitVoice(){
@@ -2075,7 +2121,6 @@ function saveSplitExpense(
     const splitData = {
 
         date:
-
             document.getElementById(
                 "date"
             ).value,
@@ -2094,11 +2139,16 @@ function saveSplitExpense(
             splitAmount
     };
 
+    /* SAVE */
+
     saveSplitHistory(
         splitData
     );
 
-    renderSplitHistory();
+    console.log(
+        "Split Saved:",
+        splitData
+    );
 }
 
 function saveSplitHistory(splitData){
