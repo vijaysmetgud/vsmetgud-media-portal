@@ -403,3 +403,317 @@ canvas{
         0 0 30px
         rgba(220,38,38,0.5);
 }
+
+/* ================= SHOW EXPENSE FOR ================= */
+
+.expenseFilterCard{
+
+    margin-top:30px;
+
+    background:#111827;
+
+    border-radius:20px;
+
+    padding:25px;
+
+    box-shadow:
+        0 0 25px
+        rgba(0,0,0,0.3);
+}
+
+.expenseFilterCard h2{
+
+    margin-bottom:20px;
+
+    text-align:center;
+}
+
+.expenseFilterRow{
+
+    display:grid;
+
+    grid-template-columns:
+        180px 1fr;
+
+    align-items:center;
+
+    gap:20px;
+
+    padding:18px 22px;
+
+    margin-bottom:12px;
+
+    border-radius:16px;
+
+    background:#1e293b;
+
+    cursor:pointer;
+
+    transition:0.3s;
+}
+
+.expenseFilterRow:hover{
+
+    transform:
+        translateY(-2px);
+
+    background:#2563eb;
+}
+
+.expenseFilterRow span:first-child{
+
+    font-weight:bold;
+
+    font-size:18px;
+
+    color:#60a5fa;
+}
+
+.expenseFilterRow span:last-child{
+
+    opacity:0.9;
+
+    text-align:left;
+
+    color:#cbd5e1;
+}
+
+/* ================= MOBILE FIX ================= */
+
+*{
+
+    box-sizing:border-box;
+}
+
+html,
+body{
+
+    width:100%;
+
+    overflow-x:hidden;
+}
+
+body{
+
+    margin:0;
+
+    padding:12px;
+}
+
+.container{
+
+    width:100%;
+
+    max-width:900px;
+
+    margin:auto;
+
+    padding:0;
+
+    overflow:hidden;
+}
+
+/* INPUTS */
+
+input,
+select{
+
+    width:100%;
+
+    max-width:100%;
+}
+
+/* USER SECTION */
+
+.userSection{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:10px;
+}
+
+.userSection select,
+.userSection button{
+
+    flex:1 1 150px;
+
+    min-width:0;
+}
+
+/* BUTTON ROW */
+
+.buttonRow{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:10px;
+}
+
+.buttonRow button{
+
+    flex:1 1 180px;
+
+    min-width:0;
+}
+
+/* ACTION BUTTONS */
+
+.topActionButtons{
+
+    width:100%;
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:10px;
+}
+
+.topActionButtons button{
+
+    flex:1 1 180px;
+
+    min-width:0;
+}
+
+/* SHOW EXPENSE CARD */
+
+.expenseFilterRow{
+
+    display:grid;
+
+    grid-template-columns:
+        130px 1fr;
+
+    gap:12px;
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+    body{
+
+        padding:8px;
+    }
+
+    .container{
+
+        width:100%;
+
+        max-width:100%;
+    }
+
+    h1{
+
+        font-size:24px;
+
+        text-align:center;
+    }
+
+    /* STACK USER SECTION */
+
+    .userSection{
+
+        flex-direction:
+            column;
+    }
+
+    .userSection select,
+    .userSection button{
+
+        width:100%;
+    }
+
+    /* STACK FORM BUTTONS */
+
+    .buttonRow{
+
+        flex-direction:
+            column;
+    }
+
+    .buttonRow button{
+
+        width:100%;
+
+        flex:none;
+    }
+
+    /* STACK ACTION BUTTONS */
+
+    .topActionButtons{
+
+        flex-direction:
+            column;
+
+        padding:12px;
+    }
+
+    .topActionButtons button{
+
+        width:100%;
+
+        min-width:0;
+
+        flex:none;
+    }
+
+    /* SUMMARY CARDS */
+
+    .summary{
+
+        grid-template-columns:
+            1fr;
+    }
+
+    /* FILTER CARD */
+
+    .expenseFilterRow{
+
+        grid-template-columns:
+            1fr;
+
+        text-align:center;
+
+        gap:8px;
+    }
+
+    .expenseFilterRow span{
+
+        text-align:center;
+    }
+
+    /* CHARTS */
+
+    .chartContainer{
+
+        width:100%;
+
+        height:280px;
+
+        overflow:hidden;
+    }
+
+    canvas{
+
+        max-width:100% !important;
+
+        height:100% !important;
+    }
+
+    /* SETTLEMENT MODAL */
+
+    .settlementCard{
+
+        width:95%;
+
+        max-width:95%;
+
+        padding:16px;
+    }
+}

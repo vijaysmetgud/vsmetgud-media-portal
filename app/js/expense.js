@@ -646,25 +646,40 @@ function processVoiceExpense(text){
 
     /* ================= ADD USER ================= */
 
+    /* ================= ADD USER ================= */
+
     if(
 
-        text.includes("add user")
+        text.startsWith(
+            "add user"
+        )
 
         ||
 
-        text.includes("new user")
-
+        text.startsWith(
+            "new user"
+        )
     ){
+
+        console.log(
+            "Voice add user:",
+            text
+        );
 
         let userName = text
 
             .replace(
-                "add user",
+                /^add user/i,
                 ""
             )
 
             .replace(
-                "new user",
+                /^new user/i,
+                ""
+            )
+
+            .replace(
+                /[^a-zA-Z ]/g,
                 ""
             )
 
@@ -683,7 +698,7 @@ function processVoiceExpense(text){
             userName
         );
 
-        return;
+        return; // VERY IMPORTANT
     }
 
     /* ================= SPLIT SHARE ================= */
@@ -796,6 +811,41 @@ function processVoiceExpense(text){
 
         return;
     }
+
+
+    /* IGNORE COMMANDS */
+
+    if(
+
+        text.includes("user")
+
+        ||
+
+        text.includes("settlement")
+
+        ||
+
+        text.includes("split")
+
+        ||
+
+        text.includes("expenses")
+
+        ||
+
+        text.includes("today")
+
+        ||
+
+        text.includes("month")
+
+        ||
+
+        text.includes("year")
+    ){
+
+        return;
+    } 
 
     /* CLEAN EXTRA SPACES */
 
@@ -1181,6 +1231,57 @@ function getExpensesByDate(){
     );
 }
 
+/* ================= SHOW EXPENSE WINDOW ================= */
+
+function openExpenseFilterWindow(){
+
+    const choice =
+        prompt(
+
+`Show Expenses For
+
+1 = Today
+2 = Month
+3 = Year
+4 = All
+5 = Select Date`
+        );
+
+    switch(choice){
+
+        case "1":
+
+            showTodayExpenses();
+            break;
+
+        case "2":
+
+            showMonthlyExpenses();
+            break;
+
+        case "3":
+
+            showYearlyExpenses();
+            break;
+
+        case "4":
+
+            showAllExpenses();
+            break;
+
+        case "5":
+
+            getExpensesByDate();
+            break;
+
+        default:
+
+            speak(
+                "Invalid selection"
+            );
+    }
+}
+
 /* ================= FILTERED RENDER ================= */
 
 function renderFilteredExpenses(
@@ -1242,6 +1343,8 @@ function renderFilteredExpenses(
 
 /* ================= SPLIT EXPENSES ================= */
 
+/* ================= SPLIT EXPENSES ================= */
+
 function splitExpense(){
 
     const dateInput =
@@ -1250,13 +1353,27 @@ function splitExpense(){
             "date"
         );
 
-    /* AUTO OPEN CALENDAR */
+    /* RESET OLD EVENTS */
 
-    dateInput.showPicker?.();
+    dateInput.onchange =
+        null;
 
-    alert(
-        "Please select split date"
-    );
+    /* OPEN CALENDAR */
+
+    try{
+
+        dateInput.focus();
+
+        dateInput.showPicker?.();
+
+    }
+
+    catch(err){
+
+        console.log(
+            "Date picker fallback"
+        );
+    }
 
     /* WAIT FOR DATE */
 
@@ -1271,151 +1388,120 @@ function splitExpense(){
 
         if(!selectedDate){
 
-            alert(
-                "Please select date"
-            );
-
-            return;
-        }
-
-        if(users.length === 0){
-
-            alert(
-                "Please add users first"
-            );
-
-            return;
-        }
-
-        const item =
-            prompt(
-                "Expense item?"
-            );
-
-        if(!item){
-
-            return;
-        }
-
-        const totalAmount =
-            Number(
-
-                prompt(
-                    "Total amount?"
-                )
-            );
-
-        if(!totalAmount){
-
-            return;
-        }
-
-        const paidBy =
-            prompt(
-                "Who paid total amount?"
-            )
-            ?.trim();
-
-        if(!paidBy){
-
             speak(
-                "Please enter who paid"
+                "Please select split date"
             );
 
             return;
         }
 
-        let selectedUsers =
-            [];
-
-        users.forEach(user=>{
-
-            const include =
-                confirm(
-
-                    `Include ${user} in split?`
-                );
-
-            if(include){
-
-                selectedUsers.push(
-                    user
-                );
-            }
-        });
-
-        const newUser =
-            prompt(
-
-                "Add another user? (optional)"
-            );
-
-        if(newUser){
-
-            const cleanName =
-                newUser.trim();
-
-            if(
-
-                !users.some(
-
-                    u =>
-
-                    u.toLowerCase() ===
-                    cleanName.toLowerCase()
-                )
-            ){
-
-                users.push(
-                    cleanName
-                );
-
-                selectedUsers.push(
-                    cleanName
-                );
-
-                localStorage.setItem(
-
-                    "expenseUsers",
-
-                    JSON.stringify(
-                        users
-                    )
-                );
-            }
-        }
-
-        if(
-            selectedUsers.length === 0
-        ){
-
-            alert(
-                "No users selected"
-            );
-
-            return;
-        }
-
-        saveSplitExpense(
-
-            item,
-
-            totalAmount,
-
-            selectedUsers,
-
-            paidBy
+        continueSplitExpense(
+            selectedDate
         );
+    };
+}
 
-        const splitAmount =
-            Math.round(
+function continueSplitExpense(
+    selectedDate
+){
 
-                totalAmount /
-
-                selectedUsers.length
-            );
+    if(users.length === 0){
 
         alert(
+            "Please add users first"
+        );
+
+        return;
+    }
+
+    const item =
+        prompt(
+            "Expense item?"
+        );
+
+    if(!item){
+
+        return;
+    }
+
+    const totalAmount =
+        Number(
+
+            prompt(
+                "Total amount?"
+            )
+        );
+
+    if(!totalAmount){
+
+        return;
+    }
+
+    const paidBy =
+        prompt(
+            "Who paid total amount?"
+        )
+        ?.trim()
+        .toLowerCase();
+
+    if(!paidBy){
+
+        speak(
+            "Please enter who paid"
+        );
+
+        return;
+    }
+
+    let selectedUsers =
+        [];
+
+    users.forEach(user=>{
+
+        const include =
+            confirm(
+
+                `Include ${user} in split?`
+            );
+
+        if(include){
+
+            selectedUsers.push(
+                user
+            );
+        }
+    });
+
+    if(
+        selectedUsers.length === 0
+    ){
+
+        alert(
+            "No users selected"
+        );
+
+        return;
+    }
+
+    saveSplitExpense(
+
+        item,
+
+        totalAmount,
+
+        selectedUsers,
+
+        paidBy
+    );
+
+    const splitAmount =
+        Math.round(
+
+            totalAmount /
+            selectedUsers.length
+        );
+
+    alert(
 
 `Split Successful
 
@@ -1437,20 +1523,9 @@ ${selectedUsers.join(", ")}
 Each Pays:
 ₹${splitAmount}`
 
-        );
-
-        /* RESET */
-
-        dateInput.onchange =
-            null;
-    };
-}
-
-function processSplitVoice(){
-
-    speak(
-        "Please use split voice button"
     );
+}
+function processSplitVoice(text){
 
     startSplitVoice();
 }
@@ -1606,33 +1681,70 @@ function saveSplitExpense(
 
 function startSplitVoice(){
 
-    const selectedDate =
+    const dateInput =
 
         document.getElementById(
             "date"
         );
 
-    if(!selectedDate.value){
+    /* RESET EVENTS */
 
-        selectedDate.showPicker?.();
+    dateInput.onchange =
+        null;
 
-        alert(
-            "Please select split date"
-        );
+    try{
 
-        selectedDate.onchange =
-        ()=>{
+        dateInput.focus();
 
-            selectedDate.onchange =
-                null;
+        dateInput.showPicker?.();
 
-            startSplitVoice();
-        };
-
-        return;
     }
 
-    speechSynthesis.cancel();
+    catch(err){
+
+        console.log(
+            "Date picker fallback"
+        );
+    }
+
+    /* WAIT FOR DATE */
+
+    dateInput.onchange =
+    ()=>{
+
+        dateInput.onchange =
+            null;
+
+        const selectedDate =
+            dateInput.value;
+
+        if(!selectedDate){
+
+            alert(
+                "Please select split date"
+            );
+
+            return;
+        }
+
+        console.log(
+            "Split date selected:",
+            selectedDate
+        );
+
+        /* SPEAK AFTER DATE */
+
+        speechSynthesis.cancel();
+
+        setTimeout(()=>{
+
+            startSplitVoiceFlow();
+
+        },300);
+    };
+}
+
+function startSplitVoiceFlow(){
 
     const SpeechRecognition =
 
@@ -1649,280 +1761,317 @@ function startSplitVoice(){
         return;
     }
 
-    /* ================= ASK USERS ================= */
+    let selectedUsers = [];
+    let item = "";
+    let amount = 0;
+    let paidBy = "";
 
-    const speech1 =
-        new SpeechSynthesisUtterance(
+    let isProcessing =
+        false;
+
+    askUsers();
+
+    /* ================= USERS ================= */
+
+    function askUsers(){
+
+        speak(
             "Please say users"
         );
 
-    speech1.lang = "en-IN";
+        setTimeout(()=>{
 
-    speech1.onend = ()=>{
+            const recognition =
+                new SpeechRecognition();
 
-        const userRecognition =
-            new SpeechRecognition();
-
-        userRecognition.lang =
-            "en-IN";
-
-        userRecognition.continuous =
-            false;
-
-        userRecognition.interimResults =
-            false;
-
-        userRecognition.maxAlternatives =
-            1;
-
-        userRecognition.start();
-
-        userRecognition.onerror =
-        ()=>{
-
-            speak(
-                "Could not hear users"
-            );
-        };
-
-        userRecognition.onresult =
-        function(event){
-
-            userRecognition.stop();
-
-            const userText =
-
-                event.results[0][0]
-                .transcript
-                .toLowerCase()
-                .trim();
-
-            const selectedUsers =
-
-                userText
-                .replace(/,/g," ")
-
-                .split(" ")
-
-                .filter(Boolean);
-
-            /* ================= ASK ITEM ================= */
-
-            const speech2 =
-                new SpeechSynthesisUtterance(
-                    "Please say expense item"
-                );
-
-            speech2.lang =
+            recognition.lang =
                 "en-IN";
 
-            speech2.onend = ()=>{
+            recognition.continuous =
+                false;
 
-                const itemRecognition =
-                    new SpeechRecognition();
+            recognition.interimResults =
+                false;
 
-                itemRecognition.lang =
-                    "en-IN";
+            recognition.maxAlternatives =
+                1;
 
-                itemRecognition.continuous =
+            recognition.start();
+
+            recognition.onresult =
+            (event)=>{
+
+                if(isProcessing){
+
+                    return;
+                }
+
+                isProcessing =
+                    true;
+
+                recognition.stop();
+
+                selectedUsers =
+
+                    event
+                    .results[0][0]
+                    .transcript
+                    .toLowerCase()
+                    .trim()
+                    .replace(/,/g," ")
+                    .split(" ")
+                    .filter(Boolean);
+
+                console.log(
+                    "Users:",
+                    selectedUsers
+                );
+
+                isProcessing =
                     false;
 
-                itemRecognition.interimResults =
-                    false;
-
-                itemRecognition.maxAlternatives =
-                    1;
-
-                itemRecognition.start();
-
-                itemRecognition.onerror =
-                ()=>{
-
-                    speak(
-                        "Could not hear expense item"
-                    );
-                };
-
-                itemRecognition.onresult =
-                function(itemEvent){
-
-                    itemRecognition.stop();
-
-                    const item =
-
-                        itemEvent
-                        .results[0][0]
-                        .transcript
-                        .trim();
-
-                    /* ================= ASK AMOUNT ================= */
-
-                    const speech3 =
-                        new SpeechSynthesisUtterance(
-                            "Please say amount"
-                        );
-
-                    speech3.lang =
-                        "en-IN";
-
-                    speech3.onend = ()=>{
-
-                        const amountRecognition =
-                            new SpeechRecognition();
-
-                        amountRecognition.lang =
-                            "en-IN";
-
-                        amountRecognition.continuous =
-                            false;
-
-                        amountRecognition.interimResults =
-                            false;
-
-                        amountRecognition.maxAlternatives =
-                            1;
-
-                        amountRecognition.start();
-
-                        amountRecognition.onerror =
-                        ()=>{
-
-                            speak(
-                                "Could not hear amount"
-                            );
-                        };
-
-                        amountRecognition.onresult =
-                        function(amountEvent){
-
-                            amountRecognition.stop();
-
-                            const amount =
-
-                                Number(
-
-                                    amountEvent
-                                    .results[0][0]
-                                    .transcript
-                                    .replace(
-                                        /[^0-9]/g,
-                                        ""
-                                    )
-                                );
-
-                            if(!amount){
-
-                                speak(
-                                    "Could not understand amount"
-                                );
-
-                                return;
-                            }
-
-                            const speech4 =
-                                new SpeechSynthesisUtterance(
-                                    "Who paid the total amount"
-                                );
-
-                            speech4.lang =
-                                "en-IN";
-
-                            speech4.onend = ()=>{
-
-                                const payerRecognition =
-                                    new SpeechRecognition();
-
-                                payerRecognition.lang =
-                                    "en-IN";
-
-                                payerRecognition.start();
-
-                                payerRecognition.onresult =
-                                function(payEvent){
-
-                                    payerRecognition.stop();
-
-                                    const paidBy =
-
-                                        payEvent
-                                        .results[0][0]
-                                        .transcript
-                                        .trim()
-                                        .toLowerCase();
-
-                                    saveSplitExpense(
-
-                                        item,
-
-                                        amount,
-
-                                        selectedUsers,
-
-                                        paidBy
-                                    );
-
-                                    const splitAmount =
-
-                                        Math.round(
-
-                                            amount /
-                                            selectedUsers.length
-                                        );
-
-                                    alert(
-
-                                `Split Successful
-
-                                Date:
-                                ${document.getElementById("date").value}
-
-                                Item:
-                                ${item}
-
-                                Paid By:
-                                ${paidBy}
-
-                                Total:
-                                ₹${amount}
-
-                                Users:
-                                ${selectedUsers.join(", ")}
-
-                                Each Pays:
-                                ₹${splitAmount}`
-
-                                    );
-
-                                    speak(
-
-                                `${item} split among ${selectedUsers.length} users`
-                                    );
-                                };
-                            };
-
-                            speechSynthesis.speak(
-                                speech4
-                            );                        
-
-                            
-                        };
-                    };
-
-                    speechSynthesis.speak(
-                        speech3
-                    );
-                };
+                askItem();
             };
 
-            speechSynthesis.speak(
-                speech2
-            );
-        };
-    };
+        },1200);
+    }
 
-    speechSynthesis.speak(
-        speech1
-    );
+    /* ================= ITEM ================= */
+
+    function askItem(){
+
+        speak(
+            "Please say expense item"
+        );
+
+        setTimeout(()=>{
+
+            const recognition =
+                new SpeechRecognition();
+
+            recognition.lang =
+                "en-IN";
+
+            recognition.continuous =
+                false;
+
+            recognition.interimResults =
+                false;
+
+            recognition.maxAlternatives =
+                1;
+
+            recognition.start();
+
+            recognition.onresult =
+            (event)=>{
+
+                if(isProcessing){
+
+                    return;
+                }
+
+                isProcessing =
+                    true;
+
+                recognition.stop();
+
+                item =
+
+                    event
+                    .results[0][0]
+                    .transcript
+                    .trim();
+
+                console.log(
+                    "Item:",
+                    item
+                );
+
+                isProcessing =
+                    false;
+
+                askAmount();
+            };
+
+        },1200);
+    }
+
+    /* ================= AMOUNT ================= */
+
+    function askAmount(){
+
+        speak(
+            "Please say amount"
+        );
+
+        setTimeout(()=>{
+
+            const recognition =
+                new SpeechRecognition();
+
+            recognition.lang =
+                "en-IN";
+
+            recognition.continuous =
+                false;
+
+            recognition.interimResults =
+                false;
+
+            recognition.maxAlternatives =
+                1;
+
+            recognition.start();
+
+            recognition.onresult =
+            (event)=>{
+
+                if(isProcessing){
+
+                    return;
+                }
+
+                isProcessing =
+                    true;
+
+                recognition.stop();
+
+                amount =
+
+                    Number(
+
+                        event
+                        .results[0][0]
+                        .transcript
+                        .replace(
+                            /[^0-9]/g,
+                            ""
+                        )
+                    );
+
+                if(!amount){
+
+                    isProcessing =
+                        false;
+
+                    speak(
+                        "Could not understand amount"
+                    );
+
+                    return;
+                }
+
+                console.log(
+                    "Amount:",
+                    amount
+                );
+
+                isProcessing =
+                    false;
+
+                askPayer();
+            };
+
+        },1200);
+    }
+
+    /* ================= PAYER ================= */
+
+    function askPayer(){
+
+        speak(
+            "Who paid total amount"
+        );
+
+        setTimeout(()=>{
+
+            const recognition =
+                new SpeechRecognition();
+
+            recognition.lang =
+                "en-IN";
+
+            recognition.continuous =
+                false;
+
+            recognition.interimResults =
+                false;
+
+            recognition.maxAlternatives =
+                1;
+
+            recognition.start();
+
+            recognition.onresult =
+            (event)=>{
+
+                if(isProcessing){
+
+                    return;
+                }
+
+                isProcessing =
+                    true;
+
+                recognition.stop();
+
+                paidBy =
+
+                    event
+                    .results[0][0]
+                    .transcript
+                    .trim()
+                    .toLowerCase();
+
+                saveSplitExpense(
+
+                    item,
+
+                    amount,
+
+                    selectedUsers,
+
+                    paidBy
+                );
+
+                const splitAmount =
+                    Math.round(
+
+                        amount /
+
+                        selectedUsers.length
+                    );
+
+                alert(
+
+`Split Successful
+
+Date:
+${document.getElementById("date").value}
+
+Item:
+${item}
+
+Paid By:
+${paidBy}
+
+Total:
+₹${amount}
+
+Users:
+${selectedUsers.join(", ")}
+
+Each Pays:
+₹${splitAmount}`
+                );
+
+                isProcessing =
+                    false;
+            };
+
+        },1200);
+    }
 }
 
 function saveSplitHistory(splitData){

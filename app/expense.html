@@ -97,32 +97,6 @@
 
     </div>
 
-    <!-- FILTERS -->
-
-    <div class="filterButtons">
-
-        <button onclick="showTodayExpenses()">
-            Today
-        </button>
-
-        <button onclick="showMonthlyExpenses()">
-            Month
-        </button>
-
-        <button onclick="showYearlyExpenses()">
-            Year
-        </button>
-
-        <button onclick="showAllExpenses()">
-            All
-        </button>
-
-        <button onclick="getExpensesByDate()">
-            📅 Select Date
-        </button>
-
-    </div>
-
     <!-- SUMMARY -->
 
     <div class="summary">
@@ -165,6 +139,73 @@
                 ₹0
             </p>
 
+        </div>
+
+    </div>
+
+    <!-- SHOW EXPENSE FOR -->
+
+    <div class="expenseFilterCard">
+
+        <h2>
+            📂 Show Expenses For
+        </h2>
+
+        <div
+            class="expenseFilterRow"
+            onclick="showTodayExpenses()"
+        >
+            <span>Today</span>
+
+            <span>
+                Show today's expenses
+            </span>
+        </div>
+
+        <div
+            class="expenseFilterRow"
+            onclick="showMonthlyExpenses()"
+        >
+            <span>Month</span>
+
+            <span>
+                Show monthly expenses
+            </span>
+        </div>
+
+        <div
+            class="expenseFilterRow"
+            onclick="showYearlyExpenses()"
+        >
+            <span>Year</span>
+
+            <span>
+                Show yearly expenses
+            </span>
+        </div>
+
+        <div
+            class="expenseFilterRow"
+            onclick="showAllExpenses()"
+        >
+            <span>All</span>
+
+            <span>
+                Show all expenses
+            </span>
+        </div>
+
+        <div
+            class="expenseFilterRow"
+            onclick="getExpensesByDate()"
+        >
+            <span>
+                📅 Select Date
+            </span>
+
+            <span>
+                Show expenses for date
+            </span>
         </div>
 
     </div>
