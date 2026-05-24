@@ -515,7 +515,29 @@ function startVoice(){
         );
     }
 
+    let voiceStarted = false;
+
+    function startVoiceFlow(){
+
+        if(voiceStarted){
+            return;
+        }
+
+        voiceStarted = true;
+
+        askUser();
+    }
+
     /* WAIT FOR DATE */
+
+    setTimeout(()=>{
+
+        if(dateInput.value){
+
+            startVoiceFlow();
+        }
+
+    },300);
 
     dateInput.onchange =
     ()=>{
@@ -523,24 +545,10 @@ function startVoice(){
         dateInput.onchange =
             null;
 
-        const selectedDate =
-            dateInput.value;
+        if(dateInput.value){
 
-        if(!selectedDate){
-
-            alert(
-                "Please select expense date"
-            );
-
-            return;
+            startVoiceFlow();
         }
-
-        console.log(
-            "Expense date:",
-            selectedDate
-        );
-
-        askUser();
     };
 
     /* ================= COMMON ================= */
@@ -651,7 +659,7 @@ function startVoice(){
 
         speakThenListen(
 
-            "Please add user",
+            "Please say user name",
 
             (text)=>{
 
@@ -2139,7 +2147,35 @@ function startSplitVoiceFlow(){
                     .toLowerCase()
                     .replace(/,/g," ")
                     .split(" ")
+                    .filter(Boolean)
+                    .map(name=>
+
+                        users.find(
+
+                            user=>
+
+                                user
+                                .toLowerCase()
+
+                                ===
+
+                                name
+                        )
+                    )
                     .filter(Boolean);
+
+                if(
+                    selectedUsers.length === 0
+                ){
+
+                    speak(
+                        "No valid users found. Please try again"
+                    );
+
+                    askUsers();
+
+                    return;
+                }
 
                 askItem();
             }
@@ -2242,10 +2278,35 @@ function startSplitVoiceFlow(){
 
             (text)=>{
 
+                const matchedUser =
+
+                    users.find(
+
+                        user=>
+
+                            user
+                            .toLowerCase()
+
+                            ===
+
+                            text
+                            .toLowerCase()
+                            .trim()
+                    );
+
+                if(!matchedUser){
+
+                    speak(
+                        "User not found, please try again"
+                    );
+
+                    askPayer();
+
+                    return;
+                }
+
                 paidBy =
-                    text
-                    .toLowerCase()
-                    .trim();
+                    matchedUser;
 
                 saveSplitExpense(
 
@@ -2369,6 +2430,33 @@ function processSplitVoice(text){
             .trim();
     }
 
+    const matchedUser =
+
+        users.find(
+
+            user=>
+
+                user
+                .toLowerCase()
+
+                ===
+
+                paidBy
+                .toLowerCase()
+        );
+
+    if(!matchedUser){
+
+        speak(
+            "Invalid payer"
+        );
+
+        return;
+    }
+
+    paidBy =
+        matchedUser;
+
     /* users */
 
     let userText =
@@ -2385,6 +2473,22 @@ function processSplitVoice(text){
 
         userText
         .split(" ")
+        .filter(Boolean)
+        .map(name=>
+
+            users.find(
+
+                user=>
+
+                    user
+                    .toLowerCase()
+
+                    ===
+
+                    name
+                    .toLowerCase()
+            )
+        )
         .filter(Boolean);
 
     if(
@@ -3972,6 +4076,18 @@ function openBarChartWindow(){
 
     splitHistory.forEach(split=>{
 
+        const exists =
+
+            filteredExpenses.some(
+
+                exp =>
+                    exp.date === split.date
+            );
+
+        if(!exists){
+            return;
+        }
+
         if(!totals[split.item]){
 
             totals[split.item] = 0;
@@ -4182,6 +4298,18 @@ function openPieChartWindow(){
         ) || [];
 
     splitHistory.forEach(split=>{
+
+        const exists =
+
+            filteredExpenses.some(
+
+                exp =>
+                    exp.date === split.date
+            );
+
+        if(!exists){
+            return;
+        }
 
         if(!totals[split.item]){
 
