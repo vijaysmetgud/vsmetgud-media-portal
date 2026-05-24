@@ -1924,10 +1924,10 @@ spent
 
         itemsText +=
 
-`${item.item}
-₹${item.amount}
+    `${item.item}
+    ₹${item.amount}
 
-`;
+    `;
     });
 
     alert(
@@ -1961,25 +1961,27 @@ spent
 
     .toFixed(2)
 
-    )}
+    )}`
+);
 
-    /* REFRESH UI */
+/* REFRESH UI */
 
-    loadExpenses();
+loadExpenses();
 
-    renderExpenses();
+renderExpenses();
 
-    renderSplitHistory();
+renderSplitHistory();
 
-    /* OPEN RESULT */
+/* OPEN RESULT */
 
-    setTimeout(()=>{
+setTimeout(()=>{
 
-        showSettlement();
+    showSettlement();
 
-    },200);
+},200);
 
 }
+
 
 function startSplitVoice(){
 
@@ -2570,13 +2572,13 @@ function processSplitVoice(text){
         Number(
 
             (
-                grandTotal /
+                amount /
 
                 selectedUsers.length
             )
 
             .toFixed(2)
-        )
+        );
 
     speak(
 
