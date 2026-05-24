@@ -3220,14 +3220,7 @@ function getSettlementData(){
         };
     }
 
-    const balances = {};
     const spent = {};
-
-    users.forEach(user=>{
-
-        balances[user] = 0;
-        spent[user] = 0;
-    });
 
     let total = 0;
     let spentHtml = "";
@@ -3239,8 +3232,11 @@ function getSettlementData(){
 
         total += split.total;
 
-        spent[split.paidBy] +=
-            split.total;
+        spent[split.paidBy] =
+
+            (spent[split.paidBy] || 0)
+
+            + split.total;
 
         spentHtml += `
 
@@ -3316,12 +3312,6 @@ function getSettlementData(){
                 </div>
                 `;
 
-                balances[user] -=
-                    split.each;
-
-                balances[
-                    split.paidBy
-                ] += split.each;
             }
         });
     });
