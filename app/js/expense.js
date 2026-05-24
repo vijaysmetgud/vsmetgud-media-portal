@@ -2335,15 +2335,32 @@ function startSplitVoiceFlow(){
 
                     setTimeout(()=>{
 
+                        speechSynthesis.cancel();
+
                         askPayer();
 
-                    },800);
+                    },1200);
 
                     return;
                 }
 
                 paidBy =
                     matchedUser;
+
+                /* auto include payer */
+
+                if(
+
+                    !selectedUsers.includes(
+                        paidBy
+                    )
+
+                ){
+
+                    selectedUsers.push(
+                        paidBy
+                    );
+                }
 
                 saveSplitExpense(
 
