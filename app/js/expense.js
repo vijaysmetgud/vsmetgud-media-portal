@@ -2293,6 +2293,183 @@ Each Pays:
     }
 }
 
+/* ================= FAST SPLIT VOICE ================= */
+
+function processSplitVoice(text){
+
+    text =
+        text
+        .toLowerCase()
+        .trim();
+
+    console.log(
+        "Fast split raw:",
+        text
+    );
+
+    /* remove 'split' */
+
+    text =
+        text.replace(
+            /^split\s+/,
+            ""
+        );
+
+    /* amount */
+
+    const amountMatch =
+        text.match(/\d+/);
+
+    if(!amountMatch){
+
+        speak(
+            "Amount not found"
+        );
+
+        return;
+    }
+
+    const amount =
+        Number(
+            amountMatch[0]
+        );
+
+    /* item */
+
+    const item =
+
+        text
+        .split(/\d+/)[0]
+        .trim();
+
+    if(!item){
+
+        speak(
+            "Expense item not found"
+        );
+
+        return;
+    }
+
+    /* payer */
+
+    let paidBy =
+        currentUser;
+
+    const paidMatch =
+
+        text.match(
+            /paid by\s+([a-z ]+)/i
+        );
+
+    if(paidMatch){
+
+        paidBy =
+            paidMatch[1]
+            .trim();
+    }
+
+    /* users */
+
+    let userText =
+        text
+        .replace(item,"")
+        .replace(amount,"")
+        .replace(
+            /paid by.+$/i,
+            ""
+        )
+        .trim();
+
+    const selectedUsers =
+
+        userText
+        .split(" ")
+        .filter(Boolean);
+
+    if(
+        selectedUsers.length === 0
+    ){
+
+        speak(
+            "Please say users"
+        );
+
+        return;
+    }
+
+    /* auto include payer */
+
+    if(
+
+        !selectedUsers.includes(
+            paidBy
+        )
+
+    ){
+
+        selectedUsers.push(
+            paidBy
+        );
+    }
+
+    saveSplitExpense(
+
+        item,
+
+        amount,
+
+        selectedUsers,
+
+        paidBy
+    );
+
+    renderSplitHistory();
+
+    renderExpenses();
+
+    const splitAmount =
+
+        Math.round(
+
+            amount /
+
+            selectedUsers.length
+        );
+
+    speak(
+
+`${item}
+split added.
+Total ${amount} rupees.
+Each pays
+${splitAmount}`
+    );
+
+    alert(
+
+`Split Successful
+
+Date:
+${document.getElementById("date").value}
+
+Item:
+${item}
+
+Paid By:
+${paidBy}
+
+Total:
+₹${amount}
+
+Users:
+${selectedUsers.join(", ")}
+
+Each Pays:
+₹${splitAmount}`
+    );
+}
+
 function saveSplitExpense(
 
     item,
@@ -3688,6 +3865,18 @@ function renderPieChart(){
         ) || [];
 
     splitHistory.forEach(split=>{
+
+        const exists =
+
+            filteredExpenses.some(
+
+                exp =>
+                    exp.date === split.date
+            );
+
+        if(!exists){
+            return;
+        }
 
         if(!totals[split.item]){
 
