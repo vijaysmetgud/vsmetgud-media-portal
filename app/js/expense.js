@@ -2147,6 +2147,12 @@ function startSplitVoiceFlow(){
                 speak(
                     "Could not hear properly"
                 );
+
+                setTimeout(()=>{
+
+                    callback("");
+
+                },1000);
             };
         };
 
@@ -2162,6 +2168,21 @@ function startSplitVoiceFlow(){
             "Please say users",
 
             (text)=>{
+
+                if(!text){
+
+                    speak(
+                        "Please say users again"
+                    );
+
+                    setTimeout(()=>{
+
+                        askUsers();
+
+                    },800);
+
+                    return;
+                }
 
                 selectedUsers =
 
@@ -2212,8 +2233,23 @@ function startSplitVoiceFlow(){
 
             (text)=>{
 
+                if(!text){
+
+                    speak(
+                        "Please say expense item again"
+                    );
+
+                    setTimeout(()=>{
+
+                        askItem();
+
+                    },800);
+
+                    return;
+                }
+
                 item =
-                    text;
+                    text.trim();
 
                 askAmount();
             }
@@ -2227,6 +2263,21 @@ function startSplitVoiceFlow(){
             "Please say amount",
 
             (text)=>{
+
+                if(!text){
+
+                    speak(
+                        "Please say amount again"
+                    );
+
+                    setTimeout(()=>{
+
+                        askAmount();
+
+                    },800);
+
+                    return;
+                }
 
                 text =
                     text
@@ -2301,6 +2352,21 @@ function startSplitVoiceFlow(){
             "Who paid total amount",
 
             (text)=>{
+
+                if(!text){
+
+                    speak(
+                        "Please say payer name again"
+                    );
+
+                    setTimeout(()=>{
+
+                        askPayer();
+
+                    },800);
+
+                    return;
+                }
 
                 const cleanText =
 
