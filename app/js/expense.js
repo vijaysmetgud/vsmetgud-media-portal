@@ -848,121 +848,123 @@ function startVoice(){
         );
     }
 
-/* ================= AMOUNT ================= */
 
-function askAmount(){
 
-    speakThenListen(
+    /* ================= AMOUNT ================= */
 
-        "Please say amount",
+    function askAmount(){
 
-        (text)=>{
+        speakThenListen(
 
-            text =
-                text
-                .toLowerCase()
-                .replace(
-                    /rupees|rupee|rs/g,
-                    ""
-                )
-                .trim();
+            "Please say amount",
 
-            /* direct numeric */
+            (text)=>{
 
-            let amount =
-
-                Number(
-
-                    text.replace(
-                        /[^0-9]/g,
+                text =
+                    text
+                    .toLowerCase()
+                    .replace(
+                        /rupees|rupee|rs/g,
                         ""
                     )
-                );
+                    .trim();
 
-            /* words support */
+                /* direct numeric */
 
-            if(!amount){
+                let amount =
 
-                const words = {
+                    Number(
 
-                    one:1,
-                    two:2,
-                    three:3,
-                    four:4,
-                    five:5,
-                    six:6,
-                    seven:7,
-                    eight:8,
-                    nine:9,
-                    ten:10,
-                    hundred:100,
-                    thousand:1000
-                };
+                        text.replace(
+                            /[^0-9]/g,
+                            ""
+                        )
+                    );
 
-                amount = 0;
+                /* words support */
 
-                text.split(" ")
-                .forEach(word=>{
+                if(!amount){
 
-                    if(words[word]){
+                    const words = {
 
-                        amount +=
-                            words[word];
-                    }
-                });
-            }
+                        one:1,
+                        two:2,
+                        three:3,
+                        four:4,
+                        five:5,
+                        six:6,
+                        seven:7,
+                        eight:8,
+                        nine:9,
+                        ten:10,
+                        hundred:100,
+                        thousand:1000
+                    };
 
-            if(
+                    amount = 0;
 
-                !amount ||
+                    text.split(" ")
+                    .forEach(word=>{
 
-                amount <= 0
-            ){
+                        if(words[word]){
+
+                            amount +=
+                                words[word];
+                        }
+                    });
+                }
+
+                if(
+
+                    !amount ||
+
+                    amount <= 0
+                ){
+
+                    speak(
+                        "Invalid amount"
+                    );
+
+                    return;
+                }
+
+                /* AUTO FILL */
+
+                document.getElementById(
+                    "item"
+                ).value =
+                    item;
+
+                document.getElementById(
+                    "price"
+                ).value =
+                    amount;
+
+                addExpense();
 
                 speak(
-                    "Invalid amount"
+                    "Expense added successfully"
                 );
 
-                return;
+                alert(
+
+    `Expense Added
+
+    Date:
+    ${dateInput.value}
+
+    User:
+    ${selectedUser}
+
+    Item:
+    ${item}
+
+    Amount:
+    ₹${amount}`
+                );
             }
-
-            /* AUTO FILL */
-
-            document.getElementById(
-                "item"
-            ).value =
-                item;
-
-            document.getElementById(
-                "price"
-            ).value =
-                amount;
-
-            addExpense();
-
-            speak(
-                "Expense added successfully"
-            );
-
-            alert(
-
-`Expense Added
-
-Date:
-${dateInput.value}
-
-User:
-${selectedUser}
-
-Item:
-${item}
-
-Amount:
-₹${amount}`
-            );
-        }
-    );
-}
+        );
+    }
 }
 
 /* ================= PROCESS VOICE ================= */
