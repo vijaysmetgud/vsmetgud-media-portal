@@ -1900,6 +1900,37 @@ spent
         return;
     }
 
+    /* auto include payer */
+
+    if(
+
+        !selectedUsers.includes(
+            paidBy
+        )
+
+    ){
+
+        selectedUsers.push(
+            paidBy
+        );
+    }
+
+    /* SAVE EACH ITEM */
+
+    splitItems.forEach(exp=>{
+
+        saveSplitExpense(
+
+            exp.item,
+
+            exp.amount,
+
+            selectedUsers,
+
+            paidBy
+        );
+    });
+
     /* ================= SAVE EACH ITEM ================= */
 
     splitItems.forEach(exp=>{
