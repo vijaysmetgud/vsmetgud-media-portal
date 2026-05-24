@@ -1931,22 +1931,6 @@ spent
         );
     });
 
-    /* ================= SAVE EACH ITEM ================= */
-
-    splitItems.forEach(exp=>{
-
-        saveSplitExpense(
-
-            exp.item,
-
-            exp.amount,
-
-            selectedUsers,
-
-            paidBy
-        );
-    });
-
     /* ================= SUCCESS ================= */
 
     let itemsText = "";
