@@ -2332,12 +2332,16 @@ function startSplitVoiceFlow(){
                 
 
                 const splitAmount =
-                    Math.round(
+                    Number(
 
+                    (
                         amount /
 
                         selectedUsers.length
-                    );
+                    )
+
+                    .toFixed(2)
+                )
 
                 alert(
 
@@ -2602,12 +2606,16 @@ function saveSplitExpense(
 
     const splitAmount =
 
-        Math.round(
+        Number(
 
-            totalAmount /
+            (
+                totalAmount /
 
-            selectedUsers.length
-        );
+                selectedUsers.length
+            )
+
+            .toFixed(2)
+        )
 
     const splitData = {
 
@@ -2888,12 +2896,9 @@ function renderSplitHistory(){
 
     /* ================= NET OUTSTANDING ================= */
 
-    const balances = {};
+    const pairBalances = {};
 
-    users.forEach(user=>{
-
-        balances[user] = 0;
-    });
+    /* build pairwise owes */
 
     splitHistory.forEach(split=>{
 
@@ -2903,54 +2908,36 @@ function renderSplitHistory(){
 
                 user.toLowerCase()
 
-                !==
+                ===
 
                 split.paidBy
                 .toLowerCase()
 
             ){
-
-                balances[user] -=
-                    split.each;
-
-                balances[
-                    split.paidBy
-                ] += split.each;
+                return;
             }
+
+            const key =
+
+                `${user}|${split.paidBy}`;
+
+            pairBalances[key] =
+
+                (
+                    pairBalances[key]
+                    || 0
+                )
+
+                +
+
+                split.each;
         });
     });
 
-    const creditors = [];
-    const debtors = [];
+    /* relationship wise netting */
 
-    Object.entries(
-        balances
-    )
-
-    .forEach(([user,balance])=>{
-
-        if(balance > 0){
-
-            creditors.push({
-
-                user,
-
-                amount:
-                    balance
-            });
-        }
-
-        else if(balance < 0){
-
-            debtors.push({
-
-                user,
-
-                amount:
-                    Math.abs(balance)
-            });
-        }
-    });
+    const processed =
+        new Set();
 
     let tableHtml =
 
@@ -2971,10 +2958,10 @@ function renderSplitHistory(){
 
     <table
     style="
-        min-width:700px;
-        width:100%;
-        border-collapse:collapse;
-        text-align:center;
+    min-width:700px;
+    width:100%;
+    border-collapse:collapse;
+    text-align:center;
     "
     >
 
@@ -2985,27 +2972,46 @@ function renderSplitHistory(){
     </tr>
     `;
 
-    debtors.forEach(debtor=>{
+    Object.keys(pairBalances)
 
-        creditors.forEach(creditor=>{
+    .forEach(key=>{
 
-            if(
+        if(
+            processed.has(key)
+        ){
+            return;
+        }
 
-                debtor.amount <= 0 ||
+        const [
 
-                creditor.amount <= 0
-            ){
-                return;
-            }
+            fromUser,
 
-            const payment =
+            toUser
 
-                Math.min(
+        ] =
+            key.split("|");
 
-                    debtor.amount,
+        const reverseKey =
 
-                    creditor.amount
-                );
+            `${toUser}|${fromUser}`;
+
+        const forward =
+
+            pairBalances[key]
+            || 0;
+
+        const reverse =
+
+            pairBalances[
+                reverseKey
+            ]
+            || 0;
+
+        const net =
+
+            forward - reverse;
+
+        if(net > 0){
 
             tableHtml +=
 
@@ -3013,49 +3019,52 @@ function renderSplitHistory(){
             <tr>
 
                 <td>
-                    ${debtor.user}
+                    ${fromUser}
                 </td>
 
                 <td>
-                    ${creditor.user}
+                    ${toUser}
                 </td>
 
                 <td>
-                    ₹${payment}
+                    ₹${net.toFixed(2)}
                 </td>
 
             </tr>
             `;
+        }
 
-            debtor.amount -=
-                payment;
+        else if(net < 0){
 
-            creditor.amount -=
-                payment;
-        });
+            tableHtml +=
+
+            `
+            <tr>
+
+                <td>
+                    ${toUser}
+                </td>
+
+                <td>
+                    ${fromUser}
+                </td>
+
+                <td>
+                    ₹${Math.abs(
+                        net
+                    ).toFixed(2)}
+                </td>
+
+            </tr>
+            `;
+        }
+
+        processed.add(key);
+
+        processed.add(
+            reverseKey
+        );
     });
-
-    if(
-
-        creditors.length === 0 ||
-
-        debtors.length === 0
-    ){
-
-        tableHtml +=
-
-        `
-        <tr>
-
-            <td colspan="3">
-
-                ✅ No outstanding balance
-
-            </td>
-
-        </tr>
-        `;
-    }
 
     tableHtml +=
 
@@ -3067,7 +3076,6 @@ function renderSplitHistory(){
 
     container.innerHTML +=
         tableHtml;
-
 }
 
 /* ================= FINAL SETTLEMENT ================= */
@@ -3303,35 +3311,40 @@ function getSettlementData(){
 
     /* ================= NET OUTSTANDING ================= */
 
-    const creditors = [];
-    const debtors = [];
+    const pairBalances = {};
 
-    Object.entries(
-        balances
-    )
+    splitHistory.forEach(split=>{
 
-    .forEach(([user,balance])=>{
+        split.users.forEach(user=>{
 
-        if(balance > 0){
+            if(
 
-            creditors.push({
+                user.toLowerCase()
 
-                user,
+                ===
 
-                amount:balance
-            });
-        }
+                split.paidBy
+                .toLowerCase()
 
-        else if(balance < 0){
+            ){
+                return;
+            }
 
-            debtors.push({
+            const key =
 
-                user,
+                `${user}|${split.paidBy}`;
 
-                amount:
-                    Math.abs(balance)
-            });
-        }
+            pairBalances[key] =
+
+                (
+                    pairBalances[key]
+                    || 0
+                )
+
+                +
+
+                split.each;
+        });
     });
 
     let netHtml =
@@ -3345,9 +3358,9 @@ function getSettlementData(){
 
     <table
     style="
-        width:100%;
-        text-align:center;
-        border-collapse:collapse;
+    width:100%;
+    text-align:center;
+    border-collapse:collapse;
     "
     >
 
@@ -3358,55 +3371,100 @@ function getSettlementData(){
     </tr>
     `;
 
-    debtors.forEach(debtor=>{
+    const processed =
+        new Set();
 
-        creditors.forEach(creditor=>{
+    Object.keys(pairBalances)
 
-            if(
+    .forEach(key=>{
 
-                debtor.amount <= 0 ||
+        if(
+            processed.has(key)
+        ){
+            return;
+        }
 
-                creditor.amount <= 0
+        const [
 
-            ){
+            fromUser,
 
-                return;
-            }
+            toUser
 
-            const payment =
+        ] =
+            key.split("|");
 
-                Math.min(
+        const reverseKey =
 
-                    debtor.amount,
+            `${toUser}|${fromUser}`;
 
-                    creditor.amount
-                );
+        const forward =
 
-            netHtml += `
+            pairBalances[key]
+            || 0;
 
+        const reverse =
+
+            pairBalances[
+                reverseKey
+            ]
+            || 0;
+
+        const net =
+            forward - reverse;
+
+        if(net > 0){
+
+            netHtml +=
+
+            `
             <tr>
 
                 <td>
-                    ${debtor.user}
+                    ${fromUser}
                 </td>
 
                 <td>
-                    ${creditor.user}
+                    ${toUser}
                 </td>
 
                 <td>
-                    ₹${payment}
+                    ₹${net.toFixed(2)}
                 </td>
 
             </tr>
             `;
+        }
 
-            debtor.amount -=
-                payment;
+        else if(net < 0){
 
-            creditor.amount -=
-                payment;
-        });
+            netHtml +=
+
+            `
+            <tr>
+
+                <td>
+                    ${toUser}
+                </td>
+
+                <td>
+                    ${fromUser}
+                </td>
+
+                <td>
+                    ₹${Math.abs(
+                        net
+                    ).toFixed(2)}
+                </td>
+
+            </tr>
+            `;
+        }
+
+        processed.add(key);
+
+        processed.add(
+            reverseKey
+        );
     });
 
     netHtml +=
