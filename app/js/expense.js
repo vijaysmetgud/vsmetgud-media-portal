@@ -546,7 +546,9 @@ function startVoice(){
     /* ================= COMMON ================= */
 
     function speakThenListen(
+
         message,
+
         callback
     ){
 
@@ -564,11 +566,21 @@ function startVoice(){
         speech.rate =
             0.9;
 
+        speech.pitch =
+            1;
+
         speech.onend =
         ()=>{
 
             const recognition =
-                new SpeechRecognition();
+
+                new (
+                    window
+                    .SpeechRecognition ||
+
+                    window
+                    .webkitSpeechRecognition
+                )();
 
             recognition.lang =
                 "en-IN";
@@ -587,25 +599,30 @@ function startVoice(){
             document.getElementById(
                 "voiceStatus"
             ).innerText =
+
                 "🎤 Listening...";
 
             recognition.onresult =
             (event)=>{
 
-                recognition.stop();
-
                 const text =
 
-                    event
-                    .results[0][0]
+                    event.results[0][0]
                     .transcript
                     .trim();
+
+                console.log(
+                    "Voice:",
+                    text
+                );
 
                 document.getElementById(
                     "voiceStatus"
                 ).innerText =
 
-                    "You said: " + text;
+                    "✅ " + text;
+
+                recognition.stop();
 
                 callback(text);
             };
@@ -613,9 +630,13 @@ function startVoice(){
             recognition.onerror =
             ()=>{
 
-                speak(
-                    "Could not hear properly"
-                );
+                document.getElementById(
+                    "voiceStatus"
+                ).innerText =
+
+                    "❌ Could not hear";
+
+                recognition.stop();
             };
         };
 
@@ -734,7 +755,90 @@ function startVoice(){
                 speech.onend =
                 ()=>{
 
-                    askItem();
+                    speakThenListen(
+
+                        "Say expense item or command",
+
+                        (text)=>{
+
+                            const voiceText =
+
+                                text
+                                .toLowerCase()
+                                .trim();
+
+                            /* ================= COMMAND MODE ================= */
+
+                            if(
+
+                                voiceText.includes(
+                                    "today"
+                                )
+
+                                ||
+
+                                voiceText.includes(
+                                    "month"
+                                )
+
+                                ||
+
+                                voiceText.includes(
+                                    "year"
+                                )
+
+                                ||
+
+                                voiceText.includes(
+                                    "settlement"
+                                )
+
+                                ||
+
+                                voiceText.includes(
+                                    "split"
+                                )
+
+                                ||
+
+                                voiceText.startsWith(
+                                    "add user"
+                                )
+
+                            ){
+
+                                processVoiceExpense(
+                                    voiceText
+                                );
+
+                                return;
+                            }
+
+                            /* ================= FAST EXPENSE ================= */
+
+                            const hasNumber =
+
+                                /\d/.test(
+                                    voiceText
+                                );
+
+                            if(hasNumber){
+
+                                processVoiceExpense(
+                                    voiceText
+                                );
+
+                                return;
+                            }
+
+                            /* ================= GUIDED MODE ================= */
+
+                            item =
+                                voiceText;
+
+                            askAmount();
+                        }
+                    );
                 };
 
                 speechSynthesis.speak(
@@ -744,72 +848,103 @@ function startVoice(){
         );
     }
 
-    /* ================= ITEM ================= */
+/* ================= AMOUNT ================= */
 
-    function askItem(){
+function askAmount(){
 
-        speakThenListen(
+    speakThenListen(
 
-            "Please say expense item",
+        "Please say amount",
 
-            (text)=>{
+        (text)=>{
 
-                item =
-                    text.trim();
+            text =
+                text
+                .toLowerCase()
+                .replace(
+                    /rupees|rupee|rs/g,
+                    ""
+                )
+                .trim();
 
-                askAmount();
-            }
-        );
-    }
+            /* direct numeric */
 
-    /* ================= AMOUNT ================= */
+            let amount =
 
-    function askAmount(){
+                Number(
 
-        speakThenListen(
-
-            "Please say amount",
-
-            (text)=>{
-
-                amount =
-
-                    Number(
-
-                        text.replace(
-                            /[^0-9]/g,
-                            ""
-                        )
-                    );
-
-                if(!amount){
-
-                    speak(
-                        "Invalid amount"
-                    );
-
-                    return;
-                }
-
-                /* AUTO FILL DATE */
-
-                document.getElementById(
-                    "item"
-                ).value =
-                    item;
-
-                document.getElementById(
-                    "price"
-                ).value =
-                    amount;
-
-                addExpense();
-
-                speak(
-                    "Expense added successfully"
+                    text.replace(
+                        /[^0-9]/g,
+                        ""
+                    )
                 );
 
-                alert(
+            /* words support */
+
+            if(!amount){
+
+                const words = {
+
+                    one:1,
+                    two:2,
+                    three:3,
+                    four:4,
+                    five:5,
+                    six:6,
+                    seven:7,
+                    eight:8,
+                    nine:9,
+                    ten:10,
+                    hundred:100,
+                    thousand:1000
+                };
+
+                amount = 0;
+
+                text.split(" ")
+                .forEach(word=>{
+
+                    if(words[word]){
+
+                        amount +=
+                            words[word];
+                    }
+                });
+            }
+
+            if(
+
+                !amount ||
+
+                amount <= 0
+            ){
+
+                speak(
+                    "Invalid amount"
+                );
+
+                return;
+            }
+
+            /* AUTO FILL */
+
+            document.getElementById(
+                "item"
+            ).value =
+                item;
+
+            document.getElementById(
+                "price"
+            ).value =
+                amount;
+
+            addExpense();
+
+            speak(
+                "Expense added successfully"
+            );
+
+            alert(
 
 `Expense Added
 
@@ -824,10 +959,10 @@ ${item}
 
 Amount:
 ₹${amount}`
-                );
-            }
-        );
-    }
+            );
+        }
+    );
+}
 }
 
 /* ================= PROCESS VOICE ================= */
@@ -868,8 +1003,6 @@ function processVoiceExpense(text){
 
         return;
     }
-
-    /* ================= ADD USER ================= */
 
     /* ================= ADD USER ================= */
 
@@ -1185,7 +1318,7 @@ function renderExpenses(){
 
     if(!expenses || expenses.length === 0){
 
-    expenseList.innerHTML = `
+        expenseList.innerHTML = `
 
         <div class="expenseItem">
 
@@ -1223,7 +1356,8 @@ function renderExpenses(){
     renderSplitHistory();
 
     return;
-}
+    }
+
 
     let daily = 0;
 
@@ -1519,6 +1653,7 @@ function renderFilteredExpenses(
     
     filteredExpenses =
         [...list];
+
     const expenseList =
         document.getElementById(
             "expenseList"
@@ -1569,6 +1704,10 @@ function renderFilteredExpenses(
     speak(
         `${title} total is ${total} rupees`
     );
+
+    renderChart();
+
+    renderPieChart();
 }
 
 /* ================= SPLIT EXPENSES ================= */
@@ -1783,48 +1922,48 @@ spent
 
     alert(
 
-`Split Successful
+    `Split Successful
 
-Date:
-${selectedDate}
+    Date:
+    ${selectedDate}
 
-Paid By:
-${paidBy}
+    Paid By:
+    ${paidBy}
 
-Items:
+    Items:
 
-${itemsText}
+    ${itemsText}
 
-Total:
-₹${grandTotal}
+    Total:
+    ₹${grandTotal}
 
-Users:
-${selectedUsers.join(", ")}
+    Users:
+    ${selectedUsers.join(", ")}
 
-Each Split:
-₹${Math.round(
+    Each Split:
+    ₹${Math.round(
 
-grandTotal /
-selectedUsers.length
+    grandTotal /
+    selectedUsers.length
 
-)}`
-);
+    )}`
+    );
 
-/* REFRESH UI */
+    /* REFRESH UI */
 
-loadExpenses();
+    loadExpenses();
 
-renderExpenses();
+    renderExpenses();
 
-renderSplitHistory();
+    renderSplitHistory();
 
-/* OPEN RESULT */
+    /* OPEN RESULT */
 
-setTimeout(()=>{
+    setTimeout(()=>{
 
-    showSettlement();
+        showSettlement();
 
-},200);
+    },200);
 
 }
 
@@ -2029,6 +2168,15 @@ function startSplitVoiceFlow(){
 
             (text)=>{
 
+                text =
+                    text
+                    .toLowerCase()
+                    .replace(
+                        /rupees|rupee|rs/g,
+                        ""
+                    )
+                    .trim();
+
                 amount =
 
                     Number(
@@ -2038,6 +2186,37 @@ function startSplitVoiceFlow(){
                             ""
                         )
                     );
+
+                if(!amount){
+
+                    const words = {
+
+                        one:1,
+                        two:2,
+                        three:3,
+                        four:4,
+                        five:5,
+                        six:6,
+                        seven:7,
+                        eight:8,
+                        nine:9,
+                        ten:10,
+                        hundred:100,
+                        thousand:1000
+                    };
+
+                    amount = 0;
+
+                    text.split(" ")
+                    .forEach(word=>{
+
+                        if(words[word]){
+
+                            amount +=
+                                words[word];
+                        }
+                    });
+                }
 
                 if(!amount){
 
@@ -2401,70 +2580,6 @@ function renderSplitHistory(){
 
                 💸 Raw Owes
 
-            </h3>
-
-            ${owesHtml}
-
-        </div>
-        `;
-    });
-
-        let itemsHtml = "";
-
-        group.items.forEach(item=>{
-
-            itemsHtml += `
-
-            <p>
-                🧾 ${item.item}
-                —
-                ₹${item.total}
-            </p>
-            `;
-        });
-
-        let owesHtml = "";
-
-        group.rawOwes.forEach(owe=>{
-
-            owesHtml +=
-
-            `
-            <p>
-                💸 ${owe}
-            </p>
-            `;
-        });
-
-        container.innerHTML +=
-
-        `
-        <div class="expenseItem">
-
-            <h2>
-                📅 ${group.date}
-            </h2>
-
-            <hr>
-
-            <h3>
-                👤 ${group.paidBy} spent
-            </h3>
-
-            ${itemsHtml}
-
-            <h3>
-
-                Total Spent:
-
-                ₹${group.totalSpent}
-
-            </h3>
-
-            <hr>
-
-            <h3>
-                💸 Raw Owes
             </h3>
 
             ${owesHtml}
@@ -3395,6 +3510,17 @@ function renderChart(){
 
     splitHistory.forEach(split=>{
 
+        const exists =
+
+            filteredExpenses.some(
+
+                exp => exp.date === split.date
+            );
+
+        if(!exists){
+            return;
+        }
+
         if(!totals[split.date]){
 
             totals[split.date] = 0;
@@ -3745,6 +3871,8 @@ window.onload = ()=>{
                     "Daily Expenses",
 
                 data:${data},
+
+                backgroundColor:"#facc15",
 
                 borderRadius:12
             }]
