@@ -1951,13 +1951,17 @@ spent
     ${selectedUsers.join(", ")}
 
     Each Split:
-    ₹${Math.round(
+    ₹${Number(
 
-    grandTotal /
-    selectedUsers.length
+    (
+        grandTotal /
 
-    )}`
-    );
+        selectedUsers.length
+    )
+
+    .toFixed(2)
+
+    )}
 
     /* REFRESH UI */
 
@@ -2553,12 +2557,16 @@ function processSplitVoice(text){
 
     const splitAmount =
 
-        Math.round(
+        Number(
 
-            amount /
+            (
+                grandTotal /
 
-            selectedUsers.length
-        );
+                selectedUsers.length
+            )
+
+            .toFixed(2)
+        )
 
     speak(
 
