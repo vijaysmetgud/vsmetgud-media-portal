@@ -3368,6 +3368,8 @@ function renderChart(){
 
     const totals = {};
 
+    /* NORMAL EXPENSES */
+
     filteredExpenses.forEach(exp=>{
 
         if(!totals[exp.date]){
@@ -3375,7 +3377,31 @@ function renderChart(){
             totals[exp.date] = 0;
         }
 
-        totals[exp.date] += exp.price;
+        totals[exp.date] +=
+            Number(exp.price);
+    });
+
+    /* SPLIT EXPENSES */
+
+    const splitHistory =
+
+        JSON.parse(
+
+            localStorage.getItem(
+                "splitHistory"
+            )
+
+        ) || [];
+
+    splitHistory.forEach(split=>{
+
+        if(!totals[split.date]){
+
+            totals[split.date] = 0;
+        }
+
+        totals[split.date] +=
+            Number(split.total);
     });
 
     const labels =
@@ -3508,6 +3534,8 @@ function renderPieChart(){
 
     const totals = {};
 
+    /* NORMAL EXPENSES */
+
     filteredExpenses.forEach(exp=>{
 
         if(!totals[exp.item]){
@@ -3515,7 +3543,31 @@ function renderPieChart(){
             totals[exp.item] = 0;
         }
 
-        totals[exp.item] += exp.price;
+        totals[exp.item] +=
+            Number(exp.price);
+    });
+
+    /* SPLIT SHARE */
+
+    const splitHistory =
+
+        JSON.parse(
+
+            localStorage.getItem(
+                "splitHistory"
+            )
+
+        ) || [];
+
+    splitHistory.forEach(split=>{
+
+        if(!totals[split.item]){
+
+            totals[split.item] = 0;
+        }
+
+        totals[split.item] +=
+            Number(split.total);
     });
 
     const labels =
@@ -3576,14 +3628,40 @@ function openBarChartWindow(){
 
     const totals = {};
 
+    /* NORMAL EXPENSES */
+
     filteredExpenses.forEach(exp=>{
 
-        if(!totals[exp.date]){
+        if(!totals[exp.item]){
 
-            totals[exp.date] = 0;
+            totals[exp.item] = 0;
         }
 
-        totals[exp.date] += exp.price;
+        totals[exp.item] +=
+            Number(exp.price);
+    });
+
+    /* SPLIT SHARE */
+
+    const splitHistory =
+
+        JSON.parse(
+
+            localStorage.getItem(
+                "splitHistory"
+            )
+
+        ) || [];
+
+    splitHistory.forEach(split=>{
+
+        if(!totals[split.item]){
+
+            totals[split.item] = 0;
+        }
+
+        totals[split.item] +=
+            Number(split.total);
     });
 
     const labels =
@@ -3759,6 +3837,8 @@ function openPieChartWindow(){
 
     const totals = {};
 
+    /* NORMAL EXPENSES */
+
     filteredExpenses.forEach(exp=>{
 
         if(!totals[exp.item]){
@@ -3766,7 +3846,31 @@ function openPieChartWindow(){
             totals[exp.item] = 0;
         }
 
-        totals[exp.item] += exp.price;
+        totals[exp.item] +=
+            Number(exp.price);
+    });
+
+    /* SPLIT SHARE */
+
+    const splitHistory =
+
+        JSON.parse(
+
+            localStorage.getItem(
+                "splitHistory"
+            )
+
+        ) || [];
+
+    splitHistory.forEach(split=>{
+
+        if(!totals[split.item]){
+
+            totals[split.item] = 0;
+        }
+
+        totals[split.item] +=
+            Number(split.total);
     });
 
     const labels =
