@@ -1930,6 +1930,13 @@ spent
     `;
     });
 
+    const eachSplit = Number(
+        (
+            grandTotal /
+            selectedUsers.length
+        ).toFixed(2)
+    );
+
     alert(
 
     `Split Successful
@@ -1951,18 +1958,8 @@ spent
     ${selectedUsers.join(", ")}
 
     Each Split:
-    ₹${Number(
-
-    (
-        grandTotal /
-
-        selectedUsers.length
-    )
-
-    .toFixed(2)
-
-    )}`
-);
+    ₹${eachSplit}`
+    );
 
 /* REFRESH UI */
 
@@ -2635,7 +2632,7 @@ function saveSplitExpense(
             )
 
             .toFixed(2)
-        )
+        );
 
     const splitData = {
 
