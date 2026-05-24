@@ -2288,20 +2288,27 @@ function startSplitVoiceFlow(){
 
             (text)=>{
 
+                const cleanText =
+
+                    text
+                    .toLowerCase()
+                    .replace(
+                        /[^a-z ]/g,
+                        ""
+                    )
+                    .trim();
+
                 const matchedUser =
 
                     users.find(
 
-                        user=>
+                        user =>
 
-                            user
-                            .toLowerCase()
+                            cleanText.includes(
 
-                            ===
-
-                            text
-                            .toLowerCase()
-                            .trim()
+                                user
+                                .toLowerCase()
+                            )
                     );
 
                 if(!matchedUser){
@@ -2310,7 +2317,13 @@ function startSplitVoiceFlow(){
                         "User not found, please try again"
                     );
 
-                    askPayer();
+                    /* small delay avoids repeat loop */
+
+                    setTimeout(()=>{
+
+                        askPayer();
+
+                    },800);
 
                     return;
                 }
@@ -2333,45 +2346,42 @@ function startSplitVoiceFlow(){
 
                 renderExpenses();
 
-                
-
                 const splitAmount =
                     Number(
 
-                    (
-                        amount /
+                        (
+                            amount /
 
-                        selectedUsers.length
-                    )
+                            selectedUsers.length
+                        )
 
-                    .toFixed(2)
-                )
+                        .toFixed(2)
+                    );
 
                 alert(
 
-                `Split Successful
+    `Split Successful
 
-                Date:
-                ${document.getElementById("date").value}
+    Date:
+    ${document.getElementById("date").value}
 
-                Item:
-                ${item}
+    Item:
+    ${item}
 
-                Paid By:
-                ${paidBy}
+    Paid By:
+    ${paidBy}
 
-                Total:
-                ₹${amount}
+    Total:
+    ₹${amount}
 
-                Users:
-                ${selectedUsers.join(", ")}
+    Users:
+    ${selectedUsers.join(", ")}
 
-                Each Pays:
-                ₹${splitAmount}`
+    Each Pays:
+    ₹${splitAmount}`
                 );
 
                 showSettlement();
-
             }
         );
     }
