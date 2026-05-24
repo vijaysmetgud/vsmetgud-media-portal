@@ -2263,8 +2263,10 @@ function startSplitVoiceFlow(){
                 if(!amount){
 
                     speak(
-                        "Invalid amount"
+                        "Invalid amount, please try again"
                     );
+
+                    askAmount();
 
                     return;
                 }
@@ -2327,7 +2329,7 @@ function startSplitVoiceFlow(){
 
                 renderExpenses();
 
-                showSettlement();
+                
 
                 const splitAmount =
                     Math.round(
@@ -2339,26 +2341,29 @@ function startSplitVoiceFlow(){
 
                 alert(
 
-`Split Successful
+                `Split Successful
 
-Date:
-${document.getElementById("date").value}
+                Date:
+                ${document.getElementById("date").value}
 
-Item:
-${item}
+                Item:
+                ${item}
 
-Paid By:
-${paidBy}
+                Paid By:
+                ${paidBy}
 
-Total:
-₹${amount}
+                Total:
+                ₹${amount}
 
-Users:
-${selectedUsers.join(", ")}
+                Users:
+                ${selectedUsers.join(", ")}
 
-Each Pays:
-₹${splitAmount}`
+                Each Pays:
+                ₹${splitAmount}`
                 );
+
+                showSettlement();
+
             }
         );
     }
