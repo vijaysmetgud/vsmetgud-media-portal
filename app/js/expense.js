@@ -1771,26 +1771,26 @@ function splitExpense(){
 
             user =>
 
-            user.toLowerCase()
+                user
+                .toLowerCase()
 
-            ===
+                ===
 
-            paidBy.toLowerCase()
+                paidBy
+                .toLowerCase()
         );
 
-    if(matchedUser){
-
-        paidBy =
-            matchedUser;
-    }
-    if(!paidBy){
+    if(!matchedUser){
 
         alert(
-            "Please enter payer"
+            "User not found"
         );
 
         return;
     }
+
+    paidBy =
+        matchedUser;
 
     let splitItems = [];
 
@@ -2007,38 +2007,42 @@ function startSplitVoice(){
 
     /* WAIT FOR DATE */
 
+    let splitVoiceStarted =
+        false;
+
+    function startSplitFlow(){
+
+        if(splitVoiceStarted){
+            return;
+        }
+
+        splitVoiceStarted =
+            true;
+
+        startSplitVoiceFlow();
+    }
+
+    /* WAIT FOR DATE */
+
+    setTimeout(()=>{
+
+        if(dateInput.value){
+
+            startSplitFlow();
+        }
+
+    },300);
+
     dateInput.onchange =
     ()=>{
 
         dateInput.onchange =
             null;
 
-        const selectedDate =
-            dateInput.value;
+        if(dateInput.value){
 
-        if(!selectedDate){
-
-            alert(
-                "Please select split date"
-            );
-
-            return;
+            startSplitFlow();
         }
-
-        console.log(
-            "Split date selected:",
-            selectedDate
-        );
-
-        /* SPEAK AFTER DATE */
-
-        speechSynthesis.cancel();
-
-        setTimeout(()=>{
-
-            startSplitVoiceFlow();
-
-        },300);
     };
 }
 
@@ -2318,6 +2322,12 @@ function startSplitVoiceFlow(){
 
                     paidBy
                 );
+
+                renderSplitHistory();
+
+                renderExpenses();
+
+                showSettlement();
 
                 const splitAmount =
                     Math.round(
