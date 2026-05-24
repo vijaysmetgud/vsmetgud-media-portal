@@ -12,6 +12,8 @@ let users =
 
 let expenses = [];
 
+let filteredExpenses = [];
+
 /* ================= SAVE ================= */
 
 function getExpenseKey(user){
@@ -650,14 +652,15 @@ function startVoice(){
                         .toLowerCase()
                     );
 
+                let message = "";
+
                 if(existingUser){
 
                     selectedUser =
                         existingUser;
 
-                    speak(
-                        "User already exists"
-                    );
+                    message =
+                        "User already exists";
                 }
 
                 else{
@@ -677,17 +680,14 @@ function startVoice(){
 
                     loadUsers();
 
-                    speak(
-                        "User added successfully"
-                    );
+                    message =
+                        "User added successfully";
                 }
 
                 /* AUTO SELECT USER */
 
                 currentUser =
                     selectedUser;
-
-                /* SELECT IN DROPDOWN */
 
                 const userSelect =
 
@@ -698,15 +698,11 @@ function startVoice(){
                 userSelect.value =
                     selectedUser;
 
-                /* UPDATE UI */
-
                 document.getElementById(
                     "currentUserName"
                 ).innerText =
 
-                `User : ${selectedUser}`;
-
-                /* SAVE CURRENT USER */
+                    `User : ${selectedUser}`;
 
                 localStorage.setItem(
 
@@ -719,18 +715,31 @@ function startVoice(){
 
                 renderExpenses();
 
-                console.log(
-                    "Selected User:",
-                    selectedUser
-                );
+                /* WAIT FOR SPEECH TO FINISH */
 
-                /* NEXT STEP */
+                speechSynthesis.cancel();
 
-                setTimeout(()=>{
+                const speech =
+
+                    new SpeechSynthesisUtterance(
+                        message
+                    );
+
+                speech.lang =
+                    "en-IN";
+
+                speech.rate =
+                    0.9;
+
+                speech.onend =
+                ()=>{
 
                     askItem();
+                };
 
-                },1000);
+                speechSynthesis.speak(
+                    speech
+                );
             }
         );
     }
@@ -1164,6 +1173,9 @@ function processVoiceExpense(text){
 
 function renderExpenses(){
 
+    filteredExpenses =
+        [...expenses];
+
     const expenseList =
         document.getElementById(
             "expenseList"
@@ -1504,7 +1516,9 @@ function renderFilteredExpenses(
     list,
     title
 ){
-
+    
+    filteredExpenses =
+        [...list];
     const expenseList =
         document.getElementById(
             "expenseList"
@@ -2199,6 +2213,11 @@ function renderSplitHistory(){
 
     container.innerHTML = "";
 
+    console.log(
+        "Split History:",
+        splitHistory
+    );
+
     if(splitHistory.length === 0){
 
         container.innerHTML =
@@ -2297,9 +2316,98 @@ function renderSplitHistory(){
     /* ================= RENDER GROUPED HISTORY ================= */
 
     Object.values(grouped)
+
     .reverse()
 
     .forEach(group=>{
+
+        let itemsHtml = "";
+
+        group.items.forEach(item=>{
+
+            itemsHtml += `
+
+            <p>
+
+                🧾 ${item.item}
+
+                - ₹${item.total}
+
+            </p>
+            `;
+        });
+
+        let owesHtml = "";
+
+        if(group.rawOwes.length){
+
+            group.rawOwes.forEach(owe=>{
+
+                owesHtml +=
+
+                `
+                <p>
+
+                    💸 ${owe}
+
+                </p>
+                `;
+            });
+
+        }else{
+
+            owesHtml =
+
+            `
+            <p>
+
+                No owes
+
+            </p>
+            `;
+        }
+
+        container.innerHTML +=
+
+        `
+        <div class="expenseItem">
+
+            <h2>
+
+                📅 ${group.date}
+
+            </h2>
+
+            <h3>
+
+                👤 ${group.paidBy}
+
+                spent
+
+            </h3>
+
+            ${itemsHtml}
+
+            <h3>
+
+                💰 Total Spent:
+                ₹${group.totalSpent}
+
+            </h3>
+
+            <hr>
+
+            <h3>
+
+                💸 Raw Owes
+
+            </h3>
+
+            ${owesHtml}
+
+        </div>
+        `;
+    });
 
         let itemsHtml = "";
 
@@ -2440,8 +2548,17 @@ function renderSplitHistory(){
         💰 Net Outstanding Owes
     </h2>
 
+    <div
+    style="
+    overflow-x:auto;
+    width:100%;
+    -webkit-overflow-scrolling:touch;
+    "
+    >
+
     <table
     style="
+        min-width:700px;
         width:100%;
         border-collapse:collapse;
         text-align:center;
@@ -2528,7 +2645,12 @@ function renderSplitHistory(){
     }
 
     tableHtml +=
-        `</table>`;
+
+    `
+    </table>
+
+    </div>
+    `;
 
     container.innerHTML +=
         tableHtml;
@@ -3246,7 +3368,7 @@ function renderChart(){
 
     const totals = {};
 
-    expenses.forEach(exp=>{
+    filteredExpenses.forEach(exp=>{
 
         if(!totals[exp.date]){
 
@@ -3290,9 +3412,9 @@ function renderChart(){
                         : [0],
 
                     backgroundColor:
-                        "#2563eb",
+                        "#facc15",
 
-                    borderRadius:10
+                    borderRadius:12
                 }]
             },
 
@@ -3302,11 +3424,57 @@ function renderChart(){
 
                 maintainAspectRatio:false,
 
+                plugins:{
+
+                    legend:{
+
+                        labels:{
+
+                            font:{
+
+                                size:24
+                            }
+                        }
+                    },
+
+                    tooltip:{
+
+                        titleFont:{
+
+                            size:22
+                        },
+
+                        bodyFont:{
+
+                            size:22
+                        }
+                    }
+                },
+
                 scales:{
+
+                    x:{
+
+                        ticks:{
+
+                            font:{
+
+                                size:22
+                            }
+                        }
+                    },
 
                     y:{
 
-                        beginAtZero:true
+                        beginAtZero:true,
+
+                        ticks:{
+
+                            font:{
+
+                                size:22
+                            }
+                        }
                     }
                 }
             }
@@ -3340,7 +3508,7 @@ function renderPieChart(){
 
     const totals = {};
 
-    expenses.forEach(exp=>{
+    filteredExpenses.forEach(exp=>{
 
         if(!totals[exp.item]){
 
@@ -3408,7 +3576,7 @@ function openBarChartWindow(){
 
     const totals = {};
 
-    expenses.forEach(exp=>{
+    filteredExpenses.forEach(exp=>{
 
         if(!totals[exp.date]){
 
@@ -3510,10 +3678,57 @@ window.onload = ()=>{
 
             maintainAspectRatio:false,
 
+            plugins:{
+
+                legend:{
+
+                    labels:{
+
+                        font:{
+
+                            size:28
+                        }
+                    }
+                },
+
+                tooltip:{
+
+                    titleFont:{
+
+                        size:26
+                    },
+
+                    bodyFont:{
+
+                        size:26
+                    }
+                }
+            },
+
             scales:{
 
+                x:{
+
+                    ticks:{
+
+                        font:{
+
+                            size:24
+                        }
+                    }
+                },
+
                 y:{
-                    beginAtZero:true
+
+                    beginAtZero:true,
+
+                    ticks:{
+
+                        font:{
+
+                            size:24
+                        }
+                    }
                 }
             }
         }
@@ -3544,7 +3759,7 @@ function openPieChartWindow(){
 
     const totals = {};
 
-    expenses.forEach(exp=>{
+    filteredExpenses.forEach(exp=>{
 
         if(!totals[exp.item]){
 

@@ -510,7 +510,9 @@ body{
 
     padding:0;
 
-    overflow:hidden;
+    overflow-x:hidden;
+    overflow-y:visible;
+
 }
 
 /* INPUTS */
@@ -715,5 +717,72 @@ select{
         max-width:95%;
 
         padding:16px;
+    }
+}
+
+/* ================= SPLIT HISTORY MOBILE SCROLL FIX ================= */
+
+.splitContainer{
+
+    width:100%;
+
+    overflow-x:auto;
+
+    overflow-y:visible;
+
+    -webkit-overflow-scrolling:touch;
+
+    padding-bottom:20px;
+}
+
+/* split cards */
+
+.splitContainer .expenseItem{
+
+    width:100%;
+
+    overflow-wrap:break-word;
+
+    word-break:break-word;
+
+    box-sizing:border-box;
+}
+
+/* owes table scroll */
+
+.splitContainer table{
+
+    min-width:700px;
+
+    width:100%;
+
+    border-collapse:collapse;
+}
+
+/* mobile fix */
+
+@media(max-width:768px){
+
+    .splitContainer{
+
+        overflow-x:auto;
+
+        overflow-y:visible;
+
+        width:100%;
+    }
+
+    .splitContainer table{
+
+        min-width:800px;
+    }
+
+    .splitContainer h2,
+
+    .splitContainer h3,
+
+    .splitContainer p{
+
+        font-size:18px;
     }
 }
