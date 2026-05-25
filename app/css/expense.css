@@ -786,3 +786,261 @@ select{
         font-size:18px;
     }
 }
+
+/* ================= GRAPH FILTER PANEL ================= */
+
+.graphFilterPanel{
+
+    margin-top:30px;
+
+    background:#1f2937;
+
+    border-radius:24px;
+
+    padding:25px;
+
+    box-shadow:
+        0 0 25px
+        rgba(0,0,0,0.25);
+
+    border:
+        1px solid rgba(255,255,255,0.08);
+}
+
+.graphFilterPanel h2{
+
+    text-align:center;
+
+    margin-bottom:25px;
+
+    color:#f8fafc;
+}
+
+/* ================= GRID ================= */
+
+.graphControls{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(220px,1fr)
+        );
+
+    gap:18px;
+}
+
+/* ================= INPUT CARD ================= */
+
+.graphInput{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+    background:#111827;
+
+    padding:18px;
+
+    border-radius:18px;
+
+    box-shadow:
+        0 0 18px
+        rgba(0,0,0,0.2);
+}
+
+.graphInput label{
+
+    font-size:15px;
+
+    font-weight:bold;
+
+    color:#93c5fd;
+}
+
+/* ================= INPUTS ================= */
+
+.graphInput select,
+
+.graphInput input{
+
+    background:#0f172a;
+
+    color:white;
+
+    border:none;
+
+    border-radius:14px;
+
+    padding:14px;
+
+    font-size:15px;
+
+    outline:none;
+
+    transition:0.3s;
+}
+
+.graphInput select:focus,
+
+.graphInput input:focus{
+
+    box-shadow:
+        0 0 0 2px
+        rgba(59,130,246,0.5);
+}
+
+/* ================= GRAPH WINDOW ================= */
+
+.graphWindowBody{
+
+    background:#111827;
+
+    color:white;
+
+    font-family:Arial;
+
+    padding:25px;
+
+    margin:0;
+}
+
+.graphWindowTitle{
+
+    text-align:center;
+
+    margin-bottom:20px;
+}
+
+/* ================= HISTORY PANEL ================= */
+
+.graphHistory{
+
+    margin-top:30px;
+
+    background:#1f2937;
+
+    border-radius:20px;
+
+    padding:20px;
+}
+
+.graphHistory h2{
+
+    margin-bottom:18px;
+
+    text-align:center;
+}
+
+/* ================= HISTORY CARD ================= */
+
+.historyCard{
+
+    background:#374151;
+
+    border-radius:16px;
+
+    padding:18px;
+
+    margin-bottom:15px;
+}
+
+.historyCard h3{
+
+    margin-top:0;
+}
+
+/* ================= PAYER ================= */
+
+.payerText{
+
+    color:#22c55e;
+
+    font-weight:bold;
+}
+
+/* ================= OWE ================= */
+
+.oweText{
+
+    color:#ef4444;
+
+    font-weight:bold;
+}
+
+/* ================= CHART AREA ================= */
+
+.graphCanvasContainer{
+
+    width:100%;
+
+    height:75vh;
+
+    position:relative;
+}
+
+/* ================= TABLE ================= */
+
+.graphHistory table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    margin-top:18px;
+}
+
+.graphHistory table th,
+
+.graphHistory table td{
+
+    border:
+        1px solid
+        rgba(255,255,255,0.08);
+
+    padding:14px;
+
+    text-align:center;
+}
+
+.graphHistory table th{
+
+    background:#1e293b;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:768px){
+
+    .graphControls{
+
+        grid-template-columns:
+            1fr;
+    }
+
+    .graphInput{
+
+        padding:16px;
+    }
+
+    .graphCanvasContainer{
+
+        height:55vh;
+    }
+
+    .graphHistory{
+
+        overflow-x:auto;
+
+        -webkit-overflow-scrolling:
+            touch;
+    }
+
+    .graphHistory table{
+
+        min-width:700px;
+    }
+}

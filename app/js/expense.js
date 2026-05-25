@@ -173,6 +173,8 @@ function addUserByVoice(name){
 
     loadUsers();
 
+    loadGraphUsers();
+
     loadExpenses();
 
     renderExpenses();
@@ -242,6 +244,8 @@ function addNewUser(){
     );
 
     loadUsers();
+
+    loadGraphUsers();
 
     loadExpenses();
 
@@ -317,6 +321,8 @@ function switchUser(){
         "expenseUser",
         currentUser
     );
+    
+    loadGraphUsers();
 
     loadExpenses();
 
@@ -3782,6 +3788,8 @@ document.getElementById(
 
 loadUsers();
 
+loadGraphUsers();
+
 if(users.length === 0){
 
     document.getElementById(
@@ -3886,6 +3894,8 @@ function deleteUser(){
 
         loadUsers();
 
+        loadGraphUsers();
+
         loadExpenses();
 
         renderExpenses();
@@ -3919,9 +3929,275 @@ function deleteUser(){
     alert(
         "User deleted successfully"
     );
+
+    loadGraphUsers();
 }
 
+/* ======================================================
+   GRAPH ENGINE
+====================================================== */
+
 let expenseChart;
+let pieChart;
+
+/* ================= USER FILTER ================= */
+
+function getSelectedGraphUser(){
+
+    return document.getElementById(
+        "graphUser"
+    )?.value || currentUser;
+}
+
+/* ================= LOAD USER EXPENSES ================= */
+
+function getAllExpensesForGraph(){
+
+    const selectedUser =
+        getSelectedGraphUser();
+
+    let allExpenses = [];
+
+    /* ALL USERS */
+
+    if(selectedUser === "all"){
+
+        users.forEach(user=>{
+
+            const userExpenses =
+
+                JSON.parse(
+
+                    localStorage.getItem(
+                        getExpenseKey(user)
+                    )
+
+                ) || [];
+
+            allExpenses.push(
+                ...userExpenses
+            );
+        });
+
+        return allExpenses;
+    }
+
+    /* CURRENT USER */
+
+    return JSON.parse(
+
+        localStorage.getItem(
+
+            getExpenseKey(
+                selectedUser
+            )
+
+        )
+
+    ) || [];
+}
+
+/* ================= NORMAL FILTER ================= */
+
+function getFilteredNormalExpenses(){
+
+    let data =
+        getAllExpensesForGraph();
+
+    const filter =
+
+        document.getElementById(
+            "graphFilter"
+        )?.value || "overall";
+
+    const selectedDate =
+
+        document.getElementById(
+            "graphDate"
+        )?.value;
+
+    const selectedMonth =
+
+        document.getElementById(
+            "graphMonth"
+        )?.value;
+
+    const selectedYear =
+
+        document.getElementById(
+            "graphYear"
+        )?.value;
+
+    const today =
+        new Date()
+        .toISOString()
+        .split("T")[0];
+
+    switch(filter){
+
+        case "today":
+
+            data = data.filter(
+
+                exp =>
+                    exp.date === today
+            );
+
+            break;
+
+        case "date":
+
+            data = data.filter(
+
+                exp =>
+                    exp.date === selectedDate
+            );
+
+            break;
+
+        case "month":
+
+            data = data.filter(
+
+                exp =>
+
+                    exp.date.startsWith(
+                        selectedMonth
+                    )
+            );
+
+            break;
+
+        case "year":
+
+            data = data.filter(
+
+                exp =>
+
+                    exp.date.startsWith(
+                        selectedYear
+                    )
+            );
+
+            break;
+
+        case "overall":
+
+        default:
+            break;
+    }
+
+    return data;
+}
+
+/* ================= SPLIT FILTER ================= */
+
+function getFilteredSplitHistory(){
+
+    let splitHistory =
+        JSON.parse(
+            localStorage.getItem(
+                "splitHistory"
+            )
+        ) || [];
+
+    const selectedUser =
+        getSelectedGraphUser();
+
+    const filter =
+        document.getElementById(
+            "graphFilter"
+        )?.value || "overall";
+
+    const selectedDate =
+        document.getElementById(
+            "graphDate"
+        )?.value;
+
+    const selectedMonth =
+        document.getElementById(
+            "graphMonth"
+        )?.value;
+
+    const selectedYear =
+        document.getElementById(
+            "graphYear"
+        )?.value;
+
+    const today =
+        new Date()
+        .toISOString()
+        .split("T")[0];
+
+    /* USER FILTER */
+
+    if(selectedUser !== "all"){
+
+        splitHistory =
+            splitHistory.filter(split=>
+
+                split.paidBy === selectedUser ||
+
+                split.users.includes(
+                    selectedUser
+                )
+            );
+    }
+
+    /* DATE FILTER */
+
+    switch(filter){
+
+        case "today":
+
+            splitHistory =
+                splitHistory.filter(
+                    split =>
+                    split.date === today
+                );
+            break;
+
+        case "date":
+
+            splitHistory =
+                splitHistory.filter(
+                    split =>
+                    split.date ===
+                    selectedDate
+                );
+            break;
+
+        case "month":
+
+            splitHistory =
+                splitHistory.filter(
+                    split =>
+                    split.date.startsWith(
+                        selectedMonth
+                    )
+                );
+            break;
+
+        case "year":
+
+            splitHistory =
+                splitHistory.filter(
+                    split =>
+                    split.date.startsWith(
+                        selectedYear
+                    )
+                );
+            break;
+
+        case "overall":
+        default:
+            break;
+    }
+
+    return splitHistory;
+}
+
+/* ================= RENDER BAR CHART ================= */
 
 function renderChart(){
 
@@ -3931,11 +4207,6 @@ function renderChart(){
         );
 
     if(!canvas){
-
-        console.log(
-            "Chart canvas not found"
-        );
-
         return;
     }
 
@@ -3944,57 +4215,85 @@ function renderChart(){
 
     const totals = {};
 
-    /* NORMAL EXPENSES */
+    const graphType =
 
-    filteredExpenses.forEach(exp=>{
+        document.getElementById(
+            "graphType"
+        )?.value || "normal";
 
-        if(!totals[exp.date]){
+    /* NORMAL */
 
-            totals[exp.date] = 0;
-        }
+    if(graphType === "normal"){
 
-        totals[exp.date] +=
-            Number(exp.price);
-    });
+        const expenses =
+            getFilteredNormalExpenses();
 
-    /* SPLIT EXPENSES */
+        expenses.forEach(exp=>{
 
-    const splitHistory =
+            totals[exp.item] =
 
-        JSON.parse(
+                (
+                    totals[exp.item]
+                    || 0
+                )
 
-            localStorage.getItem(
-                "splitHistory"
-            )
+                +
 
-        ) || [];
+                Number(exp.price);
+        });
+    }
 
-    splitHistory.forEach(split=>{
+    /* SPLIT */
 
-        const exists =
+    else{
 
-            filteredExpenses.some(
+        const splitHistory =
+            getFilteredSplitHistory();
 
-                exp => exp.date === split.date
-            );
+        splitHistory.forEach(split=>{
 
-        if(!exists){
-            return;
-        }
+            /* payer */
 
-        if(!totals[split.date]){
+            totals[
+                split.paidBy
+            ] =
 
-            totals[split.date] = 0;
-        }
+                (
+                    totals[
+                        split.paidBy
+                    ] || 0
+                )
 
-        totals[split.date] +=
-            Number(split.total);
-    });
+                +
+
+                split.total;
+
+            /* owes */
+
+            split.users.forEach(user=>{
+
+                if(user === split.paidBy){
+                    return;
+                }
+
+                totals[user] =
+
+                    (
+                        totals[user]
+                        || 0
+                    )
+
+                    -
+
+                    split.each;
+            });
+        });
+    }
 
     const labels =
         Object.keys(totals);
 
-    const data =
+    const values =
         Object.values(totals);
 
     if(expenseChart){
@@ -4009,25 +4308,57 @@ function renderChart(){
 
             data:{
 
-                labels:
-                    labels.length
-                    ? labels
-                    : ["No Data"],
+                labels,
 
                 datasets:[{
 
                     label:
-                        "Daily Expenses",
 
-                    data:
-                        data.length
-                        ? data
-                        : [0],
+                        graphType ===
+                        "normal"
+
+                        ?
+
+                        "Expenses"
+
+                        :
+
+                        "Split Share",
+
+                    data:values,
 
                     backgroundColor:
-                        "#facc15",
 
-                    borderRadius:12
+                    graphType === "normal"
+
+                    ?
+
+                    "#facc15"
+
+                    :
+
+                    labels.map(label=>{
+
+                        const splitHistory =
+                            getFilteredSplitHistory();
+
+                        const payers =
+                            splitHistory.map(
+                                s=>s.paidBy
+                            );
+
+                        return payers.includes(label)
+
+                            ?
+
+                            "#3b82f6"
+
+                            :
+
+                            "#ef4444";
+                    }),
+
+                    borderRadius:14
                 }]
             },
 
@@ -4037,82 +4368,42 @@ function renderChart(){
 
                 maintainAspectRatio:false,
 
-                plugins:{
-
-                    legend:{
-
-                        labels:{
-
-                            font:{
-
-                                size:24
-                            }
-                        }
-                    },
-
-                    tooltip:{
-
-                        titleFont:{
-
-                            size:22
-                        },
-
-                        bodyFont:{
-
-                            size:22
-                        }
-                    }
-                },
-
                 scales:{
-
-                    x:{
-
-                        ticks:{
-
-                            font:{
-
-                                size:22
-                            }
-                        }
-                    },
 
                     y:{
 
-                        beginAtZero:true,
-
-                        ticks:{
-
-                            font:{
-
-                                size:22
-                            }
-                        }
+                        beginAtZero:true
                     }
                 }
             }
         });
-
-    console.log(
-        "Bar chart rendered"
-    );
 }
 
-let pieChart;
+/* ================= PIE CHART ================= */
 
 function renderPieChart(){
 
+    const graphType =
+        document.getElementById(
+            "graphType"
+        )?.value || "normal";
+
+    if(graphType === "split"){
+
+        if(pieChart){
+            pieChart.destroy();
+        }
+
+        return;
+    }
+
     const canvas =
+
         document.getElementById(
             "expensePieChart"
         );
 
     if(!canvas){
-
-        console.log(
-            "Pie chart canvas not found"
-        );
-
         return;
     }
 
@@ -4121,52 +4412,21 @@ function renderPieChart(){
 
     const totals = {};
 
-    /* NORMAL EXPENSES */
+    const expenses =
+        getFilteredNormalExpenses();
 
-    filteredExpenses.forEach(exp=>{
+    expenses.forEach(exp=>{
 
-        if(!totals[exp.item]){
+        totals[exp.item] =
 
-            totals[exp.item] = 0;
-        }
-
-        totals[exp.item] +=
-            Number(exp.price);
-    });
-
-    /* SPLIT SHARE */
-
-    const splitHistory =
-
-        JSON.parse(
-
-            localStorage.getItem(
-                "splitHistory"
+            (
+                totals[exp.item]
+                || 0
             )
 
-        ) || [];
+            +
 
-    splitHistory.forEach(split=>{
-
-        const exists =
-
-            filteredExpenses.some(
-
-                exp =>
-                    exp.date === split.date
-            );
-
-        if(!exists){
-            return;
-        }
-
-        if(!totals[split.item]){
-
-            totals[split.item] = 0;
-        }
-
-        totals[split.item] +=
-            Number(split.total);
+            Number(exp.price);
     });
 
     const labels =
@@ -4187,17 +4447,11 @@ function renderPieChart(){
 
             data:{
 
-                labels:
-                    labels.length
-                    ? labels
-                    : ["No Data"],
+                labels,
 
                 datasets:[{
 
-                    data:
-                        data.length
-                        ? data
-                        : [1]
+                    data
                 }]
             },
 
@@ -4208,72 +4462,128 @@ function renderPieChart(){
                 maintainAspectRatio:false
             }
         });
-
-    console.log(
-        "Pie chart rendered"
-    );
 }
 
-/* ================= OPEN BAR GRAPH WINDOW ================= */
+/* ================= AUTO REFRESH ================= */
+
+[
+    "graphType",
+    "graphFilter",
+    "graphDate",
+    "graphMonth",
+    "graphYear",
+    "graphUser"
+]
+
+.forEach(id=>{
+
+    document
+    .getElementById(id)
+    ?.addEventListener(
+
+        "change",
+
+        ()=>{
+
+            renderChart();
+            renderPieChart();
+        }
+    );
+});
+
+/* INITIAL */
+
+setTimeout(()=>{
+
+    renderChart();
+    renderPieChart();
+
+},500);
+
+
+/* ======================================================
+   GRAPH WINDOWS
+====================================================== */
+
+/* ================= BAR GRAPH WINDOW ================= */
 
 function openBarChartWindow(){
 
-    const chartWindow =
-        window.open(
-            "",
-            "_blank",
-            "width=1200,height=700"
-        );
+    const graphType =
+        document.getElementById(
+            "graphType"
+        ).value;
 
     const totals = {};
 
-    /* NORMAL EXPENSES */
+    /* NORMAL EXPENSE */
 
-    filteredExpenses.forEach(exp=>{
+    if(graphType === "normal"){
 
-        if(!totals[exp.item]){
+        const expenses =
+            getFilteredNormalExpenses();
 
-            totals[exp.item] = 0;
-        }
+        expenses.forEach(exp=>{
 
-        totals[exp.item] +=
-            Number(exp.price);
-    });
+            totals[exp.item] =
+
+                (
+                    totals[exp.item]
+                    || 0
+                )
+
+                +
+
+                Number(exp.price);
+        });
+    }
 
     /* SPLIT SHARE */
 
-    const splitHistory =
+    else{
 
-        JSON.parse(
+        const splitHistory =
+            getFilteredSplitHistory();
 
-            localStorage.getItem(
-                "splitHistory"
-            )
+        splitHistory.forEach(split=>{
 
-        ) || [];
+            /* payer */
 
-    splitHistory.forEach(split=>{
+            totals[
+                split.paidBy
+            ] =
 
-        const exists =
+                (
+                    totals[
+                        split.paidBy
+                    ] || 0
+                )
 
-            filteredExpenses.some(
+                +
 
-                exp =>
-                    exp.date === split.date
-            );
+                split.total;
 
-        if(!exists){
-            return;
-        }
+            /* owes */
 
-        if(!totals[split.item]){
+            split.users.forEach(user=>{
 
-            totals[split.item] = 0;
-        }
+                if(user === split.paidBy){
+                    return;
+                }
 
-        totals[split.item] +=
-            Number(split.total);
-    });
+                totals[user] =
+
+                    (
+                        totals[user]
+                        || 0
+                    )
+
+                    -
+
+                    split.each;
+            });
+        });
+    }
 
     const labels =
         JSON.stringify(
@@ -4283,6 +4593,13 @@ function openBarChartWindow(){
     const data =
         JSON.stringify(
             Object.values(totals)
+        );
+
+    const chartWindow =
+        window.open(
+            "",
+            "_blank",
+            "width=1400,height=900"
         );
 
     chartWindow.document.write(`
@@ -4300,25 +4617,20 @@ Expense Graph
 <style>
 
 body{
-
     background:#111827;
-
     color:white;
-
     font-family:Arial;
-
     padding:30px;
-
-    text-align:center;
-
     margin:0;
 }
 
+h1{
+    text-align:center;
+}
+
 canvas{
-
     width:100% !important;
-
-    height:80vh !important;
+    height:70vh !important;
 }
 
 </style>
@@ -4328,103 +4640,189 @@ canvas{
 <body>
 
 <h1>
-📊 Expense Graph
+
+${
+graphType === "normal"
+
+?
+
+"📊 Normal Expense Graph"
+
+:
+
+"💰 Split Share Graph"
+}
+
 </h1>
+
+<p
+style="
+text-align:center;
+font-size:20px;
+margin-bottom:25px;
+"
+>
+
+Filter:
+
+${
+document
+.getElementById(
+"graphFilter"
+)
+.value
+}
+
+</p>
 
 <canvas id="graph"></canvas>
 
 <script>
 
-window.onload = ()=>{
+const ctx =
 
-    const ctx =
-        document.getElementById(
-            "graph"
-        ).getContext("2d");
+document
+.getElementById(
+    "graph"
+)
+.getContext("2d");
 
-    new Chart(ctx,{
+new Chart(ctx,{
 
-        type:"bar",
+    type:"bar",
 
-        data:{
+    data:{
 
-            labels:${labels},
+        labels:${labels},
 
-            datasets:[{
+        datasets:[{
 
-                label:
-                    "Daily Expenses",
+            label:
 
-                data:${data},
+            "${
+graphType === "normal"
 
-                backgroundColor:"#facc15",
+?
 
-                borderRadius:12
-            }]
-        },
+"Expenses"
 
-        options:{
+:
 
-            responsive:true,
+"Payer Amount"
+}",
 
-            maintainAspectRatio:false,
+data:${data},
 
-            plugins:{
+backgroundColor:
 
-                legend:{
+${
+graphType === "normal"
 
-                    labels:{
+?
 
-                        font:{
+'"#facc15"'
 
-                            size:28
-                        }
-                    }
-                },
+:
 
-                tooltip:{
+(() => {
 
-                    titleFont:{
+    const splitHistory =
+        getFilteredSplitHistory();
 
-                        size:26
-                    },
+    const payers =
+        splitHistory.map(
+            s => s.paidBy
+        );
 
-                    bodyFont:{
+    const colors =
+        Object.keys(totals)
+        .map(user =>
 
-                        size:26
-                    }
-                }
-            },
+            payers.includes(user)
 
-            scales:{
+            ? "#3b82f6"
 
-                x:{
+            : "#ef4444"
+        );
 
-                    ticks:{
+    return JSON.stringify(
+        colors
+    );
 
-                        font:{
+})()
+}
+        }]
+    },
 
-                            size:24
-                        }
-                    }
-                },
+    options:{
 
-                y:{
+    responsive:true,
 
-                    beginAtZero:true,
+    maintainAspectRatio:false,
 
-                    ticks:{
+    plugins:{
 
-                        font:{
+    legend:{
+    labels:{
+    color:"white"
+    }
+    }
+    },
 
-                            size:24
-                        }
-                    }
-                }
-            }
-        }
-    });
-};
+    scales:{
+
+    x:{
+
+    ticks:{
+    color:"white"
+    },
+
+    title:{
+    display:true,
+    text:
+
+    graphType === "normal"
+
+    ?
+
+    "Expense Items"
+
+    :
+
+    "Users",
+
+    color:"white"
+    }
+    },
+
+    y:{
+
+    beginAtZero:true,
+
+    ticks:{
+    color:"white"
+    },
+
+    title:{
+    display:true,
+    text:
+
+    graphType === "normal"
+
+    ?
+
+    "Expense Amount"
+
+    :
+
+    "Paid / Owe Amount",
+
+    color:"white"
+    }
+    }
+    }
+    }
+});
 
 </script>
 
@@ -4437,65 +4835,27 @@ window.onload = ()=>{
     chartWindow.document.close();
 }
 
-/* ================= OPEN PIE GRAPH WINDOW ================= */
+/* ================= PIE GRAPH WINDOW ================= */
 
 function openPieChartWindow(){
 
-    const chartWindow =
-        window.open(
-            "",
-            "_blank",
-            "width=1200,height=700"
-        );
+    const expenses =
+        getFilteredNormalExpenses();
 
     const totals = {};
 
-    /* NORMAL EXPENSES */
+    expenses.forEach(exp=>{
 
-    filteredExpenses.forEach(exp=>{
+        totals[exp.item] =
 
-        if(!totals[exp.item]){
-
-            totals[exp.item] = 0;
-        }
-
-        totals[exp.item] +=
-            Number(exp.price);
-    });
-
-    /* SPLIT SHARE */
-
-    const splitHistory =
-
-        JSON.parse(
-
-            localStorage.getItem(
-                "splitHistory"
+            (
+                totals[exp.item]
+                || 0
             )
 
-        ) || [];
+            +
 
-    splitHistory.forEach(split=>{
-
-        const exists =
-
-            filteredExpenses.some(
-
-                exp =>
-                    exp.date === split.date
-            );
-
-        if(!exists){
-            return;
-        }
-
-        if(!totals[split.item]){
-
-            totals[split.item] = 0;
-        }
-
-        totals[split.item] +=
-            Number(split.total);
+            Number(exp.price);
     });
 
     const labels =
@@ -4508,6 +4868,13 @@ function openPieChartWindow(){
             Object.values(totals)
         );
 
+    const chartWindow =
+        window.open(
+            "",
+            "_blank",
+            "width=1300,height=900"
+        );
+
     chartWindow.document.write(`
 
 <html>
@@ -4515,7 +4882,7 @@ function openPieChartWindow(){
 <head>
 
 <title>
-Expense Pie Graph
+Pie Graph
 </title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -4523,25 +4890,16 @@ Expense Pie Graph
 <style>
 
 body{
-
     background:#111827;
-
     color:white;
-
     font-family:Arial;
-
-    padding:30px;
-
     text-align:center;
-
-    margin:0;
+    padding:30px;
 }
 
 canvas{
-
     width:100% !important;
-
-    height:80vh !important;
+    height:75vh !important;
 }
 
 </style>
@@ -4558,35 +4916,26 @@ canvas{
 
 <script>
 
-window.onload = ()=>{
+new Chart(
 
-    const ctx =
-        document.getElementById(
-            "pie"
-        ).getContext("2d");
+document
+.getElementById(
+"pie"
+),
 
-    new Chart(ctx,{
+{
+type:"pie",
 
-        type:"pie",
+data:{
 
-        data:{
+labels:${labels},
 
-            labels:${labels},
+datasets:[{
 
-            datasets:[{
-
-                data:${data}
-            }]
-        },
-
-        options:{
-
-            responsive:true,
-
-            maintainAspectRatio:false
-        }
-    });
-};
+data:${data}
+}]
+}
+});
 
 </script>
 
@@ -4597,4 +4946,500 @@ window.onload = ()=>{
 `);
 
     chartWindow.document.close();
+}
+
+/* ================= SPLIT GRAPH ================= */
+
+function openSplitGraphWindow(){
+
+    const splitHistory =
+        getFilteredSplitHistory();
+
+    const userTotals = {};
+
+    let historyHtml = "";
+
+    splitHistory.forEach(split=>{
+
+        /* PAYER */
+
+        userTotals[
+            split.paidBy
+        ] =
+
+            (
+                userTotals[
+                    split.paidBy
+                ] || 0
+            )
+
+            +
+
+            split.total;
+
+        /* OWE USERS */
+
+        split.users.forEach(user=>{
+
+            if(
+                user === split.paidBy
+            ){
+                return;
+            }
+
+            userTotals[user] =
+
+                (
+                    userTotals[user]
+                    || 0
+                )
+
+                -
+
+                split.each;
+        });
+
+        /* HISTORY */
+
+        historyHtml += `
+
+        <div
+        style="
+        background:#1f2937;
+        padding:20px;
+        border-radius:20px;
+        margin-bottom:15px;
+        "
+        >
+
+        <h2>
+            📅 ${split.date}
+        </h2>
+
+        <h3
+        style="
+        color:#22c55e
+        "
+        >
+            👤 ${split.paidBy}
+
+            paid ₹${split.total}
+        </h3>
+
+        <p>
+            🧾 ${split.item}
+        </p>
+
+        <h4>
+            💸 Owe Details
+        </h4>
+
+        ${split.users
+
+        .filter(
+            u=>u !== split.paidBy
+        )
+
+        .map(user=>`
+
+        <p
+        style="
+        color:#ef4444
+        "
+        >
+
+        ${user}
+
+        owes
+
+        ₹${split.each}
+
+        </p>
+
+        `)
+
+        .join("")
+        }
+
+        </div>
+        `;
+    });
+
+    const labels =
+        Object.keys(
+            userTotals
+        );
+
+    const values =
+        Object.values(
+            userTotals
+        );
+
+    const payerUsers =
+        [
+            ...new Set(
+                splitHistory.map(
+                    s=>s.paidBy
+                )
+            )
+        ];
+
+    const colors =
+        labels.map(user=>{
+
+            if(payerUsers.includes(user)){
+
+                return "#3b82f6";
+            }
+
+            return "#ef4444";
+        });
+
+    const chartWindow =
+        window.open(
+            "",
+            "_blank",
+            "width=1500,height=1000"
+        );
+
+    chartWindow.document.write(`
+
+<html>
+
+<head>
+
+<title>
+Split Share Graph
+</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+    background:#111827;
+    color:white;
+    font-family:Arial;
+    padding:30px;
+}
+
+canvas{
+    width:100% !important;
+    height:70vh !important;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>
+💰 Split Share Analytics
+</h1>
+
+<canvas id="splitGraph"></canvas>
+
+<script>
+
+new Chart(
+
+document
+.getElementById(
+"splitGraph"
+),
+
+{
+
+type:"bar",
+
+data:{
+
+labels:
+
+${JSON.stringify(labels)},
+
+datasets:[{
+
+label:
+"Who Paid / Who Owes",
+
+data:
+
+${JSON.stringify(values)},
+
+backgroundColor:
+
+${JSON.stringify(colors)}
+}]
+},
+
+options:{
+
+responsive:true,
+
+maintainAspectRatio:false,
+
+scales:{
+
+y:{
+
+beginAtZero:true
+}
+}
+}
+});
+
+</script>
+
+<h1>
+📜 Payer & Owe History
+</h1>
+
+${historyHtml}
+
+</body>
+
+</html>
+
+`);
+
+    chartWindow.document.close();
+}
+
+function loadGraphUsers(){
+
+    const graphUser =
+        document.getElementById(
+            "graphUser"
+        );
+
+    if(!graphUser){
+        return;
+    }
+
+    graphUser.innerHTML = `
+
+        <option value="all">
+            All Users
+        </option>
+    `;
+
+    users.forEach(user=>{
+
+        graphUser.innerHTML += `
+
+            <option value="${user}">
+                ${user}
+            </option>
+        `;
+    });
+
+    graphUser.value =
+        currentUser;
+}
+
+/* ================= CLEAR ALL DATA ================= */
+
+/* ================= SECURE DELETE ALL DATA ================= */
+
+function clearAllExpenseData(){
+
+    /* admin credentials */
+
+    const ADMIN_USER =
+        "admin";
+
+    const ADMIN_PASS =
+        "admin@12345";
+
+    const username =
+        prompt(
+            "Enter admin username"
+        );
+
+    if(username === null){
+        return;
+    }
+
+    const password =
+        prompt(
+            "Enter admin password"
+        );
+
+    if(password === null){
+        return;
+    }
+
+    /* validation */
+
+    if(
+
+        username !== ADMIN_USER ||
+
+        password !== ADMIN_PASS
+
+    ){
+
+        speak(
+            "Invalid credentials"
+        );
+
+        alert(
+            "❌ Invalid credentials"
+        );
+
+        return;
+    }
+
+    const confirmed =
+        confirm(
+
+`Delete ALL expense tracker data?
+
+This will permanently remove:
+
+• All users
+• All expenses
+• Split history
+• Settlement history
+• Graph data
+• Current user
+
+This cannot be undone.`
+        );
+
+    if(!confirmed){
+        return;
+    }
+
+    /* remove user expenses */
+
+    users.forEach(user=>{
+
+        localStorage.removeItem(
+
+            getExpenseKey(user)
+        );
+    });
+
+    /* remove storage */
+
+    localStorage.removeItem(
+        "expenseUsers"
+    );
+
+    localStorage.removeItem(
+        "expenseUser"
+    );
+
+    localStorage.removeItem(
+        "splitHistory"
+    );
+
+    /* reset memory */
+
+    users = [];
+
+    expenses = [];
+
+    filteredExpenses = [];
+
+    currentUser = "";
+
+    /* reset UI */
+
+    document.getElementById(
+        "userSelect"
+    ).innerHTML = "";
+
+    const graphUser =
+        document.getElementById(
+            "graphUser"
+        );
+
+    if(graphUser){
+
+        graphUser.innerHTML = "";
+    }
+
+    document.getElementById(
+        "currentUserName"
+    ).innerText =
+        "User : Not Selected";
+
+    document.getElementById(
+        "expenseList"
+    ).innerHTML =
+
+        `
+        <div class="expenseItem">
+
+            <h3>
+                No expenses found
+            </h3>
+
+        </div>
+        `;
+
+    const splitContainer =
+        document.getElementById(
+            "splitExpenseList"
+        );
+
+    if(splitContainer){
+
+        splitContainer.innerHTML =
+
+        `
+        <div class="expenseItem">
+
+            No split expenses
+
+        </div>
+        `;
+    }
+
+    /* reset totals */
+
+    [
+        "dailyTotal",
+        "monthlyTotal",
+        "yearlyTotal",
+        "overallTotal"
+    ]
+
+    .forEach(id=>{
+
+        const el =
+            document.getElementById(
+                id
+            );
+
+        if(el){
+
+            el.innerText =
+                "₹0";
+        }
+    });
+
+    /* destroy graphs */
+
+    if(expenseChart){
+
+        expenseChart.destroy();
+    }
+
+    if(pieChart){
+
+        pieChart.destroy();
+    }
+
+    speak(
+        "All data deleted successfully"
+    );
+
+    alert(
+        "✅ All data deleted successfully"
+    );
 }
