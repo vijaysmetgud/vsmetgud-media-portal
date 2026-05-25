@@ -4624,7 +4624,9 @@ function openBarChartWindow(){
             "graphType"
         ).value;
 
-    const totals = {};
+    const totals = {};    
+    const payerTotals = {};
+    const oweTotals = {};
 
     /* NORMAL EXPENSE */
 
@@ -4657,14 +4659,12 @@ function openBarChartWindow(){
 
         splitHistory.forEach(split=>{
 
-            /* payer */
-
-            totals[
+            payerTotals[
                 split.paidBy
             ] =
 
                 (
-                    totals[
+                    payerTotals[
                         split.paidBy
                     ] || 0
                 )
@@ -4673,32 +4673,39 @@ function openBarChartWindow(){
 
                 split.total;
 
-            /* owes */
-
             split.users.forEach(user=>{
 
                 if(user === split.paidBy){
                     return;
                 }
 
-                totals[user] =
+                oweTotals[user] =
 
                     (
-                        totals[user]
+                        oweTotals[user]
                         || 0
                     )
 
-                    -
+                    +
 
                     split.each;
             });
         });
     }
 
-    const labels =
-        JSON.stringify(
-            Object.keys(totals)
-        );
+    const labels = [
+
+        ...new Set([
+
+            ...Object.keys(
+                payerTotals
+            ),
+
+            ...Object.keys(
+                oweTotals
+            )
+        ])
+    ];
 
     const data =
         JSON.stringify(
@@ -4805,63 +4812,59 @@ new Chart(ctx,{
 
         labels:${labels},
 
-        datasets:[{
+        datasets:
 
-            label:
-
-            "${
 graphType === "normal"
 
 ?
 
-"Expenses"
+[{
 
-:
-
-"Payer Amount"
-}",
+label:"Expenses",
 
 data:${data},
 
-backgroundColor:
+backgroundColor:"#facc15",
 
-${
-graphType === "normal"
+borderRadius:14
 
-?
-
-'"#facc15"'
+}]
 
 :
 
-(() => {
+[
 
-    const splitHistory =
-        getFilteredSplitHistory();
+{
 
-    const payers =
-        splitHistory.map(
-            s => s.paidBy
-        );
+label:"Paid Amount",
 
-    const colors =
-        Object.keys(totals)
-        .map(user =>
+data:${JSON.stringify(
+labels.map(user=>
+payerTotals[user] || 0
+)
+)},
 
-            payers.includes(user)
+backgroundColor:"#3b82f6",
 
-            ? "#3b82f6"
+borderRadius:14
+},
 
-            : "#ef4444"
-        );
+{
 
-    return JSON.stringify(
-        colors
-    );
+label:"Owe Amount",
 
-})()
+data:${JSON.stringify(
+labels.map(user=>
+oweTotals[user] || 0
+)
+)},
+
+backgroundColor:"#ef4444",
+
+borderRadius:14
 }
-        }]
+
+]
     },
 
     options:{
@@ -5193,7 +5196,6 @@ function openSplitGraphWindow(){
         ];
 
     const paidValues =
-
         labels.map(user=>
 
             payerTotals[user]
@@ -5201,7 +5203,6 @@ function openSplitGraphWindow(){
         );
 
     const oweValues =
-
         labels.map(user=>
 
             oweTotals[user]
@@ -5387,8 +5388,11 @@ function loadGraphUsers(){
         `;
     });
 
+    // graphUser.value =
+    //     currentUser || "all";
+
     graphUser.value =
-        currentUser || "all";
+        "all";    
 }
 
 /* ================= CLEAR ALL DATA ================= */
