@@ -4693,19 +4693,29 @@ function openBarChartWindow(){
         });
     }
 
-    const labels = [
+    const labels =
 
-        ...new Set([
+        graphType === "normal"
 
-            ...Object.keys(
-                payerTotals
-            ),
+        ?
 
-            ...Object.keys(
-                oweTotals
-            )
-        ])
-    ];
+        Object.keys(totals)
+
+        :
+
+        [
+
+            ...new Set([
+
+                ...Object.keys(
+                    payerTotals
+                ),
+
+                ...Object.keys(
+                    oweTotals
+                )
+            ])
+        ];
 
     const data =
         JSON.stringify(
