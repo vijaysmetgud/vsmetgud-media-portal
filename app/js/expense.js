@@ -64,12 +64,7 @@ function speak(text){
         return;
     }
 
-    /* stop previous speech safely */
-
-    if(speechSynthesis.speaking){
-
-        speechSynthesis.cancel();
-    }
+    speechSynthesis.cancel();
 
     const speech =
         new SpeechSynthesisUtterance(
@@ -697,7 +692,7 @@ function startVoice(){
                 callback("");
             };
 
-        },1500);
+        },2000);
     }
 
     /* ================= USER ================= */
@@ -2181,7 +2176,7 @@ function startSplitVoiceFlow(){
                 callback("");
             };
 
-        },1500);
+        },2000);
     }
 
     function askUsers(){
@@ -2423,8 +2418,6 @@ function startSplitVoiceFlow(){
                     /* small delay avoids repeat loop */
 
                     setTimeout(()=>{
-
-                        speechSynthesis.cancel();
 
                         askPayer();
 
