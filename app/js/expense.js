@@ -622,11 +622,7 @@ function startVoice(){
         callback
     ){
 
-        if(speechSynthesis.speaking){
-
-            speechSynthesis.cancel();
-
-        }
+        speechSynthesis.cancel();
 
         const speech =
             new SpeechSynthesisUtterance(
@@ -718,6 +714,18 @@ function startVoice(){
 
             (text)=>{
 
+                if(!text.trim()){
+
+                    speakThenListen(
+
+                        "Please say user name again",
+
+                        ()=> askUser()
+                    );
+
+                    return;
+                }
+
                 selectedUser =
                     text.trim();
 
@@ -727,13 +735,13 @@ function startVoice(){
 
                         user =>
 
-                        user
-                        .toLowerCase()
+                            user
+                            .toLowerCase()
 
-                        ===
+                            ===
 
-                        selectedUser
-                        .toLowerCase()
+                            selectedUser
+                            .toLowerCase()
                     );
 
                 let message = "";
@@ -764,11 +772,11 @@ function startVoice(){
 
                     loadUsers();
 
+                    loadGraphUsers();
+
                     message =
                         "User added successfully";
                 }
-
-                /* AUTO SELECT USER */
 
                 currentUser =
                     selectedUser;
@@ -868,22 +876,8 @@ function startVoice(){
                     }
                 );
             }
-
-            if(!text.trim()){
-
-                speakThenListen(
-
-                    "Please say user name again",
-
-                    ()=> askUser()
-                );
-
-                return;
-            }
         );
     }
-
-
 
     /* ================= AMOUNT ================= */
 
@@ -2116,10 +2110,7 @@ function startSplitVoiceFlow(){
         callback
     ){
 
-        if(speechSynthesis.speaking){
-
-            speechSynthesis.cancel();
-        }
+        speechSynthesis.cancel();
 
         const speech =
             new SpeechSynthesisUtterance(
@@ -2213,9 +2204,9 @@ function startSplitVoiceFlow(){
 
                     speakThenListen(
 
-                        "Please say amount again",
+                        "Please say users again",
 
-                        ()=> askAmount()
+                        ()=> askUsers()
                     );
 
                     return;
@@ -2248,11 +2239,12 @@ function startSplitVoiceFlow(){
                     selectedUsers.length === 0
                 ){
 
-                    speak(
-                        "No valid users found. Please try again"
-                    );
+                    speakThenListen(
 
-                    askUsers();
+                        "No valid users found. Please try again",
+
+                        ()=> askUsers()
+                    );
 
                     return;
                 }
@@ -2272,15 +2264,11 @@ function startSplitVoiceFlow(){
 
                 if(!text){
 
-                    speak(
-                        "Please say expense item again"
-                    );
-
                     speakThenListen(
 
-                        "Please say amount again",
+                        "Please say expense item again",
 
-                        ()=> askAmount()
+                        ()=> askItem()
                     );
 
                     return;
@@ -2303,10 +2291,6 @@ function startSplitVoiceFlow(){
             (text)=>{
 
                 if(!text){
-
-                    speak(
-                        "Please say amount again"
-                    );
 
                     speakThenListen(
 
@@ -2370,11 +2354,12 @@ function startSplitVoiceFlow(){
 
                 if(!amount){
 
-                    speak(
-                        "Invalid amount, please try again"
-                    );
+                    speakThenListen(
 
-                    askAmount();
+                        "Invalid amount, please try again",
+
+                        ()=> askAmount()
+                    );
 
                     return;
                 }
@@ -2394,15 +2379,11 @@ function startSplitVoiceFlow(){
 
                 if(!text){
 
-                    speak(
-                        "Please say payer name again"
-                    );
-
                     speakThenListen(
 
-                        "Please say amount again",
+                        "Please say payer name again",
 
-                        ()=> askAmount()
+                        ()=> askPayer()
                     );
 
                     return;
@@ -2433,20 +2414,16 @@ function startSplitVoiceFlow(){
 
                 if(!matchedUser){
 
-                    speak(
-                        "User not found, please try again"
+                    speakThenListen(
+
+                        "User not found, please try again",
+
+                        ()=> askPayer()
                     );
-
-                    /* small delay avoids repeat loop */
-
-                    setTimeout(()=>{
-
-                        askPayer();
-
-                    },1200);
 
                     return;
                 }
+
 
                 paidBy =
                     matchedUser;
@@ -4282,16 +4259,20 @@ function renderChart(){
         const splitHistory =
             getFilteredSplitHistory();
 
+        const payerTotals = {};
+
+        const oweTotals = {};
+
         splitHistory.forEach(split=>{
 
-            /* payer */
+            /* payer totals */
 
-            totals[
+            payerTotals[
                 split.paidBy
             ] =
 
                 (
-                    totals[
+                    payerTotals[
                         split.paidBy
                     ] || 0
                 )
@@ -4300,26 +4281,120 @@ function renderChart(){
 
                 split.total;
 
-            /* owes */
+            /* owe totals */
 
             split.users.forEach(user=>{
 
-                if(user === split.paidBy){
+                if(
+                    user === split.paidBy
+                ){
                     return;
                 }
 
-                totals[user] =
+                oweTotals[user] =
 
                     (
-                        totals[user]
+                        oweTotals[user]
                         || 0
                     )
 
-                    -
+                    +
 
                     split.each;
             });
         });
+
+        const allUsers = [
+
+            ...new Set([
+
+                ...Object.keys(
+                    payerTotals
+                ),
+
+                ...Object.keys(
+                    oweTotals
+                )
+            ])
+        ];
+
+        if(expenseChart){
+
+            expenseChart.destroy();
+        }
+
+        expenseChart =
+            new Chart(ctx,{
+
+                type:"bar",
+
+                data:{
+
+                    labels:allUsers,
+
+                    datasets:[
+
+                    {
+
+                        label:
+                            "Paid Amount",
+
+                        data:
+
+                            allUsers.map(
+                                user =>
+
+                                payerTotals[
+                                    user
+                                ] || 0
+                            ),
+
+                        backgroundColor:
+                            "#3b82f6",
+
+                        borderRadius:14
+                    },
+
+                    {
+
+                        label:
+                            "Owe Amount",
+
+                        data:
+
+                            allUsers.map(
+                                user =>
+
+                                oweTotals[
+                                    user
+                                ] || 0
+                            ),
+
+                        backgroundColor:
+                            "#ef4444",
+
+                        borderRadius:14
+                    }
+
+                    ]
+                },
+
+                options:{
+
+                    responsive:true,
+
+                    maintainAspectRatio:false,
+
+                    scales:{
+
+                        y:{
+                            beginAtZero:true
+                        }
+                    }
+                }
+            });
+
+        return;
     }
 
     const labels =
@@ -4403,8 +4478,11 @@ function renderChart(){
                 scales:{
 
                     y:{
+                        suggestedMin:
+                            Math.min(...values) - 50,
 
-                        beginAtZero:true
+                        suggestedMax:
+                            Math.max(...values) + 50
                     }
                 }
             }
@@ -4987,7 +5065,8 @@ function openSplitGraphWindow(){
     const splitHistory =
         getFilteredSplitHistory();
 
-    const userTotals = {};
+    const payerTotals = {};
+    const oweTotals = {};
 
     let historyHtml = "";
 
@@ -4995,19 +5074,19 @@ function openSplitGraphWindow(){
 
         /* PAYER */
 
-        userTotals[
+        payerTotals[
             split.paidBy
         ] =
 
-            (
-                userTotals[
-                    split.paidBy
-                ] || 0
-            )
+        (
+            payerTotals[
+                split.paidBy
+            ] || 0
+        )
 
-            +
+        +
 
-            split.total;
+        split.total;
 
         /* OWE USERS */
 
@@ -5019,14 +5098,14 @@ function openSplitGraphWindow(){
                 return;
             }
 
-            userTotals[user] =
+            oweTotals[user] =
 
                 (
-                    userTotals[user]
+                    oweTotals[user]
                     || 0
                 )
 
-                -
+                +
 
                 split.each;
         });
@@ -5098,13 +5177,35 @@ function openSplitGraphWindow(){
     });
 
     const labels =
-        Object.keys(
-            userTotals
+
+        [
+
+            ...new Set([
+
+                ...Object.keys(
+                    payerTotals
+                ),
+
+                ...Object.keys(
+                    oweTotals
+                )
+            ])
+        ];
+
+    const paidValues =
+
+        labels.map(user=>
+
+            payerTotals[user]
+            || 0
         );
 
-    const values =
-        Object.values(
-            userTotals
+    const oweValues =
+
+        labels.map(user=>
+
+            oweTotals[user]
+            || 0
         );
 
     const payerUsers =
@@ -5191,19 +5292,38 @@ labels:
 
 ${JSON.stringify(labels)},
 
-datasets:[{
+datasets:[
+
+{
 
 label:
-"Who Paid / Who Owes",
+"Paid Amount",
 
 data:
 
-${JSON.stringify(values)},
+${JSON.stringify(
+paidValues
+)},
 
 backgroundColor:
+"#3b82f6"
+},
 
-${JSON.stringify(colors)}
-}]
+{
+
+label:
+"Owe Amount",
+
+data:
+
+${JSON.stringify(
+oweValues
+)},
+
+backgroundColor:
+"#ef4444"
+}
+]
 },
 
 options:{
