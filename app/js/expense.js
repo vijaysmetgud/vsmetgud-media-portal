@@ -56,10 +56,20 @@ function saveExpenses(){
 }
 
 /* ================= SPEAK ================= */
+/* ================= SPEAK ================= */
 
 function speak(text){
 
-    speechSynthesis.cancel();
+    if(!text){
+        return;
+    }
+
+    /* stop previous speech safely */
+
+    if(speechSynthesis.speaking){
+
+        speechSynthesis.cancel();
+    }
 
     const speech =
         new SpeechSynthesisUtterance(
@@ -78,39 +88,89 @@ function speak(text){
     speech.volume =
         1;
 
-    const voices =
+    function startSpeech(){
 
+        const voices =
+            speechSynthesis
+            .getVoices();
+
+        /* prefer Indian voice */
+
+        const indianVoice =
+
+            voices.find(
+
+                voice =>
+
+                    voice.lang
+                    ?.toLowerCase()
+                    .includes("en-in")
+            )
+
+            ||
+
+            voices.find(
+
+                voice =>
+
+                    voice.lang
+                    ?.startsWith("en")
+            )
+
+            ||
+
+            null;
+
+        if(indianVoice){
+
+            speech.voice =
+                indianVoice;
+        }
+
+        speech.onerror =
+        (e)=>{
+
+            console.log(
+                "Speech error:",
+                e
+            );
+        };
+
+        speech.onend =
+        ()=>{
+
+            console.log(
+                "Speech finished"
+            );
+        };
+
+        speechSynthesis.speak(
+            speech
+        );
+    }
+
+    /* voices not loaded yet */
+
+    const voices =
         speechSynthesis
         .getVoices();
 
-    const indianVoice =
+    if(
+        voices.length === 0
+    ){
 
-        voices.find(
+        speechSynthesis
+        .onvoiceschanged =
 
-            voice =>
+        ()=>{
 
-            voice.lang ===
-            "en-IN"
-        );
+            startSpeech();
+        };
 
-    if(indianVoice){
-
-        speech.voice =
-            indianVoice;
+        return;
     }
 
-    speech.onerror =
-    (e)=>{
-
-        console.log(
-            "Speech error",
-            e
-        );
-    };
-
-    speechSynthesis.speak(
-        speech
-    );
+    startSpeech();
 }
 
 function addUserByVoice(name){
@@ -560,31 +620,13 @@ function startVoice(){
     /* ================= COMMON ================= */
 
     function speakThenListen(
-
         message,
-
         callback
     ){
 
-        speechSynthesis.cancel();
+        speak(message);
 
-        const speech =
-
-            new SpeechSynthesisUtterance(
-                message
-            );
-
-        speech.lang =
-            "en-IN";
-
-        speech.rate =
-            0.9;
-
-        speech.pitch =
-            1;
-
-        speech.onend =
-        ()=>{
+        setTimeout(()=>{
 
             const recognition =
 
@@ -610,11 +652,16 @@ function startVoice(){
 
             recognition.start();
 
-            document.getElementById(
-                "voiceStatus"
-            ).innerText =
+            const voiceStatus =
+                document.getElementById(
+                    "voiceStatus"
+                );
 
-                "🎤 Listening...";
+            if(voiceStatus){
+
+                voiceStatus.innerText =
+                    "🎤 Listening...";
+            }
 
             recognition.onresult =
             (event)=>{
@@ -625,16 +672,11 @@ function startVoice(){
                     .transcript
                     .trim();
 
-                console.log(
-                    "Voice:",
-                    text
-                );
+                if(voiceStatus){
 
-                document.getElementById(
-                    "voiceStatus"
-                ).innerText =
-
-                    "✅ " + text;
+                    voiceStatus.innerText =
+                        "✅ " + text;
+                }
 
                 recognition.stop();
 
@@ -644,19 +686,18 @@ function startVoice(){
             recognition.onerror =
             ()=>{
 
-                document.getElementById(
-                    "voiceStatus"
-                ).innerText =
+                if(voiceStatus){
 
-                    "❌ Could not hear";
+                    voiceStatus.innerText =
+                        "❌ Could not hear";
+                }
 
                 recognition.stop();
-            };
-        };
 
-        speechSynthesis.speak(
-            speech
-        );
+                callback("");
+            };
+
+        },1500);
     }
 
     /* ================= USER ================= */
@@ -750,24 +791,9 @@ function startVoice(){
 
                 renderExpenses();
 
-                /* WAIT FOR SPEECH TO FINISH */
+                speak(message);
 
-                speechSynthesis.cancel();
-
-                const speech =
-
-                    new SpeechSynthesisUtterance(
-                        message
-                    );
-
-                speech.lang =
-                    "en-IN";
-
-                speech.rate =
-                    0.9;
-
-                speech.onend =
-                ()=>{
+                setTimeout(()=>{
 
                     speakThenListen(
 
@@ -781,37 +807,27 @@ function startVoice(){
                                 .toLowerCase()
                                 .trim();
 
-                            /* ================= COMMAND MODE ================= */
+                            /* command mode */
 
                             if(
 
-                                voiceText.includes(
-                                    "today"
-                                )
+                                voiceText.includes("today")
 
                                 ||
 
-                                voiceText.includes(
-                                    "month"
-                                )
+                                voiceText.includes("month")
 
                                 ||
 
-                                voiceText.includes(
-                                    "year"
-                                )
+                                voiceText.includes("year")
 
                                 ||
 
-                                voiceText.includes(
-                                    "settlement"
-                                )
+                                voiceText.includes("settlement")
 
                                 ||
 
-                                voiceText.includes(
-                                    "split"
-                                )
+                                voiceText.includes("split")
 
                                 ||
 
@@ -828,10 +844,7 @@ function startVoice(){
                                 return;
                             }
 
-                            /* ================= FAST EXPENSE ================= */
-
                             const hasNumber =
-
                                 /\d/.test(
                                     voiceText
                                 );
@@ -845,19 +858,15 @@ function startVoice(){
                                 return;
                             }
 
-                            /* ================= GUIDED MODE ================= */
-
                             item =
                                 voiceText;
 
                             askAmount();
                         }
-                    );
-                };
 
-                speechSynthesis.speak(
-                    speech
-                );
+                    );
+
+                },1500);
             }
         );
     }
@@ -2099,24 +2108,19 @@ function startSplitVoiceFlow(){
         callback
     ){
 
-        speechSynthesis.cancel();
+        speak(message);
 
-        const speech =
-            new SpeechSynthesisUtterance(
-                message
-            );
-
-        speech.lang =
-            "en-IN";
-
-        speech.rate =
-            0.9;
-
-        speech.onend =
-        ()=>{
+        setTimeout(()=>{
 
             const recognition =
-                new SpeechRecognition();
+
+                new (
+                    window
+                    .SpeechRecognition ||
+
+                    window
+                    .webkitSpeechRecognition
+                )();
 
             recognition.lang =
                 "en-IN";
@@ -2132,17 +2136,33 @@ function startSplitVoiceFlow(){
 
             recognition.start();
 
+            const voiceStatus =
+                document.getElementById(
+                    "voiceStatus"
+                );
+
+            if(voiceStatus){
+
+                voiceStatus.innerText =
+                    "🎤 Listening...";
+            }
+
             recognition.onresult =
             (event)=>{
 
-                recognition.stop();
-
                 const text =
 
-                    event
-                    .results[0][0]
+                    event.results[0][0]
                     .transcript
                     .trim();
+
+                if(voiceStatus){
+
+                    voiceStatus.innerText =
+                        "✅ " + text;
+                }
+
+                recognition.stop();
 
                 callback(text);
             };
@@ -2150,21 +2170,18 @@ function startSplitVoiceFlow(){
             recognition.onerror =
             ()=>{
 
-                speak(
-                    "Could not hear properly"
-                );
+                if(voiceStatus){
 
-                setTimeout(()=>{
+                    voiceStatus.innerText =
+                        "❌ Could not hear";
+                }
 
-                    callback("");
+                recognition.stop();
 
-                },1000);
+                callback("");
             };
-        };
 
-        speechSynthesis.speak(
-            speech
-        );
+        },1500);
     }
 
     function askUsers(){
@@ -5236,7 +5253,7 @@ function loadGraphUsers(){
     });
 
     graphUser.value =
-        currentUser;
+        currentUser || "all";
 }
 
 /* ================= CLEAR ALL DATA ================= */
