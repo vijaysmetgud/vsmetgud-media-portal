@@ -56,7 +56,6 @@ function saveExpenses(){
 }
 
 /* ================= SPEAK ================= */
-/* ================= SPEAK ================= */
 
 function speak(text){
 
@@ -64,7 +63,11 @@ function speak(text){
         return;
     }
 
-    speechSynthesis.cancel();
+    if(speechSynthesis.speaking){
+
+        speechSynthesis.cancel();
+
+    }
 
     const speech =
         new SpeechSynthesisUtterance(
@@ -619,18 +622,26 @@ function startVoice(){
         callback
     ){
 
-        speak(message);
+        if(speechSynthesis.speaking){
 
-        setTimeout(()=>{
+            speechSynthesis.cancel();
+
+        }
+
+        const speech =
+            new SpeechSynthesisUtterance(
+                message
+            );
+
+        speech.lang = "en-IN";
+        speech.rate = 0.9;
+
+        speech.onend = ()=>{
 
             const recognition =
-
                 new (
-                    window
-                    .SpeechRecognition ||
-
-                    window
-                    .webkitSpeechRecognition
+                    window.SpeechRecognition ||
+                    window.webkitSpeechRecognition
                 )();
 
             recognition.lang =
@@ -662,7 +673,6 @@ function startVoice(){
             (event)=>{
 
                 const text =
-
                     event.results[0][0]
                     .transcript
                     .trim();
@@ -691,8 +701,11 @@ function startVoice(){
 
                 callback("");
             };
+        };
 
-        },2000);
+        speechSynthesis.speak(
+            speech
+        );
     }
 
     /* ================= USER ================= */
@@ -786,82 +799,86 @@ function startVoice(){
 
                 renderExpenses();
 
-                speak(message);
+                speakThenListen(
 
-                setTimeout(()=>{
+                    message +
+                    ". Say expense item or command",
 
-                    speakThenListen(
+                    (text)=>{
 
-                        "Say expense item or command",
+                        const voiceText =
 
-                        (text)=>{
+                            text
+                            .toLowerCase()
+                            .trim();
 
-                            const voiceText =
+                        if(
 
-                                text
-                                .toLowerCase()
-                                .trim();
+                            voiceText.includes("today")
 
-                            /* command mode */
+                            ||
 
-                            if(
+                            voiceText.includes("month")
 
-                                voiceText.includes("today")
+                            ||
 
-                                ||
+                            voiceText.includes("year")
 
-                                voiceText.includes("month")
+                            ||
 
-                                ||
+                            voiceText.includes("settlement")
 
-                                voiceText.includes("year")
+                            ||
 
-                                ||
+                            voiceText.includes("split")
 
-                                voiceText.includes("settlement")
+                            ||
 
-                                ||
+                            voiceText.startsWith(
+                                "add user"
+                            )
 
-                                voiceText.includes("split")
+                        ){
 
-                                ||
+                            processVoiceExpense(
+                                voiceText
+                            );
 
-                                voiceText.startsWith(
-                                    "add user"
-                                )
-
-                            ){
-
-                                processVoiceExpense(
-                                    voiceText
-                                );
-
-                                return;
-                            }
-
-                            const hasNumber =
-                                /\d/.test(
-                                    voiceText
-                                );
-
-                            if(hasNumber){
-
-                                processVoiceExpense(
-                                    voiceText
-                                );
-
-                                return;
-                            }
-
-                            item =
-                                voiceText;
-
-                            askAmount();
+                            return;
                         }
 
-                    );
+                        const hasNumber =
+                            /\d/.test(
+                                voiceText
+                            );
 
-                },1500);
+                        if(hasNumber){
+
+                            processVoiceExpense(
+                                voiceText
+                            );
+
+                            return;
+                        }
+
+                        item =
+                            voiceText;
+
+                        askAmount();
+                    }
+                );
+            }
+
+            if(!text.trim()){
+
+                speakThenListen(
+
+                    "Please say user name again",
+
+                    ()=> askUser()
+                );
+
+                return;
             }
         );
     }
@@ -959,10 +976,6 @@ function startVoice(){
                     amount;
 
                 addExpense();
-
-                speak(
-                    "Expense added successfully"
-                );
 
                 alert(
 
@@ -2103,18 +2116,25 @@ function startSplitVoiceFlow(){
         callback
     ){
 
-        speak(message);
+        if(speechSynthesis.speaking){
 
-        setTimeout(()=>{
+            speechSynthesis.cancel();
+        }
+
+        const speech =
+            new SpeechSynthesisUtterance(
+                message
+            );
+
+        speech.lang = "en-IN";
+        speech.rate = 0.9;
+
+        speech.onend = ()=>{
 
             const recognition =
-
                 new (
-                    window
-                    .SpeechRecognition ||
-
-                    window
-                    .webkitSpeechRecognition
+                    window.SpeechRecognition ||
+                    window.webkitSpeechRecognition
                 )();
 
             recognition.lang =
@@ -2146,7 +2166,6 @@ function startSplitVoiceFlow(){
             (event)=>{
 
                 const text =
-
                     event.results[0][0]
                     .transcript
                     .trim();
@@ -2175,8 +2194,11 @@ function startSplitVoiceFlow(){
 
                 callback("");
             };
+        };
 
-        },2000);
+        speechSynthesis.speak(
+            speech
+        );
     }
 
     function askUsers(){
@@ -2189,15 +2211,12 @@ function startSplitVoiceFlow(){
 
                 if(!text){
 
-                    speak(
-                        "Please say users again"
+                    speakThenListen(
+
+                        "Please say amount again",
+
+                        ()=> askAmount()
                     );
-
-                    setTimeout(()=>{
-
-                        askUsers();
-
-                    },800);
 
                     return;
                 }
@@ -2257,11 +2276,12 @@ function startSplitVoiceFlow(){
                         "Please say expense item again"
                     );
 
-                    setTimeout(()=>{
+                    speakThenListen(
 
-                        askItem();
+                        "Please say amount again",
 
-                    },800);
+                        ()=> askAmount()
+                    );
 
                     return;
                 }
@@ -2288,11 +2308,12 @@ function startSplitVoiceFlow(){
                         "Please say amount again"
                     );
 
-                    setTimeout(()=>{
+                    speakThenListen(
 
-                        askAmount();
+                        "Please say amount again",
 
-                    },800);
+                        ()=> askAmount()
+                    );
 
                     return;
                 }
@@ -2377,11 +2398,12 @@ function startSplitVoiceFlow(){
                         "Please say payer name again"
                     );
 
-                    setTimeout(()=>{
+                    speakThenListen(
 
-                        askPayer();
+                        "Please say amount again",
 
-                    },800);
+                        ()=> askAmount()
+                    );
 
                     return;
                 }
