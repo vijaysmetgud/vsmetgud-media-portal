@@ -4820,7 +4820,7 @@ new Chart(ctx,{
 
     data:{
 
-        labels:${labels},
+        labels:${JSON.stringify(labels)},
 
         datasets:
 
