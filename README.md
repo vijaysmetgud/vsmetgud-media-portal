@@ -241,4 +241,6 @@ and serve static files through your existing Node/NGINX media portal so it runs 
 
 without needing port 5173.
 
-For now, PM2 is the fastest permanent fix.
+For now, PM2 is the fastest permanent fix
+
+--------------------------THANK YOU GOOD BYE----------------------------------
