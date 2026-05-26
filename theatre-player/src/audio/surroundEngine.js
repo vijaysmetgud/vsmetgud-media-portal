@@ -13,7 +13,7 @@ export function setupTheatreAudio(mediaElement) {
 
   analyser.fftSize = 256;
 
-  // BASS
+  // BASS BOOST
   const bass =
     audioContext.createBiquadFilter();
 
@@ -27,7 +27,7 @@ export function setupTheatreAudio(mediaElement) {
 
   treble.type = "highshelf";
   treble.frequency.value = 4000;
-  treble.gain.value = 3;
+  treble.gain.value = 4;
 
   // VOCAL CLARITY
   const vocal =
@@ -36,25 +36,9 @@ export function setupTheatreAudio(mediaElement) {
   vocal.type = "peaking";
   vocal.frequency.value = 1500;
   vocal.Q.value = 1;
-  vocal.gain.value = 4;
+  vocal.gain.value = 5;
 
-  // STEREO WIDENING
-  const splitter =
-    audioContext.createChannelSplitter(2);
-
-  const merger =
-    audioContext.createChannelMerger(2);
-
-  const leftGain =
-    audioContext.createGain();
-
-  const rightGain =
-    audioContext.createGain();
-
-  leftGain.gain.value = 1.2;
-  rightGain.gain.value = 1.2;
-
-  // THEATRE REVERB
+  // THEATRE DELAY / ROOM FEEL
   const delay =
     audioContext.createDelay();
 
@@ -63,21 +47,13 @@ export function setupTheatreAudio(mediaElement) {
   const feedback =
     audioContext.createGain();
 
-  feedback.gain.value = 0.35;
+  feedback.gain.value = 0.3;
 
   source.connect(bass);
   bass.connect(vocal);
   vocal.connect(treble);
 
-  treble.connect(splitter);
-
-  splitter.connect(leftGain, 0);
-  splitter.connect(rightGain, 1);
-
-  leftGain.connect(merger, 0, 0);
-  rightGain.connect(merger, 0, 1);
-
-  merger.connect(delay);
+  treble.connect(delay);
   delay.connect(feedback);
   feedback.connect(delay);
 
@@ -86,9 +62,8 @@ export function setupTheatreAudio(mediaElement) {
 
   return {
     analyser,
-    audioContext,
     bass,
-    treble,
-    vocal
+    vocal,
+    treble
   };
 }

@@ -171,3 +171,7 @@ http://localhost:3000/theatre-player
 http://localhost:5173
 
 window.open("http://localhost:5173")
+
+
+
+npm run dev -- --host
