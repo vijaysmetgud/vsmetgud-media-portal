@@ -70,3 +70,61 @@ button{
 .empty{
   color:#777;
 }
+
+/* ================= MOBILE RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+
+  .player-container {
+    flex-direction: column;
+    width: 100%;
+    padding: 12px;
+    gap: 15px;
+  }
+
+  .media-player {
+    width: 100%;
+  }
+
+  .playlist {
+    width: 100%;
+    height: auto;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+
+  video,
+  audio {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+  }
+
+  canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  button {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 28px;
+    text-align: center;
+  }
+
+  .equalizer-panel,
+  .visualizer {
+    width: 100%;
+  }
+}
