@@ -1,8 +1,3 @@
-import Visualizer from "./Visualizer";
-import AmbientLights from "./AmbientLights";
-import EqualizerPanel from "./EqualizerPanel";
-import { setupTheatreAudio }
-from "../audio/surroundEngine";
 import { useRef, useState, useEffect } from "react";
 import Playlist from "./Playlist";
 import {
@@ -13,9 +8,6 @@ import {
 } from "react-icons/fa";
 
 function TheatrePlayer() {
-
-  const [audioNodes, setAudioNodes] =
-    useState(null);  
   const mediaRef = useRef();
 
   const [playlist, setPlaylist] = useState([]);
@@ -41,15 +33,6 @@ function TheatrePlayer() {
 
   const togglePlay = () => {
     if (!mediaRef.current) return;
-
-    if (!audioNodes && mediaRef.current) {
-        const nodes =
-            setupTheatreAudio(
-            mediaRef.current
-            );
-
-        setAudioNodes(nodes);
-        }
 
     if (playing) {
       mediaRef.current.pause();
@@ -84,7 +67,8 @@ function TheatrePlayer() {
     mediaRef.current.requestFullscreen();
   };
 
-  const isVideo = currentFile?.type.startsWith("video");
+  const isVideo =
+    currentFile?.type.startsWith("video");
 
   return (
     <div className="theatre-container">
@@ -99,7 +83,7 @@ function TheatrePlayer() {
       <div className="player-area">
 
         <h1 className="title">
-          Theatre Media Player
+          🎬 Theatre Media Player
         </h1>
 
         <input
@@ -131,12 +115,15 @@ function TheatrePlayer() {
               Select Audio/Video Files
             </div>
           )}
+
         </div>
 
         <div className="controls">
 
           <button onClick={togglePlay}>
-            {playing ? <FaPause /> : <FaPlay />}
+            {playing
+              ? <FaPause />
+              : <FaPlay />}
           </button>
 
           <input
@@ -144,18 +131,6 @@ function TheatrePlayer() {
             value={progress}
             onChange={seek}
           />
-
-        <EqualizerPanel
-            bass={audioNodes?.bass}
-            treble={audioNodes?.treble}
-            vocal={audioNodes?.vocal}
-            />
-
-            <Visualizer
-            analyser={audioNodes?.analyser}
-            />
-
-            <AmbientLights />  
 
           <div className="volume">
 
