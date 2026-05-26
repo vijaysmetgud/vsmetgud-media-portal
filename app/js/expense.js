@@ -3254,11 +3254,12 @@ function showSettlement(){
         <button
             class="closeSettlementBtn"
             onclick="
-                document
-                .querySelector(
-                    '.settlementModal'
-                )
-                ?.remove()
+            document.body.style.overflow='auto';
+            document
+            .querySelector(
+            '.settlementModal'
+            )
+            ?.remove()
             "
         >
             ✖ Close
@@ -3300,6 +3301,9 @@ function showSettlement(){
     document.body.appendChild(
         settlementDiv
     );
+
+    document.body.style.overflow =
+        "hidden";
 
     speak(
 

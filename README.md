@@ -176,3 +176,69 @@ window.open("http://localhost:5173")
 TO RUN THEATRE PLAYER
 
 npm run dev -- --host
+
+---------Make it always run------------
+
+sudo npm install -g pm2
+
+cd ~/vsmetgud-media-portal/theatre-player
+
+pm2 start "npm run dev -- --host" --name theatre-player
+
+pm2 list
+
+open:  http://192.168.56.103:5173/
+
+Make it auto-start after reboot
+
+Run:  pm2 startup
+
+It prints a command like:
+
+sudo env PATH=... pm2 startup systemd -u vboxuser --hp /home/vboxuser
+
+Copy-paste that exact command.
+
+Then save process list:
+pm2 save
+
+Now after VM reboot:theatre player auto starts
+
+Useful commands
+
+Check running apps:
+
+pm2 list
+
+Logs:
+
+pm2 logs theatre-player
+
+Restart:
+
+pm2 restart theatre-player
+
+Stop:
+
+pm2 stop theatre-player
+
+Delete service:
+
+pm2 delete theatre-player
+
+
+Better production way (later)
+
+Eventually you should not use Vite dev server in production.
+
+Later we’ll do:
+
+npm run build
+
+and serve static files through your existing Node/NGINX media portal so it runs on:
+
+/media/theatre-player
+
+without needing port 5173.
+
+For now, PM2 is the fastest permanent fix.
