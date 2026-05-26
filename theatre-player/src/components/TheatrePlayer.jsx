@@ -16,6 +16,7 @@ function TheatrePlayer() {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(1);
+  const [mediaSrc, setMediaSrc] = useState("");
 
   const currentFile = playlist[currentIndex];
 
@@ -25,10 +26,36 @@ function TheatrePlayer() {
     }
   }, [volume]);
 
+  useEffect(() => {
+
+    if (playlist[currentIndex]) {
+
+      const url =
+        URL.createObjectURL(
+          playlist[currentIndex]
+        );
+
+      setMediaSrc(url);
+
+      return () =>
+        URL.revokeObjectURL(url);
+    }
+
+  }, [currentIndex, playlist]);
+
   const handleUpload = (e) => {
-    const files = Array.from(e.target.files);
+
+    const files =
+      Array.from(e.target.files);
+
     setPlaylist(files);
     setCurrentIndex(0);
+
+    if (files.length > 0) {
+      setMediaSrc(
+        URL.createObjectURL(files[0])
+      );
+    }
   };
 
   const togglePlay = async () => {
@@ -114,7 +141,7 @@ function TheatrePlayer() {
               <video
                 key={currentIndex}
                 ref={mediaRef}
-                src={URL.createObjectURL(currentFile)}
+                src={mediaSrc}
                 className="media-player"
                 onTimeUpdate={handleTimeUpdate}
                 controls
@@ -124,7 +151,7 @@ function TheatrePlayer() {
               <audio
                 key={currentIndex}
                 ref={mediaRef}
-                src={URL.createObjectURL(currentFile)}
+                src={mediaSrc}
                 onTimeUpdate={handleTimeUpdate}
                 controls
                 preload="metadata"
