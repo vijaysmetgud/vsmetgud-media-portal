@@ -31,16 +31,30 @@ function TheatrePlayer() {
     setCurrentIndex(0);
   };
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
+
     if (!mediaRef.current) return;
 
-    if (playing) {
-      mediaRef.current.pause();
-    } else {
-      mediaRef.current.play();
-    }
+    try {
 
-    setPlaying(!playing);
+      if (playing) {
+
+        mediaRef.current.pause();
+        setPlaying(false);
+
+      } else {
+
+        await mediaRef.current.play();
+        setPlaying(true);
+      }
+
+    } catch (err) {
+
+      console.error(
+        "Playback failed:",
+        err
+      );
+    }
   };
 
   const handleTimeUpdate = () => {
@@ -98,16 +112,25 @@ function TheatrePlayer() {
           {currentFile ? (
             isVideo ? (
               <video
+                key={currentIndex}
                 ref={mediaRef}
                 src={URL.createObjectURL(currentFile)}
                 className="media-player"
                 onTimeUpdate={handleTimeUpdate}
+                controls
+                preload="metadata"
               />
             ) : (
               <audio
+                key={currentIndex}
                 ref={mediaRef}
                 src={URL.createObjectURL(currentFile)}
                 onTimeUpdate={handleTimeUpdate}
+                controls
+                preload="metadata"
+                style={{
+                  width: "100%"
+                }}
               />
             )
           ) : (
