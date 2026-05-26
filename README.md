@@ -172,6 +172,7 @@ http://localhost:5173
 
 window.open("http://localhost:5173")
 
-
+---------------------------------
+TO RUN THEATEE PLAYER
 
 npm run dev -- --host
