@@ -817,3 +817,31 @@ body.light .dateLabel {
     box-shadow:
         0 0 45px rgba(124,58,237,.8);
 }
+
+@media (max-width: 768px) {
+  .player-container {
+    flex-direction: column;
+    width: 100%;
+    padding: 12px;
+  }
+
+  .playlist {
+    width: 100%;
+    height: auto;
+  }
+
+  .media-player {
+    width: 100%;
+  }
+
+  video,
+  audio {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  h1 {
+    font-size: 2rem;
+    text-align: center;
+  }
+}

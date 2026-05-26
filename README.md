@@ -183,6 +183,8 @@ sudo npm install -g pm2
 
 cd ~/vsmetgud-media-portal/theatre-player
 
+pm2 delete 1
+
 pm2 start "npm run dev -- --host" --name theatre-player
 
 pm2 list
