@@ -162,3 +162,12 @@ TO RUN THE SQLITE DATABASE (To know the ubique visitors count)
 
 sudo systemctl start sqlite
 sudo systemctl enable sqlite
+------------------------------------------------------------
+
+
+
+http://localhost:3000/theatre-player
+
+http://localhost:5173
+
+window.open("http://localhost:5173")

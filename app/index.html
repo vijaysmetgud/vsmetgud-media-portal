@@ -1276,6 +1276,17 @@ PYTHON PRACTICE
 
 </div>
 
+<div class="theatrePlayerWrapper">
+
+    <button
+        id="theatrePlayerBtn"
+        onclick="openTheatrePlayer()"
+    >
+        🎬 THEATRE MEDIA PLAYER
+    </button>
+
+</div>
+
 <div id="fileSection">    
 
     <!-- FILES -->
@@ -3393,6 +3404,16 @@ function sendMessage(){
     // ===============================
 
     input.value = "";
+}
+
+function openTheatrePlayer(){
+
+    window.open(
+        "http://localhost:5173/",
+        "_blank",
+        "width=1700,height=950,resizable=yes,scrollbars=no"
+    );
+
 }
 
 function toggleChat() {
