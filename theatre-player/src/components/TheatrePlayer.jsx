@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import Playlist from "./Playlist";
 import EqualizerPanel from "./EqualizerPanel";
+import "../styles/theatre.css";
 
 import {
   FaPlay,
@@ -10,27 +11,77 @@ import {
 } from "react-icons/fa";
 
 function TheatrePlayer() {
-  const mediaRef = useRef();
 
-  const [playlist, setPlaylist] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const mediaRef = useRef(null);
 
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [mediaSrc, setMediaSrc] = useState("");
+  const audioContextRef =
+    useRef(null);
 
-  const currentFile = playlist[currentIndex];
+  const analyserRef =
+    useRef(null);
 
+  const sourceRef =
+    useRef(null);
+
+  const bassRef =
+    useRef(null);
+
+  const vocalRef =
+    useRef(null);
+
+  const trebleRef =
+    useRef(null);
+
+  const [playlist,
+    setPlaylist] =
+    useState([]);
+
+  const [currentIndex,
+    setCurrentIndex] =
+    useState(0);
+
+  const [playing,
+    setPlaying] =
+    useState(false);
+
+  const [progress,
+    setProgress] =
+    useState(0);
+
+  const [volume,
+    setVolume] =
+    useState(1);
+
+  const [mediaSrc,
+    setMediaSrc] =
+    useState("");
+
+  const currentFile =
+    playlist[currentIndex];
+
+  const isVideo =
+    currentFile?.type.startsWith(
+      "video"
+    );
+
+  // volume
   useEffect(() => {
+
     if (mediaRef.current) {
-      mediaRef.current.volume = volume;
+
+      mediaRef.current.volume =
+        volume;
+
     }
+
   }, [volume]);
 
+  // load selected file
   useEffect(() => {
 
-    if (playlist[currentIndex]) {
+    if (
+      playlist[currentIndex]
+    ) {
 
       const url =
         URL.createObjectURL(
@@ -39,90 +90,267 @@ function TheatrePlayer() {
 
       setMediaSrc(url);
 
+      setPlaying(false);
+      setProgress(0);
+
       return () =>
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(
+          url
+        );
     }
 
-  }, [currentIndex, playlist]);
+  }, [
+    playlist,
+    currentIndex
+  ]);
 
-  const handleUpload = (e) => {
+  // setup equalizer for audio/video
+  const setupAudio =
+    () => {
 
-    const files =
-      Array.from(e.target.files);
-
-    setPlaylist(files);
-    setCurrentIndex(0);
-
-    if (files.length > 0) {
-      setMediaSrc(
-        URL.createObjectURL(files[0])
-      );
-    }
-  };
-
-  const togglePlay = async () => {
-
-    if (!mediaRef.current) return;
+    if (
+      !mediaRef.current
+    ) return;
 
     try {
 
+      if (
+        audioContextRef.current
+      ) {
+
+        sourceRef.current
+          ?.disconnect();
+
+        audioContextRef
+          .current
+          .close();
+      }
+
+    } catch {}
+
+    const audioContext =
+      new window
+        .AudioContext();
+
+    const source =
+      audioContext
+        .createMediaElementSource(
+          mediaRef.current
+        );
+
+    // bass
+    const bass =
+      audioContext
+        .createBiquadFilter();
+
+    bass.type =
+      "lowshelf";
+
+    bass.frequency.value =
+      200;
+
+    bass.gain.value =
+      0;
+
+    // vocal
+    const vocal =
+      audioContext
+        .createBiquadFilter();
+
+    vocal.type =
+      "peaking";
+
+    vocal.frequency.value =
+      1000;
+
+    vocal.Q.value =
+      1;
+
+    vocal.gain.value =
+      0;
+
+    // treble
+    const treble =
+      audioContext
+        .createBiquadFilter();
+
+    treble.type =
+      "highshelf";
+
+    treble.frequency.value =
+      3000;
+
+    treble.gain.value =
+      0;
+
+    // analyser
+    const analyser =
+      audioContext
+        .createAnalyser();
+
+    analyser.fftSize =
+      128;
+
+    source.connect(bass);
+    bass.connect(vocal);
+    vocal.connect(treble);
+    treble.connect(
+      analyser
+    );
+
+    analyser.connect(
+      audioContext.destination
+    );
+
+    audioContextRef.current =
+      audioContext;
+
+    analyserRef.current =
+      analyser;
+
+    sourceRef.current =
+      source;
+
+    bassRef.current =
+      bass;
+
+    vocalRef.current =
+      vocal;
+
+    trebleRef.current =
+      treble;
+  };
+
+  const handleUpload =
+    (e) => {
+
+    const files =
+      Array.from(
+        e.target.files
+      );
+
+    setPlaylist(files);
+    setCurrentIndex(0);
+  };
+
+  const togglePlay =
+    async () => {
+
+    if (
+      !mediaRef.current
+    ) return;
+
+    try {
+
+      if (
+        !audioContextRef
+          .current
+      ) {
+
+        setupAudio();
+      }
+
       if (playing) {
 
-        mediaRef.current.pause();
+        mediaRef.current
+          .pause();
+
         setPlaying(false);
 
       } else {
 
-        await mediaRef.current.play();
+        await mediaRef
+          .current
+          .play();
+
         setPlaying(true);
       }
 
     } catch (err) {
 
-      console.error(
-        "Playback failed:",
-        err
-      );
+      console.error(err);
     }
   };
 
-  const handleTimeUpdate = () => {
-    const media = mediaRef.current;
+  const handleLoadedMedia =
+    () => {
 
-    if (!media) return;
+    setupAudio();
+  };
+
+  const handleTimeUpdate =
+    () => {
+
+    const media =
+      mediaRef.current;
+
+    if (!media)
+      return;
 
     const percent =
-      (media.currentTime / media.duration) * 100;
+      (
+        media.currentTime /
+        media.duration
+      ) * 100;
 
-    setProgress(percent || 0);
+    setProgress(
+      percent || 0
+    );
   };
 
-  const seek = (e) => {
-    const media = mediaRef.current;
+  const seek =
+    (e) => {
+
+    const media =
+      mediaRef.current;
+
+    if (!media)
+      return;
 
     media.currentTime =
-      (e.target.value / 100) * media.duration;
+      (
+        e.target.value /
+        100
+      ) *
+      media.duration;
 
-    setProgress(e.target.value);
+    setProgress(
+      e.target.value
+    );
   };
 
-  const fullscreen = () => {
-    mediaRef.current.requestFullscreen();
-  };
+  const fullscreen =
+    () => {
 
-  const isVideo =
-    currentFile?.type.startsWith("video");
+    if (
+      mediaRef.current &&
+      isVideo
+    ) {
+
+      mediaRef.current
+        .requestFullscreen();
+    }
+  };
 
   return (
+
     <div className="theatre-container">
 
+      {/* LEFT PLAYLIST */}
       <div className="sidebar">
+
         <Playlist
-          playlist={playlist}
-          setCurrentIndex={setCurrentIndex}
+          playlist={
+            playlist
+          }
+          setCurrentIndex={
+            setCurrentIndex
+          }
         />
+
       </div>
 
+      {/* PLAYER AREA */}
       <div className="player-area">
 
         <h1 className="title">
@@ -133,48 +361,98 @@ function TheatrePlayer() {
           type="file"
           multiple
           accept="audio/*,video/*"
-          onChange={handleUpload}
+          onChange={
+            handleUpload
+          }
         />
 
-        <div className="media-wrapper">
+        {/* EQUALIZER */}
+        <EqualizerPanel
+          bass={
+            bassRef.current
+          }
+          vocal={
+            vocalRef.current
+          }
+          treble={
+            trebleRef.current
+          }
+          analyser={
+            analyserRef.current
+          }
+        />
 
-          {currentFile ? (
-            isVideo ? (
-              <video
-                key={currentIndex}
-                ref={mediaRef}
-                src={mediaSrc}
-                className="media-player"
-                onTimeUpdate={handleTimeUpdate}
-                controls
-                preload="metadata"
-              />
-            ) : (
-              <audio
-                key={currentIndex}
-                ref={mediaRef}
-                src={mediaSrc}
-                onTimeUpdate={handleTimeUpdate}
-                controls
-                preload="metadata"
-                style={{
-                  width: "100%"
-                }}
-              />
-            )
-          ) : (
-            <div className="empty">
-              Select Audio/Video Files
-            </div>
-          )}
+        {/* VIDEO WINDOW */}
+        {currentFile &&
+          isVideo && (
 
-        </div>
+          <div className="media-wrapper">
 
-        <EqualizerPanel />
+            <video
+              key={
+                currentIndex
+              }
+              ref={
+                mediaRef
+              }
+              src={
+                mediaSrc
+              }
+              className="media-player"
+              onLoadedMetadata={
+                handleLoadedMedia
+              }
+              onTimeUpdate={
+                handleTimeUpdate
+              }
+              preload="metadata"
+            />
 
+          </div>
+        )}
+
+        {/* AUDIO */}
+        {currentFile &&
+          !isVideo && (
+
+          <audio
+            key={
+              currentIndex
+            }
+            ref={
+              mediaRef
+            }
+            src={
+              mediaSrc
+            }
+            onLoadedMetadata={
+              handleLoadedMedia
+            }
+            onTimeUpdate={
+              handleTimeUpdate
+            }
+            preload="metadata"
+            style={{
+              width:
+                "100%"
+            }}
+          />
+        )}
+
+        {!currentFile && (
+          <div className="empty">
+            Select Audio/Video Files
+          </div>
+        )}
+
+        {/* CONTROLS */}
         <div className="controls">
 
-          <button onClick={togglePlay}>
+          <button
+            onClick={
+              togglePlay
+            }
+          >
             {playing
               ? <FaPause />
               : <FaPlay />}
@@ -182,8 +460,14 @@ function TheatrePlayer() {
 
           <input
             type="range"
-            value={progress}
-            onChange={seek}
+            min="0"
+            max="100"
+            value={
+              progress
+            }
+            onChange={
+              seek
+            }
           />
 
           <div className="volume">
@@ -195,19 +479,32 @@ function TheatrePlayer() {
               min="0"
               max="1"
               step="0.1"
-              value={volume}
-              onChange={(e) =>
-                setVolume(e.target.value)
+              value={
+                volume
+              }
+              onChange={
+                (e) =>
+                  setVolume(
+                    e.target
+                      .value
+                  )
               }
             />
+
           </div>
 
-          <button onClick={fullscreen}>
+          <button
+            onClick={
+              fullscreen
+            }
+          >
             <FaExpand />
           </button>
 
         </div>
+
       </div>
+
     </div>
   );
 }
