@@ -27,9 +27,11 @@ sudo chmod -R 755 /mnt/media
    5  cloudflared tunnel create media-portal   
    6  sudo mkdir -p /etc/cloudflared
    7  sudo nano /etc/cloudflared/config.yml
-   8 cloudflared tunnel route dns media-portal vsmetgud.buzz   
+   8 cloudflared tunnel route dns media-portal vsmetgud.online   
+   
+   cloudflared tunnel run media-portal-tunnel
 
-   cloudflared tunnel --config /etc/cloudflared/config.yml run my-tunnel
+   cloudflared tunnel --config /etc/cloudflared/config.yml run media-portal-tunnel
    -----------------------------------------------------------------------------
    cloudflared tunnel create media-portal
       Tunnel credentials written to /home/vboxuser/.cloudflared/4f615c1f-bbd8-4265-a837-617a30e3fb87.json. cloudflared chose this file based on where your origin certificate was found. Keep this file secret. 
@@ -46,6 +48,8 @@ Created tunnel media-portal with id 4f615c1f-bbd8-4265-a837-617a30e3fb87
 ON MASTERNODE ----> helm/mediaportal ----> and execute below commands:
 
     helm upgrade media-portal .
+
+    helm upgrade --install media-portal .
     
     kubectl rollout restart deployment media-portal
 
@@ -248,3 +252,61 @@ without needing port 5173.
 For now, PM2 is the fastest permanent fix
 
 --------------------------THANK YOU GOOD BYE----------------------------------
+
+
+
+------AUTOMATE CLOUD FLARE TUNNEL RUN  WITHOUT MANUAL COMMAND-----------------
+
+
+sudo cloudflared service install
+
+sudo systemctl enable cloudflared
+sudo systemctl start cloudflared
+
+sudo systemctl status cloudflared
+
+
+sudo cat /etc/systemd/system/cloudflared.service
+inside service file you shouldsee new token in the line
+ExecStart=/usr/bin/cloudflared tunnel run --protocol http2 --token eyJhIjoiNjk1MmVlOTc0ZTU3ZmY3MzgyZGI4ZDczNjY5YzE3ODMiLCJ0IjoiNTE0MTY2MTctNzVkMS00ODM0LWFjNDUtMjEyYWFmODVjODk0IiwicyI6IldKNXlzUkltMTB0WWpWdXR4ak9OaFFEQ2kxNSt2VmgzR3o3blEyZURqZ0U9In0=
+
+after save run these commands below:
+
+sudo systemctl daemon-reload
+sudo systemctl enable cloudflared
+sudo systemctl restart cloudflared
+sudo systemctl status cloudflared
+
+
+
+4. Check logs
+
+If something fails:
+
+sudo journalctl -u cloudflared -f
+
+or:
+
+sudo systemctl status cloudflared
+
+This is the fastest way to see tunnel errors.
+
+5. Reboot test
+
+Run:
+
+sudo reboot
+
+After login:
+
+sudo systemctl status cloudflared
+
+You should see:
+
+active (running)
+
+without running:
+
+cloudflared tunnel run media
+
+manually.

@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import Playlist from "./Playlist";
+import EqualizerPanel from "./EqualizerPanel";
+
 import {
   FaPlay,
   FaPause,
@@ -167,6 +169,10 @@ function TheatrePlayer() {
           )}
 
         </div>
+
+        </div>
+
+        <EqualizerPanel />
 
         <div className="controls">
 
