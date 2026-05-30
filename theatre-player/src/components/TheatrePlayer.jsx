@@ -170,8 +170,6 @@ function TheatrePlayer() {
 
         </div>
 
-        </div>
-
         <EqualizerPanel />
 
         <div className="controls">
