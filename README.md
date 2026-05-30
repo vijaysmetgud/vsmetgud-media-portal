@@ -28,6 +28,8 @@ sudo chmod -R 755 /mnt/media
    6  sudo mkdir -p /etc/cloudflared
    7  sudo nano /etc/cloudflared/config.yml
    8 cloudflared tunnel route dns media-portal vsmetgud.buzz   
+
+   cloudflared tunnel --config /etc/cloudflared/config.yml run my-tunnel
    -----------------------------------------------------------------------------
    cloudflared tunnel create media-portal
       Tunnel credentials written to /home/vboxuser/.cloudflared/4f615c1f-bbd8-4265-a837-617a30e3fb87.json. cloudflared chose this file based on where your origin certificate was found. Keep this file secret. 
