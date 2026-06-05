@@ -4,12 +4,15 @@ import {
   useState
 } from "react";
 
+
 function EqualizerPanel({
   bass,
   vocal,
   treble,
-  analyser
-}) {
+  analyser,
+  delay,
+  feedback
+}){
 
   const canvasRef =
     useRef(null);
@@ -17,7 +20,7 @@ function EqualizerPanel({
   const [
     activeMode,
     setActiveMode
-  ] = useState("");
+  ] = useState("cinema");
 
   // Presets
   const preset =
@@ -40,18 +43,32 @@ function EqualizerPanel({
 
     switch (mode) {
 
+      case "surround":
+
+        bass.gain.value = 8;
+        vocal.gain.value = 2;
+        treble.gain.value = 8;
+
+        if (delay)
+          delay.delayTime.value = 0.08;
+
+        if (feedback)
+          feedback.gain.value = 0.5;
+
+        break;
+
       case "cinema":
 
-        bass.gain.value = 10;
-        vocal.gain.value = 4;
-        treble.gain.value = 4;
+        bass.gain.value = 12;
+        vocal.gain.value = 3;
+        treble.gain.value = 6;
 
         break;
 
       case "music":
 
-        bass.gain.value = 12;
-        vocal.gain.value = 2;
+        bass.gain.value = 10;
+        vocal.gain.value = 4;
         treble.gain.value = 7;
 
         break;
@@ -66,7 +83,7 @@ function EqualizerPanel({
 
       case "vocal":
 
-        bass.gain.value = 0;
+        bass.gain.value = 1;
         vocal.gain.value = 10;
         treble.gain.value = 3;
 
@@ -76,6 +93,37 @@ function EqualizerPanel({
         break;
     }
   };
+
+  useEffect(() => {
+    let animationId;
+
+    const draw = () => {
+
+      animationId =
+        requestAnimationFrame(draw);
+
+      ...
+    };
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+    
+    if (
+      !bass ||
+      !vocal ||
+      !treble
+    ) {
+      return;
+    }
+
+    bass.gain.value = 12;
+    vocal.gain.value = 3;
+    treble.gain.value = 6;
+
+  }, [bass, vocal, treble]);
 
   // Beat visualizer
   useEffect(() => {
@@ -188,6 +236,20 @@ function EqualizerPanel({
       />
 
       <div className="eq-panel">
+
+
+        <button
+          className={
+            activeMode === "surround"
+              ? "active-preset"
+              : ""
+          }
+          onClick={() =>
+            preset("surround")
+          }
+        >
+          Surround
+        </button>
 
         <button
           className={

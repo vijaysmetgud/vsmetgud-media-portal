@@ -354,7 +354,7 @@ function TheatrePlayer() {
       <div className="player-area">
 
         <h1 className="title">
-          🎬 Theatre Media Player
+          🎬 THEATRE MEDIA PLAYER
         </h1>
 
         <input

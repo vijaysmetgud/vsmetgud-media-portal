@@ -205,19 +205,18 @@ input[type="file"] {
 .active-preset {
   background: linear-gradient(
     135deg,
-    #7c3aed,
-    #d946ef
+    #FFD700,
+    #FFC107
   ) !important;
 
-  border: 2px solid #d946ef !important;
+  color: #000 !important;
+
+  border: 2px solid #FFD700 !important;
 
   box-shadow:
-    0 0 25px rgba(
-      217,
-      70,
-      239,
-      .8
-    );
+    0 0 10px rgba(255, 215, 0, 0.6),
+    0 0 20px rgba(255, 215, 0, 0.8),
+    0 0 35px rgba(255, 193, 7, 0.9);
 
   transform: scale(1.08);
 }

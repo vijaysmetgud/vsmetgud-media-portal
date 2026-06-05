@@ -1285,6 +1285,10 @@ PYTHON PRACTICE
         🎬 THEATRE MEDIA PLAYER
     </button>
 
+    <button onclick="openInTheatre('${file}')">
+        🎬 Theatre Mode
+    </button>
+
 </div>
 
 <div id="fileSection">    
@@ -3414,6 +3418,20 @@ function openTheatrePlayer() {
         "width=1700,height=950,resizable=yes,scrollbars=no"
     );
 
+}
+
+function openInTheatre(file){
+
+    const mediaUrl =
+        window.location.origin +
+        "/stream/" +
+        encodeURIComponent(file);
+
+    window.open(
+        "https://theatre.vsmetgud.online/?media=" +
+        encodeURIComponent(mediaUrl),
+        "_blank"
+    );
 }
 
 function toggleChat() {
