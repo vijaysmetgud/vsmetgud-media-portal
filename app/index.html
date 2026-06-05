@@ -1924,6 +1924,25 @@ function renderFiles(files){
             <button
                 onclick="
                     event.stopPropagation();
+                    openInTheatre('${file}');
+                "
+                style="
+                    padding:6px 12px;
+                    border:none;
+                    border-radius:8px;
+                    background:#f59e0b;
+                    color:black;
+                    cursor:pointer;
+                    margin-right:8px;
+                    font-weight:bold;
+                "
+            >
+                🎬 Theatre Mode
+            </button>
+
+            <button
+                onclick="
+                    event.stopPropagation();
 
                     window.open(
                         '/media/${encodeURIComponent(file)}',
@@ -1942,7 +1961,6 @@ function renderFiles(files){
                 Open In New Tab
             </button>
         `;
-
         card.onclick = () => {
 
             openFile(file);
@@ -3422,9 +3440,17 @@ function openTheatrePlayer() {
 
 function openInTheatre(file){
 
+    const lower = file.toLowerCase();
+
+    const basePath =
+        lower.endsWith(".mp3") ||
+        lower.endsWith(".wav")
+            ? "/media/"
+            : "/stream/";
+
     const mediaUrl =
         window.location.origin +
-        "/stream/" +
+        basePath +
         encodeURIComponent(file);
 
     window.open(
