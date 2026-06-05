@@ -91,7 +91,7 @@ body {
 /* title */
 
 .title {
-  font-size: 58px;
+  font-size: 36px;
   text-align: center;
   margin-bottom: 20px;
 }
@@ -99,7 +99,7 @@ body {
 /* file upload */
 
 input[type="file"] {
-  color: white;
+  color: rgb(138, 255, 84);
   margin-bottom: 20px;
 }
 

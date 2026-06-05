@@ -184,3 +184,5 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback }) {
   );
 
 }
+
+export default EqualizerPanel;
