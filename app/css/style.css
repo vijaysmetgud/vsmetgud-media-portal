@@ -785,6 +785,7 @@ body.light .dateLabel {
     display:flex;
     justify-content:center;
     margin-top:24px;
+    right:35px;
 }
 
 #theatrePlayerBtn{
