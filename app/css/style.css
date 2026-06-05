@@ -784,16 +784,16 @@ body.light .dateLabel {
 .theatrePlayerWrapper{
     display:flex;
     justify-content:center;
-    margin-top:20px;
+    margin-top:24px;
 }
 
 #theatrePlayerBtn{
-    padding:18px 30px;
+    padding:24px 32px;
     border:none;
     border-radius:40px;
     cursor:pointer;
 
-    font-size:18px;
+    font-size:24px;
     font-weight:700;
 
     color:white;
