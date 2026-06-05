@@ -49,6 +49,24 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback }) {
         vocal.gain.value = 10;
         treble.gain.value = 3;
         break;
+       
+      case "party":
+        bass.gain.value = 15;
+        vocal.gain.value = 3;
+        treble.gain.value = 10;
+        break;
+
+      case "podcast":
+        bass.gain.value = 2;
+        vocal.gain.value = 9;
+        treble.gain.value = 3;
+        break;
+
+      case "bass-boost":
+        bass.gain.value = 18;
+        vocal.gain.value = 2;
+        treble.gain.value = 2;
+        break;  
 
       default:
         break;
@@ -121,4 +139,48 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback }) {
         </button>
         <button
           className={activeMode === "cinema" ? "active-preset" : ""}
-          onClick
+          onClick={() => preset("cinema")}
+        >
+          Cinema
+        </button>
+        <button
+          className={activeMode === "music" ? "active-preset" : ""}
+          onClick={() => preset("music")}
+        >
+          Music
+        </button>
+        <button
+          className={activeMode === "night" ? "active-preset" : ""}
+          onClick={() => preset("night")}
+        >
+          Night
+        </button>
+        <button
+          className={activeMode === "vocal" ? "active-preset" : ""}
+          onClick={() => preset("vocal")}
+        >
+          Vocal
+        </button>
+        <button
+          className={activeMode === "party" ? "active-preset" : ""}
+          onClick={() => preset("party")}
+        >
+          Party
+        </button>
+        <button
+          className={activeMode === "podcast" ? "active-preset" : ""}
+          onClick={() => preset("podcast")}
+        >
+          Podcast
+        </button>
+        <button
+          className={activeMode === "bass-boost" ? "active-preset" : ""}
+          onClick={() => preset("bass-boost")}
+        >
+          Bass Boost
+        </button>
+      </div>
+    </div>
+  );
+
+}
