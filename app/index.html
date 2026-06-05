@@ -3431,22 +3431,35 @@ function sendMessage(){
 function openTheatrePlayer() {
 
     window.open(
-        "http://192.168.56.103:5173/",
+        "http://theatre.vsmetgud.online//",
         "_blank",
         "width=1700,height=950,resizable=yes,scrollbars=no"
     );
 
 }
 
-function openInTheatre(file){
-
+function openInTheatre(file) {
     const lower = file.toLowerCase();
 
-    const basePath =
-        lower.endsWith(".mp3") ||
-        lower.endsWith(".wav")
-            ? "/media/"
-            : "/stream/";
+    const audioFormats = [
+        ".mp3", ".wav", ".aac", ".m4a", ".ogg",
+        ".flac", ".wma", ".opus", ".aiff", ".alac"
+    ];
+
+    const videoFormats = [
+        ".mp4", ".mkv", ".webm", ".avi", ".mov",
+        ".wmv", ".flv", ".m4v", ".3gp", ".mpeg",
+        ".mpg", ".ts", ".mts", ".m2ts", ".ogv"
+    ];
+
+    const isAudio = audioFormats.some(ext => lower.endsWith(ext));
+    const isVideo = videoFormats.some(ext => lower.endsWith(ext));
+
+    const basePath = isAudio
+        ? "/media/"
+        : isVideo
+            ? "/stream/"
+            : "/stream/"; // default
 
     const mediaUrl =
         window.location.origin +
