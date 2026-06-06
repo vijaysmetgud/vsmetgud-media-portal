@@ -59,9 +59,11 @@ function TheatrePlayer() {
     playlist[currentIndex] || null;
 
   const isVideo =
-    mediaSrc.match(
+    currentFile?.type?.startsWith("video/") ||
+    currentFileName.match(
       /\.(mp4|mkv|webm|mov|avi)$/i
     );
+  
 
   const playPrevious = () => {
     if (playlist.length === 0) return;
@@ -457,19 +459,6 @@ function TheatrePlayer() {
           }
         />
 
-        {/* EQUALIZER */}
-        <EqualizerPanel
-          bass={bassRef.current}
-          vocal={vocalRef.current}
-          treble={trebleRef.current}
-          analyser={analyserRef.current}
-          currentFile={currentFile?.name || currentFileName}
-          playPrevious={playPrevious}
-          playPause={togglePlay}
-          playNext={playNext}
-          playing={playing}
-        />
-
         {/* VIDEO WINDOW */}
         {mediaSrc && isVideo && (
           <div className="media-wrapper">
@@ -477,6 +466,9 @@ function TheatrePlayer() {
               ref={mediaRef}
               src={mediaSrc}
               className="media-player"
+              controls
+              autoPlay
+              playsInline
               onLoadedMetadata={handleLoadedMedia}
               onTimeUpdate={handleTimeUpdate}
             />
@@ -492,6 +484,19 @@ function TheatrePlayer() {
             onTimeUpdate={handleTimeUpdate}
           />
         )}
+
+        {/* EQUALIZER */}
+        <EqualizerPanel
+          bass={bassRef.current}
+          vocal={vocalRef.current}
+          treble={trebleRef.current}
+          analyser={analyserRef.current}
+          currentFile={currentFile?.name || currentFileName}
+          playPrevious={playPrevious}
+          playPause={togglePlay}
+          playNext={playNext}
+          playing={playing}
+        />
 
         {!currentFile && (
           <div className="empty">
