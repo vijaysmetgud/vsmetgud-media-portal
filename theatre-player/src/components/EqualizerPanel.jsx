@@ -127,7 +127,7 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback }) {
       <canvas
         ref={canvasRef}
         width="900"
-        height="140"
+        height="300"
         className="visualizer-canvas"
       />
       <div className="eq-panel">
