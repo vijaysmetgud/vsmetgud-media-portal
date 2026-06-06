@@ -51,18 +51,37 @@ function TheatrePlayer() {
   const [volume,
     setVolume] =
     useState(1);
-
-  const [mediaSrc,
-    setMediaSrc] =
-    useState("");
+  
+  const [mediaSrc, setMediaSrc] = useState("");
+  const [currentFileName, setCurrentFileName] = useState("");  
 
   const currentFile =
-    playlist[currentIndex];
+    playlist[currentIndex] || null;
 
   const isVideo =
-    currentFile?.type.startsWith(
-      "video"
+    mediaSrc.match(
+      /\.(mp4|mkv|webm|mov|avi)$/i
     );
+
+  const playPrevious = () => {
+    if (playlist.length === 0) return;
+
+    setCurrentIndex((prev) =>
+      prev === 0 ? playlist.length - 1 : prev - 1
+    );
+
+    setPlaying(false);
+  };
+
+  const playNext = () => {
+    if (playlist.length === 0) return;
+
+    setCurrentIndex((prev) =>
+      prev === playlist.length - 1 ? 0 : prev + 1
+    );
+
+    setPlaying(false);
+  };  
 
   // volume
   useEffect(() => {
@@ -75,6 +94,63 @@ function TheatrePlayer() {
     }
 
   }, [volume]);
+
+  useEffect(() => {
+
+  if (!mediaSrc) return;
+
+  const timer =
+    setTimeout(async () => {
+
+      try {
+
+        if (
+          mediaRef.current
+        ) {
+
+          await mediaRef.current.play();
+
+          setPlaying(true);
+
+        }
+
+      } catch (err) {
+
+        console.error(err);
+
+      }
+
+    }, 500);
+
+  return () =>
+    clearTimeout(timer);
+
+}, [mediaSrc]);
+
+  useEffect(() => {
+
+    const media =
+      new URLSearchParams(
+        window.location.search
+      ).get("media");
+
+    if (!media) return;
+
+    const decoded =
+      decodeURIComponent(media);
+
+    setMediaSrc(decoded);
+
+    const parts =
+      decoded.split("/");
+
+    setCurrentFileName(
+      decodeURIComponent(
+        parts[parts.length - 1]
+      )
+    );
+
+  }, []);
 
   // load selected file
   useEffect(() => {
@@ -103,6 +179,21 @@ function TheatrePlayer() {
     playlist,
     currentIndex
   ]);
+
+  useEffect(() => {
+    if (!mediaRef.current || !mediaSrc) return;
+
+    const playMedia = async () => {
+      try {
+        await mediaRef.current.play();
+        setPlaying(true);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    playMedia();
+  }, [mediaSrc]);
 
   // setup equalizer for audio/video
   const setupAudio =
@@ -368,74 +459,39 @@ function TheatrePlayer() {
 
         {/* EQUALIZER */}
         <EqualizerPanel
-          bass={
-            bassRef.current
+          bass={bassRef.current}
+          vocal={vocalRef.current}
+          treble={trebleRef.current}
+          analyser={analyserRef.current}
+          currentFile={
+            currentFile?.name ||
+            currentFileName
           }
-          vocal={
-            vocalRef.current
-          }
-          treble={
-            trebleRef.current
-          }
-          analyser={
-            analyserRef.current
-          }
+          playPause={togglePlay}
+          playPrevious={playPrevious}
+          playNext={playNext}
         />
 
         {/* VIDEO WINDOW */}
-        {currentFile &&
-          isVideo && (
-
+        {mediaSrc && isVideo && (
           <div className="media-wrapper">
-
             <video
-              key={
-                currentIndex
-              }
-              ref={
-                mediaRef
-              }
-              src={
-                mediaSrc
-              }
+              ref={mediaRef}
+              src={mediaSrc}
               className="media-player"
-              onLoadedMetadata={
-                handleLoadedMedia
-              }
-              onTimeUpdate={
-                handleTimeUpdate
-              }
-              preload="metadata"
+              onLoadedMetadata={handleLoadedMedia}
+              onTimeUpdate={handleTimeUpdate}
             />
-
           </div>
         )}
 
-        {/* AUDIO */}
-        {currentFile &&
-          !isVideo && (
-
+        {/* AUDIO WINDOW */}
+        {mediaSrc && !isVideo && (
           <audio
-            key={
-              currentIndex
-            }
-            ref={
-              mediaRef
-            }
-            src={
-              mediaSrc
-            }
-            onLoadedMetadata={
-              handleLoadedMedia
-            }
-            onTimeUpdate={
-              handleTimeUpdate
-            }
-            preload="metadata"
-            style={{
-              width:
-                "100%"
-            }}
+            ref={mediaRef}
+            src={mediaSrc}
+            onLoadedMetadata={handleLoadedMedia}
+            onTimeUpdate={handleTimeUpdate}
           />
         )}
 

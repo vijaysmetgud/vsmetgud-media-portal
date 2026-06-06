@@ -3438,41 +3438,6 @@ function openTheatrePlayer() {
 
 }
 
-// function openInTheatre(file) {
-//     const lower = file.toLowerCase();
-
-//     const audioFormats = [
-//         ".mp3", ".wav", ".aac", ".m4a", ".ogg",
-//         ".flac", ".wma", ".opus", ".aiff", ".alac"
-//     ];
-
-//     const videoFormats = [
-//         ".mp4", ".mkv", ".webm", ".avi", ".mov",
-//         ".wmv", ".flv", ".m4v", ".3gp", ".mpeg",
-//         ".mpg", ".ts", ".mts", ".m2ts", ".ogv"
-//     ];
-
-//     const isAudio = audioFormats.some(ext => lower.endsWith(ext));
-//     const isVideo = videoFormats.some(ext => lower.endsWith(ext));
-
-//     const basePath = isAudio
-//         ? "/media/"
-//         : isVideo
-//             ? "/stream/"
-//             : "/stream/"; // default
-
-//     const mediaUrl =
-//         window.location.origin +
-//         basePath +
-//         encodeURIComponent(file);
-
-//     window.open(
-//         "https://theatre.vsmetgud.online/?media=" +
-//         encodeURIComponent(mediaUrl),
-//         "_blank"
-//     );
-// }
-
 function toggleChat() {
 
     const chatbox = document.getElementById("chatbox");
