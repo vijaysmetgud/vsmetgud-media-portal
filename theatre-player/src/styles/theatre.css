@@ -175,12 +175,12 @@ input[type="file"] {
 
     border: 2px solid rgba(217,70,239,.7);
 
-    border-radius: 14px;
+    border-radius: 8px;
 
-    padding: 12px 24px;
+    padding: 6px 18px;
 
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
 
     cursor: pointer;
 
@@ -302,8 +302,8 @@ input[type="file"] {
 ====================================== */
 
 .media-wrapper {
-    width: 400px;
-    height: 230px;
+    width: 640px;
+    height: 360px;
     top: 90px;
     right: 30px;
     z-index: 1000;
