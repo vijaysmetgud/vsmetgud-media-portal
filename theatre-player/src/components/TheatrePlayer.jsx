@@ -463,13 +463,11 @@ function TheatrePlayer() {
           vocal={vocalRef.current}
           treble={trebleRef.current}
           analyser={analyserRef.current}
-          currentFile={
-            currentFile?.name ||
-            currentFileName
-          }
-          playPause={togglePlay}
+          currentFile={currentFile?.name || currentFileName}
           playPrevious={playPrevious}
+          playPause={togglePlay}
           playNext={playNext}
+          playing={playing}
         />
 
         {/* VIDEO WINDOW */}

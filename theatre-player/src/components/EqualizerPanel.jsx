@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, currentFile, playPrevious, playPause, playNext}) {
+function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, currentFile, playPrevious, playPause, playNext, playing}) {
   const canvasRef = useRef(null);
   const [activeMode, setActiveMode] = useState("surround");
 
@@ -147,26 +147,26 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, curren
         height="300"
         className="visualizer-canvas"
       />
-
-      <div className="player-controls">
+      
+      <div className="now-playing">
+        🎬 Now Playing: {currentFile || "No media selected"}
+      </div> 
+      
+      <div className="transport-controls">
 
         <button onClick={playPrevious}>
           ⏮ Previous
         </button>
 
         <button onClick={playPause}>
-          ⏯ Play / Pause
+          {playing ? "⏸ Pause" : "▶ Play"}
         </button>
 
         <button onClick={playNext}>
-          ⏭ Next
+          Next ⏭
         </button>
 
       </div>
-
-      <div className="now-playing">
-        🎬 Now Playing: {currentFile || "No media selected"}
-      </div> 
 
       <div className="eq-panel">
         <button
