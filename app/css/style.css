@@ -782,15 +782,21 @@ body.light .dateLabel {
 }
 
 .theatrePlayerWrapper{
-    display:flex;
-    justify-content:center;
-    margin-top:24px;
-    right:35px;
+    position: fixed;
+
+    top: 120px;      /* adjust as needed */
+    right: 35px;
+
+    z-index: 99999;
+
+    display: flex;
+    justify-content: flex-end;
 }
 
 #theatrePlayerBtn{
-    padding:24px 32px;
+    padding:24px 40px;
     border:none;
+    min-width: 350px;
     border-radius:40px;
     cursor:pointer;
 
