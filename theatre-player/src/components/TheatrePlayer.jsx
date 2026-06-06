@@ -65,25 +65,45 @@ function TheatrePlayer() {
     );
   
 
-  const playPrevious = () => {
+  const playPrevious = async () => {
     if (playlist.length === 0) return;
 
-    setCurrentIndex((prev) =>
-      prev === 0 ? playlist.length - 1 : prev - 1
-    );
+    const prevIndex =
+      currentIndex === 0
+        ? playlist.length - 1
+        : currentIndex - 1;
 
-    setPlaying(false);
+    setCurrentIndex(prevIndex);
+
+    setTimeout(async () => {
+      try {
+        await mediaRef.current?.play();
+        setPlaying(true);
+      } catch (err) {
+        console.error(err);
+      }
+    }, 100);
   };
 
-  const playNext = () => {
+  const playNext = async () => {
     if (playlist.length === 0) return;
 
-    setCurrentIndex((prev) =>
-      prev === playlist.length - 1 ? 0 : prev + 1
-    );
+    const nextIndex =
+      currentIndex === playlist.length - 1
+        ? 0
+        : currentIndex + 1;
 
-    setPlaying(false);
-  };  
+    setCurrentIndex(nextIndex);
+
+    setTimeout(async () => {
+      try {
+        await mediaRef.current?.play();
+        setPlaying(true);
+      } catch (err) {
+        console.error(err);
+      }
+    }, 100);
+  };
 
   // volume
   useEffect(() => {
@@ -200,6 +220,8 @@ function TheatrePlayer() {
   // setup equalizer for audio/video
   const setupAudio =
     () => {
+
+    console.log("setupAudio called");
 
     if (
       !mediaRef.current
@@ -361,14 +383,17 @@ function TheatrePlayer() {
 
     } catch (err) {
 
-      console.error(err);
+      console.error("Audio setup error:", err);
     }
   };
 
-  const handleLoadedMedia =
-    () => {
-
-    setupAudio();
+  const handleLoadedMedia = async () => {
+    try {
+      await mediaRef.current.play();
+      setPlaying(true);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleTimeUpdate =

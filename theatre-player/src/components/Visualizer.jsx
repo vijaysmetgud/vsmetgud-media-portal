@@ -72,10 +72,21 @@ function Visualizer({ analyser }) {
           "#FFD600"  // Yellow
         ];
 
-        const color =
-          colors[
-            i % colors.length
-          ];
+        const value = dataArray[i];
+
+        let color;
+
+        if (value < 50) {
+          color = "#00E5FF";
+        } else if (value < 100) {
+          color = "#2979FF";
+        } else if (value < 150) {
+          color = "#7C4DFF";
+        } else if (value < 200) {
+          color = "#FF4081";
+        } else {
+          color = "#FFD600";
+        }
 
         ctx.fillStyle = color;
 
