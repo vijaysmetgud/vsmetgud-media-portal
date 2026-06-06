@@ -131,7 +131,7 @@ input[type="file"] {
 
     width: 100%;
     max-width: 1100px;
-    height: 120px;
+    height: 80px;
 
     border-radius: 20px;
 
@@ -373,7 +373,7 @@ input[type="file"] {
   }
 
   .visualizer-canvas {
-      height: 120px;
+      height: 80px;
   }
 
   .equalizer-panel {

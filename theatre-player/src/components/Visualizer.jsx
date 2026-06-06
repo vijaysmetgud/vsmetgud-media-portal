@@ -58,8 +58,8 @@ function Visualizer({ analyser }) {
 
         const barHeight =
           Math.min(
-            dataArray[i] * 0.45,
-            70
+            dataArray[i] * 0.8,
+            100
           );
 
         const colors = [
