@@ -388,12 +388,16 @@ function TheatrePlayer() {
   };
 
   const handleLoadedMedia = async () => {
-    try {
-      await mediaRef.current.play();
-      setPlaying(true);
-    } catch (err) {
-      console.error(err);
-    }
+    setupAudio();
+
+    setTimeout(async () => {
+      try {
+        await mediaRef.current.play();
+        setPlaying(true);
+      } catch (err) {
+        console.error(err);
+      }
+    }, 100);
   };
 
   const handleTimeUpdate =
