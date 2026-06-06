@@ -24,33 +24,33 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, curren
     switch (mode) {
 
       case "surround":
-        bass.gain.value = 6;
-        vocal.gain.value = 5;
-        treble.gain.value = 4;
+        bass.gain.value = 4;
+        vocal.gain.value = 8;
+        treble.gain.value = 7;
 
-        if (delay) delay.delayTime.value = 0.015;
-        if (feedback) feedback.gain.value = 0.10;
+        if (delay) delay.delayTime.value = 0.018;
+        if (feedback) feedback.gain.value = 0.15;
         break;
 
       case "theatre":
-        bass.gain.value = 6;
-        vocal.gain.value = 6;
-        treble.gain.value = 4;
+        bass.gain.value = 4;
+        vocal.gain.value = 9;
+        treble.gain.value = 5;
 
-        if (delay) delay.delayTime.value = 0.012;
-        if (feedback) feedback.gain.value = 0.08;
+        if (delay) delay.delayTime.value = 0.015;
+        if (feedback) feedback.gain.value = 0.12;
         break;
 
       case "cinema":
-        bass.gain.value = 7;
-        vocal.gain.value = 4;
-        treble.gain.value = 6;
+        bass.gain.value = 2;
+        vocal.gain.value = 10;
+        treble.gain.value = 10;
         break;
 
       case "music":
-        bass.gain.value = 6;
-        vocal.gain.value = 4;
-        treble.gain.value = 7;
+        bass.gain.value = 5;
+        vocal.gain.value = 9;
+        treble.gain.value = 9;
         break;
 
       case "night":
