@@ -24,33 +24,33 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, curren
     switch (mode) {
 
       case "surround":
-        bass.gain.value = 4;
-        vocal.gain.value = 8;
-        treble.gain.value = 7;
+        bass.gain.value = 3;
+        vocal.gain.value = 5;
+        treble.gain.value = 6;
 
-        if (delay) delay.delayTime.value = 0.018;
-        if (feedback) feedback.gain.value = 0.15;
+        if (delay) delay.delayTime.value = 0.015;
+        if (feedback) feedback.gain.value = 0.09;
         break;
 
       case "theatre":
-        bass.gain.value = 4;
-        vocal.gain.value = 9;
-        treble.gain.value = 5;
+        bass.gain.value = 2;
+        vocal.gain.value = 6;
+        treble.gain.value = 7;
 
-        if (delay) delay.delayTime.value = 0.015;
-        if (feedback) feedback.gain.value = 0.12;
+        if (delay) delay.delayTime.value = 0.012;
+        if (feedback) feedback.gain.value = 0.08;
         break;
 
       case "cinema":
         bass.gain.value = 2;
-        vocal.gain.value = 10;
-        treble.gain.value = 10;
+        vocal.gain.value = 6;
+        treble.gain.value = 5;
         break;
 
       case "music":
-        bass.gain.value = 5;
-        vocal.gain.value = 9;
-        treble.gain.value = 9;
+        bass.gain.value = 3;
+        vocal.gain.value = 5;
+        treble.gain.value = 7;
         break;
 
       case "night":
@@ -60,15 +60,15 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, curren
         break;
 
       case "vocal":
-        bass.gain.value = 1;
+        bass.gain.value = -2;
         vocal.gain.value = 8;
-        treble.gain.value = 3;
+        treble.gain.value = 4;
         break;
 
       case "party":
-        bass.gain.value = 8;
-        vocal.gain.value = 3;
-        treble.gain.value = 7;
+        bass.gain.value = 4;
+        vocal.gain.value = 2;
+        treble.gain.value = 9;
         break;
 
       case "podcast":
@@ -78,8 +78,8 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, curren
         break;
 
       case "bass-boost":
-        bass.gain.value = 10;
-        vocal.gain.value = 0;
+        bass.gain.value = 7;
+        vocal.gain.value = -1;
         treble.gain.value = 1;
         break;
 
@@ -121,7 +121,7 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, curren
       let x = 0;
 
       for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i] / 2;
+        const barHeight = Math.pow(dataArray[i] / 255, 0.8) * canvas.height * 0.9;
 
         // Example: dynamic color based on height
         ctx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
