@@ -794,35 +794,123 @@ body.light .dateLabel {
 }
 
 #theatrePlayerBtn{
-    padding:24px 40px;
-    border:none;
-    min-width: 350px;
-    border-radius:40px;
-    cursor:pointer;
 
-    font-size:24px;
-    font-weight:700;
+    position: relative;
 
-    color:white;
+    padding: 24px 42px;
+
+    min-width: 360px;
+
+    border: none;
+
+    border-radius: 60px;
+
+    cursor: pointer;
+
+    overflow: hidden;
+
+    font-size: 24px;
+
+    font-weight: 900;
+
+    letter-spacing: 1.5px;
+
+    color: white;
 
     background:
         linear-gradient(
             135deg,
-            #7c3aed,
-            #2563eb
+            #ff6b00,
+            #ffb300,
+            #ffd54f
         );
 
     box-shadow:
-        0 0 25px rgba(124,58,237,.5);
+        0 0 20px rgba(255,179,0,.4),
+        0 0 40px rgba(255,179,0,.35),
+        0 0 80px rgba(255,179,0,.25);
 
-    transition:.3s ease;
+    transition:
+        transform .3s ease,
+        box-shadow .3s ease,
+        filter .3s ease;
+
+    backdrop-filter: blur(12px);
+
+    animation:
+        theatreFloat 3s ease-in-out infinite;
 }
 
 #theatrePlayerBtn:hover{
-    transform:scale(1.08);
+
+    transform:
+        translateY(-4px)
+        scale(1.06);
+
+    filter: brightness(1.15);
 
     box-shadow:
-        0 0 45px rgba(124,58,237,.8);
+        0 0 35px rgba(255,179,0,.6),
+        0 0 70px rgba(255,179,0,.5),
+        0 0 120px rgba(255,179,0,.35);
+}
+
+#theatrePlayerBtn:active{
+
+    transform: scale(.96);
+}
+
+#theatrePlayerBtn::before{
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+
+    left: -150%;
+
+    width: 70%;
+
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,.45),
+            transparent
+        );
+
+    transform: skewX(-25deg);
+
+    animation: theatreShine 4s infinite;
+}
+
+@keyframes theatreFloat{
+
+    0%{
+        transform: translateY(0);
+    }
+
+    50%{
+        transform: translateY(-6px);
+    }
+
+    100%{
+        transform: translateY(0);
+    }
+}
+
+@keyframes theatreShine{
+
+    0%{
+        left:-150%;
+    }
+
+    100%{
+        left:200%;
+    }
 }
 
 @media (max-width: 768px) {
