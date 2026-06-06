@@ -58,7 +58,7 @@ function Visualizer({ analyser }) {
 
         const barHeight =
           Math.min(
-            dataArray[i] * 0.8,
+            dataArray[i] * 4,
             100
           );
 
@@ -79,8 +79,8 @@ function Visualizer({ analyser }) {
 
         ctx.fillStyle = color;
 
-        ctx.fillStyle =
-          gradient;
+        // ctx.fillStyle =
+        //   gradient;
 
         ctx.shadowColor = "#FFD700";
         ctx.shadowBlur = 15;  
@@ -91,8 +91,8 @@ function Visualizer({ analyser }) {
           x,
           centerY -
             barHeight / 2,
-          8,
-          barHeight,
+          6,
+          barHeight * 2,
           4
         );
 
