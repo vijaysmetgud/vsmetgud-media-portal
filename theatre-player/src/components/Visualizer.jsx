@@ -14,7 +14,7 @@ function Visualizer({ analyser }) {
     const ctx =
       canvas.getContext("2d");
 
-    analyser.fftSize = 64;
+    analyser.fftSize = 128;
 
     analyser.smoothingTimeConstant =
       0.85;
@@ -26,6 +26,16 @@ function Visualizer({ analyser }) {
       new Uint8Array(bufferLength);
 
     let animationId;
+
+      const colors = [
+        "#00E5FF",
+        "#2979FF",
+        "#7C4DFF",
+        "#D500F9",
+        "#FF4081",
+        "#FF6D00",
+        "#FFD600"
+      ];
 
     const animate = () => {
 
@@ -59,42 +69,50 @@ function Visualizer({ analyser }) {
         const barHeight =
           Math.min(
             dataArray[i] * 4,
-            100
+            120
           );
 
-        const colors = [
-          "#00E5FF", // Cyan
-          "#2979FF", // Blue
-          "#7C4DFF", // Purple
-          "#D500F9", // Pink
-          "#FF4081", // Rose
-          "#FF6D00", // Orange
-          "#FFD600"  // Yellow
-        ];
+        // const colors = [
+        //   "#00E5FF", // Cyan
+        //   "#2979FF", // Blue
+        //   "#7C4DFF", // Purple
+        //   "#D500F9", // Pink
+        //   "#FF4081", // Rose
+        //   "#FF6D00", // Orange
+        //   "#FFD600"  // Yellow
+        // ];
 
-        const value = dataArray[i];
+        // const value = dataArray[i];
 
-        let color;
+        // let color;
 
-        if (value < 50) {
-          color = "#00E5FF";
-        } else if (value < 100) {
-          color = "#2979FF";
-        } else if (value < 150) {
-          color = "#7C4DFF";
-        } else if (value < 200) {
-          color = "#FF4081";
-        } else {
-          color = "#FFD600";
-        }
+        // if (value < 20) {
+        //   color = "#00E5FF";
+        // } else if (value < 40) {
+        //   color = "#2979FF";
+        // } else if (value < 50) {
+        //   color = "#7C4DFF";
+        // } else if (value < 70) {
+        //   color = "#FF4081";
+        // } else {
+        //   color = "#FFD600";
+        // }
 
-        ctx.fillStyle = color;
+        // ctx.fillStyle = color;
 
         // ctx.fillStyle =
         //   gradient;
 
-        ctx.shadowColor = "#FFD700";
-        ctx.shadowBlur = 15;  
+
+
+        const hue = (i / bufferLength) * 360;
+
+        const color = `hsl(${hue}, 100%, 60%)`;
+
+        ctx.fillStyle = color;
+
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 20;  
 
         ctx.beginPath();
 

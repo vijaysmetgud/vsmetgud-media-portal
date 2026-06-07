@@ -85,24 +85,14 @@ function TheatrePlayer() {
     }, 100);
   };
 
-  const playNext = async () => {
+  const playNext = () => {
     if (playlist.length === 0) return;
 
-    const nextIndex =
-      currentIndex === playlist.length - 1
+    setCurrentIndex(prev =>
+      prev === playlist.length - 1
         ? 0
-        : currentIndex + 1;
-
-    setCurrentIndex(nextIndex);
-
-    setTimeout(async () => {
-      try {
-        await mediaRef.current?.play();
-        setPlaying(true);
-      } catch (err) {
-        console.error(err);
-      }
-    }, 100);
+        : prev + 1
+    );
   };
 
   // volume
@@ -388,16 +378,17 @@ function TheatrePlayer() {
   };
 
   const handleLoadedMedia = async () => {
-    setupAudio();
 
-    setTimeout(async () => {
-      try {
-        await mediaRef.current.play();
-        setPlaying(true);
-      } catch (err) {
-        console.error(err);
-      }
-    }, 100);
+    if (!audioContextRef.current) {
+      setupAudio();
+    }
+
+    try {
+      await mediaRef.current.play();
+      setPlaying(true);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleTimeUpdate =
@@ -500,6 +491,7 @@ function TheatrePlayer() {
               playsInline
               onLoadedMetadata={handleLoadedMedia}
               onTimeUpdate={handleTimeUpdate}
+              onEnded={playNext}
             />
           </div>
         )}
@@ -511,6 +503,7 @@ function TheatrePlayer() {
             src={mediaSrc}
             onLoadedMetadata={handleLoadedMedia}
             onTimeUpdate={handleTimeUpdate}
+            onEnded={playNext}
           />
         )}
 

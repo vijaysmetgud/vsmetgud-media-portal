@@ -28,17 +28,17 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, curren
         vocal.gain.value = 5;
         treble.gain.value = 6;
 
-        if (delay) delay.delayTime.value = 0.015;
-        if (feedback) feedback.gain.value = 0.09;
+        if (delay) delay.delayTime.value = 0.025;
+        if (feedback) feedback.gain.value = 0.08;
         break;
 
       case "theatre":
         bass.gain.value = 2;
-        vocal.gain.value = 6;
-        treble.gain.value = 7;
+        vocal.gain.value = 7;
+        treble.gain.value = 6;
 
-        if (delay) delay.delayTime.value = 0.012;
-        if (feedback) feedback.gain.value = 0.08;
+        if (delay) delay.delayTime.value = 0.025;
+        if (feedback) feedback.gain.value = 0.15;
         break;
 
       case "cinema":
