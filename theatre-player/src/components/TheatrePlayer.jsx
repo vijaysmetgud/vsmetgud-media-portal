@@ -29,6 +29,12 @@ function TheatrePlayer() {
   const vocalRef =
     useRef(null);
 
+  const leftDelayRef =
+    useRef(null);
+
+  const rightDelayRef =
+    useRef(null);
+
   const trebleRef =
     useRef(null);
 
@@ -252,7 +258,7 @@ function TheatrePlayer() {
       "lowshelf";
 
     bass.frequency.value =
-      200;
+      120;
 
     bass.gain.value =
       0;
@@ -266,7 +272,7 @@ function TheatrePlayer() {
       "peaking";
 
     vocal.frequency.value =
-      1000;
+      1800;
 
     vocal.Q.value =
       1;
@@ -283,7 +289,7 @@ function TheatrePlayer() {
       "highshelf";
 
     treble.frequency.value =
-      3000;
+      4500;
 
     treble.gain.value =
       0;
@@ -293,19 +299,74 @@ function TheatrePlayer() {
       audioContext
         .createAnalyser();
 
+    const compressor =
+      audioContext.createDynamicsCompressor();
+
+    compressor.threshold.value = -15;
+    compressor.knee.value = 20;
+    compressor.ratio.value = 8;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.25;    
+   
+    const splitter =
+      audioContext.createChannelSplitter(2);
+
+    const merger =
+      audioContext.createChannelMerger(2);
+
+    const leftDelay =
+      audioContext.createDelay();
+
+    const rightDelay =
+      audioContext.createDelay();
+
+    leftDelay.delayTime.value = 0.015;
+    rightDelay.delayTime.value = 0.030;  
+
     analyser.fftSize =
       128;
-
     source.connect(bass);
+
     bass.connect(vocal);
+
     vocal.connect(treble);
-    treble.connect(
+
+    treble.connect(compressor);
+
+    compressor.connect(splitter);
+
+    // LEFT CHANNEL
+    splitter.connect(
+      leftDelay,
+      0
+    );
+
+    // RIGHT CHANNEL
+    splitter.connect(
+      rightDelay,
+      1
+    );
+
+    leftDelay.connect(
+      merger,
+      0,
+      0
+    );
+
+    rightDelay.connect(
+      merger,
+      0,
+      1
+    );
+
+    merger.connect(
       analyser
     );
 
     analyser.connect(
       audioContext.destination
     );
+      
 
     audioContextRef.current =
       audioContext;
@@ -324,6 +385,12 @@ function TheatrePlayer() {
 
     trebleRef.current =
       treble;
+
+    leftDelayRef.current =
+      leftDelay;
+
+    rightDelayRef.current =
+      rightDelay;  
   };
 
   const handleUpload =
@@ -453,12 +520,9 @@ function TheatrePlayer() {
       <div className="sidebar">
 
         <Playlist
-          playlist={
-            playlist
-          }
-          setCurrentIndex={
-            setCurrentIndex
-          }
+          playlist={playlist}
+          currentIndex={currentIndex}
+          setCurrentIndex={setCurrentIndex}
         />
 
       </div>
@@ -478,6 +542,12 @@ function TheatrePlayer() {
             handleUpload
           }
         />
+
+        {!currentFile && (
+          <div className="empty">
+            Select Audio/Video Files
+          </div>
+        )}
 
         {/* VIDEO WINDOW */}
         {mediaSrc && isVideo && (
@@ -507,82 +577,61 @@ function TheatrePlayer() {
           />
         )}
 
-        {/* EQUALIZER */}
-        <EqualizerPanel
-          bass={bassRef.current}
-          vocal={vocalRef.current}
-          treble={trebleRef.current}
-          analyser={analyserRef.current}
-          currentFile={currentFile?.name || currentFileName}
-          playPrevious={playPrevious}
-          playPause={togglePlay}
-          playNext={playNext}
-          playing={playing}
-        />
-
-        {!currentFile && (
-          <div className="empty">
-            Select Audio/Video Files
-          </div>
-        )}
-
         {/* CONTROLS */}
-        <div className="controls">
+        {mediaSrc && (
+          <div className="controls">
 
-          <button
-            onClick={
-              togglePlay
-            }
-          >
-            {playing
-              ? <FaPause />
-              : <FaPlay />}
-          </button>
-
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={
-              progress
-            }
-            onChange={
-              seek
-            }
-          />
-
-          <div className="volume">
-
-            <FaVolumeUp />
+            <button onClick={togglePlay}>
+              {playing ? <FaPause /> : <FaPlay />}
+            </button>
 
             <input
               type="range"
               min="0"
-              max="1"
-              step="0.1"
-              value={
-                volume
-              }
-              onChange={
-                (e) =>
-                  setVolume(
-                    e.target
-                      .value
-                  )
-              }
+              max="100"
+              value={progress}
+              onChange={seek}
             />
 
+            <div className="volume">
+              <FaVolumeUp />
+
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={volume}
+                onChange={(e) =>
+                  setVolume(e.target.value)
+                }
+              />
+            </div>
+
+            <button onClick={fullscreen}>
+              <FaExpand />
+            </button>
+
           </div>
+        )}
 
-          <button
-            onClick={
-              fullscreen
-            }
-          >
-            <FaExpand />
-          </button>
 
-        </div>
+        {/* EQUALIZER */}
+        {mediaSrc && (
+          <EqualizerPanel
+            bass={bassRef.current}
+            vocal={vocalRef.current}
+            treble={trebleRef.current}
+            analyser={analyserRef.current}
+            leftDelay={leftDelayRef.current}
+            rightDelay={rightDelayRef.current}
+            currentFile={currentFile?.name || currentFileName}
+            playPrevious={playPrevious}
+            playPause={togglePlay}
+            playNext={playNext}
+            playing={playing}
+          />
+        )}     
 
       </div>
 

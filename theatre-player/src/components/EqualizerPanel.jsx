@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, currentFile, playPrevious, playPause, playNext, playing}) {
+function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, leftDelay,rightDelay, currentFile, playPrevious, playPause, playNext, playing}) {
   const canvasRef = useRef(null);
   const [activeMode, setActiveMode] = useState("surround");
 
@@ -24,27 +24,42 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, curren
     switch (mode) {
 
       case "surround":
-        bass.gain.value = 2.6;
-        vocal.gain.value = 7;
-        treble.gain.value = 8;
+        bass.gain.value = 2.2;
+        vocal.gain.value = 5.5;
+        treble.gain.value = 3.8;
 
-        if (delay) delay.delayTime.value = 0.030;
-        if (feedback) feedback.gain.value = 0.20;
+        if (leftDelay)
+          leftDelay.delayTime.value = 0.015;
+
+        if (rightDelay)
+          rightDelay.delayTime.value = 0.030;
+
         break;
 
       case "theatre":
-        bass.gain.value = 2.2;
-        vocal.gain.value = 7;
-        treble.gain.value = 6;
+        bass.gain.value = 2.5;
+        vocal.gain.value = 6.0;
+        treble.gain.value = 3.5;
 
-        if (delay) delay.delayTime.value = 0.025;
-        if (feedback) feedback.gain.value = 0.15;
-        break;
+        if (leftDelay)
+          leftDelay.delayTime.value = 0.012;
+
+        if (rightDelay)
+          rightDelay.delayTime.value = 0.024;
+
+        break;  
 
       case "cinema":
-        bass.gain.value = 2;
-        vocal.gain.value = 6;
-        treble.gain.value = 5;
+        bass.gain.value = 3.0;
+        vocal.gain.value = 5.0;
+        treble.gain.value = 3.0;
+
+        if (leftDelay)
+          leftDelay.delayTime.value = 0.018;
+
+        if (rightDelay)
+          rightDelay.delayTime.value = 0.035;
+
         break;
 
       case "music":
@@ -67,7 +82,7 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, curren
 
       case "party":
         bass.gain.value = 4;
-        vocal.gain.value = 2;
+        vocal.gain.value = 3;
         treble.gain.value = 9;
         break;
 
@@ -117,11 +132,11 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, curren
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const barWidth = (canvas.width / bufferLength) * 2.5;
+      const barWidth = (canvas.width / bufferLength) * 2.0;
       let x = 0;
 
       for (let i = 0; i < bufferLength; i++) {
-        const barHeight = Math.pow(dataArray[i] / 255, 0.8) * canvas.height * 0.9;
+        const barHeight = Math.pow(dataArray[i] / 255, 1) * canvas.height * 1.1;
 
         // Example: dynamic color based on height
         ctx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
@@ -137,7 +152,7 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, curren
       cancelAnimationFrame(animationId);
     };
   }, [analyser]);
-
+    
   return (
     <div className="equalizer-wrapper">
 

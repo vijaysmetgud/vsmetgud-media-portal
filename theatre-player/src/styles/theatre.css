@@ -39,6 +39,8 @@ body {
   overflow-x: hidden;
 
   padding: 18px;
+
+  padding-top: 120px;
 }
 
 .sidebar h2 {
@@ -49,26 +51,73 @@ body {
 
 /* playlist items */
 
-.playlist-item {
-  background: #171717;
-  border-radius: 14px;
+.track {
 
-  padding: 12px;
-  margin-bottom: 10px;
+    background: #171717;
 
-  cursor: pointer;
-  transition: .3s;
+    border-radius: 14px;
 
-  text-align: center;
-  word-break: break-word;
+    padding: 12px;
 
-  font-size: 14px;
-  line-height: 1.45;
+    margin-bottom: 10px;
+
+    cursor: pointer;
+
+    transition: all .3s ease;
+
+    text-align: left;
+
+    word-break: break-word;
+
+    font-size: 12px;
+
+    line-height: 1.45;
+
+    font-style: italic;
+
+    color: #ddd;
 }
 
-.playlist-item:hover {
-  background: #242424;
-  transform: scale(1.02);
+.track:hover {
+
+    background: #242424;
+
+    transform: scale(1.02);
+
+    box-shadow:
+        0 0 10px rgba(124,58,237,.25);
+}
+
+.active-track {
+
+    background:
+        linear-gradient(
+            135deg,
+            #FFD700,
+            #FF9800
+        ) !important;
+
+    color: #000;
+
+    font-weight: 700;
+
+    border:
+        2px solid #FFD700;
+
+    box-shadow:
+        0 0 12px rgba(255,215,0,.8),
+        0 0 30px rgba(255,215,0,.4);
+
+    transform: scale(1.02);
+}
+
+.track.active-track::before {
+
+    content: "▶";
+
+    margin-right: 8px;
+
+    color: #000;
 }
 
 /* ======================================
@@ -92,7 +141,7 @@ body {
 
 .title {
 
-    font-size: 28px;
+    font-size: 24px;
     text-align: center;
     margin-bottom: 20px;
 
@@ -122,7 +171,7 @@ input[type="file"] {
   flex-direction: column;
   align-items: center;
 
-  margin: 25px auto;
+  margin: 10px auto;
 }
 
 /* equalizer container */
@@ -131,7 +180,7 @@ input[type="file"] {
 
     width: 100%;
     max-width: 1100px;
-    height: 80px;
+    height: 120px;
 
     border-radius: 20px;
 
@@ -302,15 +351,18 @@ input[type="file"] {
 ====================================== */
 
 .media-wrapper {
-    width: 700px;
-    max-width: 90%;
+
+    width: 1200px;
+    max-width: 95%;
 
     aspect-ratio: 16 / 9;
 
     margin: 10px auto 20px;
 
     background: #000;
+
     border-radius: 15px;
+
     overflow: hidden;
 
     border: 1px solid rgba(217,70,239,.25);
@@ -338,9 +390,17 @@ input[type="file"] {
 ====================================== */
 
 .empty {
-  margin-top: 30px;
-  font-size: 28px;
-  color: #888;
+
+  margin-top: 20px;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  color: rgba(255,255,255,.55);
+
+  text-align: center;
+
+  letter-spacing: 0.5px;
 }
 
 /* ======================================
@@ -380,11 +440,11 @@ input[type="file"] {
   }
 
   .visualizer-canvas {
-      height: 80px;
+      height: 120px;
   }
 
   .equalizer-panel {
-    height: 80px;
+    height: 120px;
   }
 
   .eq-bar {
@@ -399,16 +459,16 @@ input[type="file"] {
 
 .now-playing {
 
-    width:100%;
-    max-width:1100px;
+    width: 70%;
+    max-width: 600px;
 
-    margin-top:20px;
+    margin-top: 10px;
 
-    padding:18px;
+    padding: 8px 12px;
 
-    text-align:center;
+    text-align: center;
 
-    border-radius:20px;
+    border-radius: 12px;
 
     background:
         linear-gradient(
@@ -420,14 +480,14 @@ input[type="file"] {
     border:
         1px solid rgba(217,70,239,.25);
 
-    color:#f5d0fe;
+    color: #f5d0fe;
 
-    font-size:18px;
-    font-weight:700;
+    font-size: 14px;
+    font-weight: 600;
 
     box-shadow:
-        0 0 15px rgba(124,58,237,.25),
-        0 0 30px rgba(217,70,239,.15);
+        0 0 10px rgba(124,58,237,.20),
+        0 0 20px rgba(217,70,239,.10);
 }
 
 .eq-panel button {
@@ -449,4 +509,26 @@ input[type="file"] {
     backdrop-filter: blur(8px);
 
     transition:all .3s ease;
+}
+
+.controls {
+
+    width: 100%;
+    max-width: 1100px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 15px;
+
+    margin: 10px 0 15px;
+
+    padding: 12px;
+
+    border-radius: 15px;
+
+    background: rgba(255,255,255,.03);
+
+    backdrop-filter: blur(10px);
 }

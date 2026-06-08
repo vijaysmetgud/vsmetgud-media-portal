@@ -1,6 +1,11 @@
-function Playlist({ playlist, setCurrentIndex }) {
+function Playlist({
+  playlist,
+  currentIndex,
+  setCurrentIndex
+}) {
   return (
     <div className="playlist">
+
       <h2>Playlist</h2>
 
       {playlist.length === 0 && (
@@ -10,9 +15,16 @@ function Playlist({ playlist, setCurrentIndex }) {
       {playlist.map((file, index) => (
         <div
           key={index}
-          className="track"
-          onClick={() => setCurrentIndex(index)}
+          className={
+            index === currentIndex
+              ? "track active-track"
+              : "track"
+          }
+          onClick={() =>
+            setCurrentIndex(index)
+          }
         >
+          {index === currentIndex && "▶ "}
           {file.name}
         </div>
       ))}

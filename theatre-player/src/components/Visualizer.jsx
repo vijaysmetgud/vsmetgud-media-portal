@@ -14,10 +14,10 @@ function Visualizer({ analyser }) {
     const ctx =
       canvas.getContext("2d");
 
-    analyser.fftSize = 128;
+    analyser.fftSize = 256;
 
     analyser.smoothingTimeConstant =
-      0.85;
+      0.92;
 
     const bufferLength =
       analyser.frequencyBinCount;
@@ -26,17 +26,6 @@ function Visualizer({ analyser }) {
       new Uint8Array(bufferLength);
 
     let animationId;
-
-      const colors = [
-        "#00E5FF",
-        "#2979FF",
-        "#7C4DFF",
-        "#D500F9",
-        "#FF4081",
-        "#FF6D00",
-        "#FFD600"
-      ];
-
     const animate = () => {
 
       animationId =
@@ -58,77 +47,78 @@ function Visualizer({ analyser }) {
       const centerY =
         canvas.height / 2;
 
-      let x = 0;
+      let x = 10;   
 
-      for (
-        let i = 0;
-        i < bufferLength;
-        i++
-      ) {
+      const spacing = (canvas.width - 20) / bufferLength;
+
+      ctx.globalCompositeOperation =
+        "lighter";
+
+      const time = Date.now() / 80;
+
+      for (let i = 0; i < bufferLength; i++) {
+
+        const normalized = dataArray[i] / 255;
+
+        let bassBoost = 1;
+
+        if (i < 6)
+          bassBoost = 2.2;
+        else if (i < 12)
+          bassBoost = 1.6;
 
         const barHeight =
-          Math.min(
-            dataArray[i] * 4,
-            120
+          Math.pow(normalized, 0.8) *
+          canvas.height *
+          0.8 *
+          bassBoost;
+        
+        const hue =
+          (time + i * 8) % 360;  
+
+        const gradient =
+          ctx.createLinearGradient(
+            0,
+            centerY - barHeight,
+            0,
+            centerY + barHeight
           );
 
-        // const colors = [
-        //   "#00E5FF", // Cyan
-        //   "#2979FF", // Blue
-        //   "#7C4DFF", // Purple
-        //   "#D500F9", // Pink
-        //   "#FF4081", // Rose
-        //   "#FF6D00", // Orange
-        //   "#FFD600"  // Yellow
-        // ];
+        gradient.addColorStop(0, `hsl(${hue},100%,65%)`);
+        gradient.addColorStop(0.5, `hsl(${(hue+120)%360},100%,65%)`);
+        gradient.addColorStop(1, `hsl(${(hue+240)%360},100%,65%)`);
 
-        // const value = dataArray[i];
-
-        // let color;
-
-        // if (value < 20) {
-        //   color = "#00E5FF";
-        // } else if (value < 40) {
-        //   color = "#2979FF";
-        // } else if (value < 50) {
-        //   color = "#7C4DFF";
-        // } else if (value < 70) {
-        //   color = "#FF4081";
-        // } else {
-        //   color = "#FFD600";
-        // }
-
-        // ctx.fillStyle = color;
-
-        // ctx.fillStyle =
-        //   gradient;
-
-
-
-        const hue = (i / bufferLength) * 360;
-
-        const color = `hsl(${hue}, 100%, 60%)`;
-
-        ctx.fillStyle = color;
-
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 20;  
+        ctx.fillStyle = gradient;
+        ctx.shadowColor = `hsl(${hue},100%,65%)`;
+        ctx.shadowBlur = 4 + normalized * 8;
 
         ctx.beginPath();
 
         ctx.roundRect(
           x,
-          centerY -
-            barHeight / 2,
-          6,
+          centerY - barHeight,
+          2.5,
           barHeight * 2,
-          4
+          1.25
         );
 
         ctx.fill();
 
-        x += 12;
+        ctx.globalAlpha = 0.15;
+
+        ctx.fillRect(
+          x,
+          centerY + barHeight,
+          2.5,
+          barHeight * 0.4
+        );
+
+        ctx.globalAlpha = 1;
+
+        x += spacing;
       }
+      ctx.globalCompositeOperation =
+        "source-over";
     };
 
     animate();
