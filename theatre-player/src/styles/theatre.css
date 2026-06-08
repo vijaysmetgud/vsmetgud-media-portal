@@ -19,35 +19,14 @@ body {
 ====================================== */
 
 .theatre-container {
-  display: flex;
-  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
   background: #000;
 }
 
 /* ======================================
    LEFT PLAYLIST
 ====================================== */
-
-.sidebar {
-  width: 300px;
-  min-width: 300px;
-
-  background: #090909;
-  border-right: 1px solid #222;
-
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  padding: 18px;
-
-  padding-top: 120px;
-}
-
-.sidebar h2 {
-  text-align: center;
-  font-size: 22px;
-  margin-bottom: 18px;
-}
 
 /* playlist items */
 
@@ -141,9 +120,9 @@ body {
 
 .title {
 
-    font-size: 24px;
+    font-size: 20px;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 
     color: #f5d0fe;
 
@@ -156,7 +135,7 @@ body {
 
 input[type="file"] {
   color: rgb(138, 255, 84);
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
 /* ======================================
@@ -180,7 +159,7 @@ input[type="file"] {
 
     width: 100%;
     max-width: 1100px;
-    height: 120px;
+    height: 80px;
 
     border-radius: 20px;
 
@@ -352,8 +331,7 @@ input[type="file"] {
 
 .media-wrapper {
 
-    width: 1200px;
-    max-width: 95%;
+    width: 720px;
 
     aspect-ratio: 16 / 9;
 
@@ -370,12 +348,6 @@ input[type="file"] {
     box-shadow:
         0 0 15px rgba(124,58,237,.25),
         0 0 25px rgba(217,70,239,.15);
-}
-
-.media-player {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
 }
 
 .media-player {
@@ -418,8 +390,8 @@ input[type="file"] {
   }
 
   .media-wrapper {
-      width: 320px;
-      height: 180px;
+      width: 340px;
+      height: 194px;
       margin: 10px auto;
   }
 
@@ -440,11 +412,11 @@ input[type="file"] {
   }
 
   .visualizer-canvas {
-      height: 120px;
+      height: 80px;
   }
 
   .equalizer-panel {
-    height: 120px;
+    height: 80px;
   }
 
   .eq-bar {
@@ -459,8 +431,8 @@ input[type="file"] {
 
 .now-playing {
 
-    width: 70%;
-    max-width: 600px;
+    width: 100%;
+    max-width: 1000px;
 
     margin-top: 10px;
 
@@ -482,8 +454,8 @@ input[type="file"] {
 
     color: #f5d0fe;
 
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 8px;
+    font-weight: 300;
 
     box-shadow:
         0 0 10px rgba(124,58,237,.20),
@@ -524,11 +496,50 @@ input[type="file"] {
 
     margin: 10px 0 15px;
 
-    padding: 12px;
+    padding: 16px;
 
     border-radius: 15px;
 
     background: rgba(255,255,255,.03);
 
     backdrop-filter: blur(10px);
+}
+
+.playlist {
+
+    width: 100%;
+    max-width: 1100px;
+    max-height: 400px;
+
+    overflow-y: auto;
+
+    margin: 20px auto;
+
+    padding: 20px;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(124,58,237,.08),
+            rgba(217,70,239,.04)
+        );
+
+    border:
+        1px solid rgba(255,255,255,.08);
+
+    box-shadow:
+        0 0 15px rgba(124,58,237,.15);
+}
+
+.playlist h2 {
+
+    margin-top: 0;
+
+    text-align: center;
+
+    color: #f5d0fe;
+
+    font-size: 20px;
 }

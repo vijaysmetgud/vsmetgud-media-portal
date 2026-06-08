@@ -516,17 +516,6 @@ function TheatrePlayer() {
 
     <div className="theatre-container">
 
-      {/* LEFT PLAYLIST */}
-      <div className="sidebar">
-
-        <Playlist
-          playlist={playlist}
-          currentIndex={currentIndex}
-          setCurrentIndex={setCurrentIndex}
-        />
-
-      </div>
-
       {/* PLAYER AREA */}
       <div className="player-area">
 
@@ -615,7 +604,6 @@ function TheatrePlayer() {
           </div>
         )}
 
-
         {/* EQUALIZER */}
         {mediaSrc && (
           <EqualizerPanel
@@ -631,7 +619,16 @@ function TheatrePlayer() {
             playNext={playNext}
             playing={playing}
           />
-        )}     
+        )}
+
+        {/* PLAYLIST */}
+        {playlist.length > 0 && (
+          <Playlist
+            playlist={playlist}
+            currentIndex={currentIndex}
+            setCurrentIndex={setCurrentIndex}
+          />
+        )} 
 
       </div>
 
