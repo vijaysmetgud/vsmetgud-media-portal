@@ -115,38 +115,6 @@ function TheatrePlayer() {
 
   useEffect(() => {
 
-  if (!mediaSrc) return;
-
-  const timer =
-    setTimeout(async () => {
-
-      try {
-
-        if (
-          mediaRef.current
-        ) {
-
-          await mediaRef.current.play();
-
-          setPlaying(true);
-
-        }
-
-      } catch (err) {
-
-        console.error(err);
-
-      }
-
-    }, 500);
-
-  return () =>
-    clearTimeout(timer);
-
-}, [mediaSrc]);
-
-  useEffect(() => {
-
     const media =
       new URLSearchParams(
         window.location.search
@@ -197,21 +165,6 @@ function TheatrePlayer() {
     playlist,
     currentIndex
   ]);
-
-  useEffect(() => {
-    if (!mediaRef.current || !mediaSrc) return;
-
-    const playMedia = async () => {
-      try {
-        await mediaRef.current.play();
-        setPlaying(true);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    playMedia();
-  }, [mediaSrc]);
 
   // setup equalizer for audio/video
   const setupAudio =
@@ -298,6 +251,11 @@ function TheatrePlayer() {
     const analyser =
       audioContext
         .createAnalyser();
+    
+    const masterGain =
+      audioContext.createGain();
+
+    masterGain.gain.value = 1.5; // 30% boost    
 
     const compressor =
       audioContext.createDynamicsCompressor();
@@ -314,14 +272,23 @@ function TheatrePlayer() {
     const merger =
       audioContext.createChannelMerger(2);
 
+    const leftGain =
+      audioContext.createGain();
+
+    const rightGain =
+      audioContext.createGain();
+
+    leftGain.gain.value = 1.2;
+    rightGain.gain.value = 1.2;  
+
     const leftDelay =
       audioContext.createDelay();
 
     const rightDelay =
       audioContext.createDelay();
 
-    leftDelay.delayTime.value = 0.015;
-    rightDelay.delayTime.value = 0.030;  
+    leftDelay.delayTime.value = 0.030;
+    rightDelay.delayTime.value = 0.060;  
 
     analyser.fftSize =
       128;
@@ -335,38 +302,100 @@ function TheatrePlayer() {
 
     compressor.connect(splitter);
 
-    // LEFT CHANNEL
-    splitter.connect(
-      leftDelay,
-      0
-    );
+    splitter.connect(leftDelay, 0);
+    splitter.connect(rightDelay, 1);
 
-    // RIGHT CHANNEL
-    splitter.connect(
-      rightDelay,
-      1
-    );
+    leftDelay.connect(leftGain);
+    rightDelay.connect(rightGain);
 
-    leftDelay.connect(
-      merger,
-      0,
-      0
-    );
+    const crossL =
+      audioContext.createGain();
 
-    rightDelay.connect(
-      merger,
-      0,
-      1
-    );
+    const crossR =
+      audioContext.createGain();
+
+    leftDelay.connect(crossR);
+    rightDelay.connect(crossL);
+
+    crossR.connect(merger, 0, 1);
+    crossL.connect(merger, 0, 0);
+
+
+    crossL.gain.value = 0.45;
+    crossR.gain.value = 0.45;
+
+    const leftPanner =
+      audioContext.createStereoPanner();
+
+    const rightPanner =
+      audioContext.createStereoPanner();
+
+    leftPanner.pan.value = -1;
+    rightPanner.pan.value = 1;
+
+    leftGain.connect(leftPanner);
+    rightGain.connect(rightPanner);
+
+    leftPanner.connect(merger, 0, 0);
+    rightPanner.connect(merger, 0, 1);
 
     merger.connect(
       analyser
     );
 
-    analyser.connect(
+    const convolver =
+      audioContext.createConvolver();
+
+    const length =
+      audioContext.sampleRate * 2;
+
+    const impulse =
+      audioContext.createBuffer(
+        2,
+        length,
+        audioContext.sampleRate
+      );
+
+    for (let channel = 0; channel < 2; channel++) {
+
+      const data =
+        impulse.getChannelData(channel);
+
+      for (let i = 0; i < length; i++) {
+
+        data[i] =
+          (Math.random() * 2 - 1) *
+          Math.pow(
+            1 - i / length,
+            2
+          );
+      }
+    }
+
+    convolver.buffer = impulse;
+
+    const wetGain =
+      audioContext.createGain();
+
+    const dryGain =
+      audioContext.createGain();
+
+    wetGain.gain.value = 0.25;
+    dryGain.gain.value = 0.85;
+
+    merger.connect(dryGain);
+
+    merger.connect(convolver);
+
+    convolver.connect(wetGain);
+
+    dryGain.connect(masterGain);
+
+    wetGain.connect(masterGain);
+
+    masterGain.connect(
       audioContext.destination
     );
-      
 
     audioContextRef.current =
       audioContext;
@@ -566,44 +595,6 @@ function TheatrePlayer() {
           />
         )}
 
-        {/* CONTROLS */}
-        {mediaSrc && (
-          <div className="controls">
-
-            <button onClick={togglePlay}>
-              {playing ? <FaPause /> : <FaPlay />}
-            </button>
-
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={progress}
-              onChange={seek}
-            />
-
-            <div className="volume">
-              <FaVolumeUp />
-
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={volume}
-                onChange={(e) =>
-                  setVolume(e.target.value)
-                }
-              />
-            </div>
-
-            <button onClick={fullscreen}>
-              <FaExpand />
-            </button>
-
-          </div>
-        )}
-
         {/* EQUALIZER */}
         {mediaSrc && (
           <EqualizerPanel
@@ -618,6 +609,11 @@ function TheatrePlayer() {
             playPause={togglePlay}
             playNext={playNext}
             playing={playing}
+            progress={progress}
+            seek={seek}
+            volume={volume}
+            setVolume={setVolume}
+            fullscreen={fullscreen}
           />
         )}
 

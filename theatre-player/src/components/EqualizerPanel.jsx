@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, leftDelay,rightDelay, currentFile, playPrevious, playPause, playNext, playing}) {
+function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, leftDelay, rightDelay, currentFile, playPrevious, playPause, playNext, playing, progress, seek, volume, setVolume, fullscreen }) {
   const canvasRef = useRef(null);
   const [activeMode, setActiveMode] = useState("surround");
 
@@ -24,41 +24,41 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, leftDe
     switch (mode) {
 
       case "surround":
-        bass.gain.value = 2.4;
-        vocal.gain.value = 7;
-        treble.gain.value = 8;
+        bass.gain.value = 3;
+        vocal.gain.value = 8;
+        treble.gain.value = 5;
 
         if (leftDelay)
-          leftDelay.delayTime.value = 0.015;
+          leftDelay.delayTime.value = 0.020;
 
         if (rightDelay)
-          rightDelay.delayTime.value = 0.030;
+          rightDelay.delayTime.value = 0.040;
 
         break;
 
       case "theatre":
-        bass.gain.value = 2;
+        bass.gain.value = 2.5;
         vocal.gain.value = 7;
-        treble.gain.value = 6;
+        treble.gain.value = 4;
 
         if (leftDelay)
-          leftDelay.delayTime.value = 0.012;
+          leftDelay.delayTime.value = 0.025;
 
         if (rightDelay)
-          rightDelay.delayTime.value = 0.024;
+          rightDelay.delayTime.value = 0.050;
 
         break;  
 
       case "cinema":
-        bass.gain.value = 2.5;
-        vocal.gain.value = 6.0;
-        treble.gain.value = 3.0;
+        bass.gain.value = 2;
+        vocal.gain.value = 8;
+        treble.gain.value = 5;
 
         if (leftDelay)
-          leftDelay.delayTime.value = 0.018;
+          leftDelay.delayTime.value = 0.035;
 
         if (rightDelay)
-          rightDelay.delayTime.value = 0.035;
+          rightDelay.delayTime.value = 0.070;
 
         break;
 
@@ -101,6 +101,13 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, leftDe
       default:
         break;
     }
+    console.log(
+      "Preset:",
+      mode,
+      "Bass:", bass.gain.value,
+      "Vocal:", vocal.gain.value,
+      "Treble:", treble.gain.value
+    );
   };
 
   // Set initial EQ preset on mount
@@ -179,6 +186,41 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, leftDe
 
         <button onClick={playNext}>
           Next ⏭
+        </button>
+
+      </div>
+
+      <div className="controls">
+
+        <button onClick={playPause}>
+          {playing ? "⏸" : "▶"}
+        </button>
+
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={progress}
+          onChange={seek}
+        />
+
+        <div className="volume">
+          🔊
+
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.1"
+            value={volume}
+            onChange={(e) =>
+              setVolume(parseFloat(e.target.value))
+            }
+          />
+        </div>
+
+        <button onClick={fullscreen}>
+          ⛶
         </button>
 
       </div>
