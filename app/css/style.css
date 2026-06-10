@@ -656,20 +656,13 @@ body.light .dateLabel {
 /* RIGHT SIDE QUICK APPS */
 
 .quickApps{
-
-    position:fixed;
-
-    right:30px;
-
-    top:320px;   /* adjust */
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:30px;
-
-    z-index:99999;
+    position: fixed;
+    right: 25px;
+    bottom: 280px;   /* above chatbot */
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    z-index: 99999;
 }
 
 /* EXPENSE */
