@@ -46,6 +46,46 @@
 
     </div>
 
+    <div class="topActionButtons">
+
+        <button onclick="openBarChartWindow()">
+            📊 Bar Graph
+        </button>
+
+        <button onclick="openPieChartWindow()">
+            🥧 Pie Graph
+        </button>
+
+        <button onclick="openSplitGraphWindow()">
+            💰 Split Share Graph
+        </button>
+
+        <button onclick="openLineChartWindow()">
+            📈 Trend Graph
+        </button>    
+
+        <button onclick="showSettlement()">
+            💰 Settlement
+        </button>
+
+        <button onclick="downloadSettlementReport()">
+            📄 Report
+        </button>
+
+        <button onclick="shareSettlementWhatsApp()">
+            📲 WhatsApp
+        </button>
+
+        <button onclick="sendSettlementEmail()">
+            📧 Email
+        </button>
+
+        <button onclick="clearAllExpenseData()">
+            🗑 Delete All Data
+        </button>
+
+    </div>
+
     <div class="formCard">
 
         <h3 id="currentUserName">
@@ -230,7 +270,7 @@
                 User
             </label>
 
-            <select id="graphUser"></select>
+            <select id="graphUser">
 
                 <option value="current">
                     Current User
@@ -260,6 +300,10 @@
 
                 <option value="split">
                     Split Share Expenses
+                </option>
+
+                <option value="all">
+                    All Expenses
                 </option>
 
             </select>
@@ -351,44 +395,6 @@
     </div>
 
 </div>
-
-<!-- ================= ACTION BUTTONS ================= -->
-
-    <div class="topActionButtons">
-
-        <button onclick="openBarChartWindow()">
-            📊 Bar Graph
-        </button>
-
-        <button onclick="openPieChartWindow()">
-            🥧 Pie Graph
-        </button>
-
-        <button onclick="openSplitGraphWindow()">
-            💰 Split Share Graph
-        </button>
-
-        <button onclick="showSettlement()">
-            💰 Settlement
-        </button>
-
-        <button onclick="downloadSettlementReport()">
-            📄 Report
-        </button>
-
-        <button onclick="shareSettlementWhatsApp()">
-            📲 WhatsApp
-        </button>
-
-        <button onclick="sendSettlementEmail()">
-            📧 Email
-        </button>
-
-        <button onclick="clearAllExpenseData()">
-            🗑 Delete All Data
-        </button>
-
-    </div>
 
     <!-- EXPENSE LIST -->
 

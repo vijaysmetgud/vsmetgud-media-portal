@@ -284,70 +284,38 @@ canvas{
 }
 
 /* ================= TOP ACTION BUTTONS ================= */
-
 .topActionButtons{
-
-    position:sticky;
-
-    top:10px;
-
-    z-index:999;
 
     display:flex;
 
     flex-wrap:wrap;
 
-    gap:12px;
-
     justify-content:center;
 
-    margin:25px 0;
+    gap:15px;
 
-    padding:18px;
-
-    border-radius:22px;
-
-    background:
-        rgba(31,41,55,0.9);
-
-    backdrop-filter:
-        blur(16px);
-
-    box-shadow:
-        0 0 35px
-        rgba(0,0,0,0.25);
+    margin:20px 0;
 }
 
 .topActionButtons button{
 
-    min-width:180px;
+    width:220px;
 
-    padding:18px 22px;
+    height:50px;
 
     border:none;
 
-    border-radius:20px;
-
-    cursor:pointer;
+    border-radius:12px;
 
     font-size:15px;
 
-    font-weight:bold;
+    font-weight:600;
 
-    color:white;
+    display:flex;
 
-    transition:0.3s ease;
+    align-items:center;
 
-    background:
-        linear-gradient(
-            135deg,
-            #2563eb,
-            #1d4ed8
-        );
-
-    box-shadow:
-        0 0 25px
-        rgba(37,99,235,0.3);
+    justify-content:center;
 }
 
 .topActionButtons button:hover{
@@ -548,9 +516,15 @@ select{
 
     display:flex;
 
+    justify-content:center;
+
+    align-items:center;
+
+    gap:15px;
+
     flex-wrap:wrap;
 
-    gap:10px;
+    margin-bottom:20px;
 }
 
 .userSection select,
@@ -569,14 +543,16 @@ select{
 
     flex-wrap:wrap;
 
-    gap:10px;
+    justify-content:center;
+
+    gap:15px;
 }
 
 .buttonRow button{
 
-    flex:1 1 180px;
+    width:220px;
 
-    min-width:0;
+    height:50px;
 }
 
 /* ACTION BUTTONS */
