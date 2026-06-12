@@ -527,7 +527,15 @@ select{
     margin-bottom:20px;
 }
 
-.userSection select,
+.userSection select{
+
+    height:50px;
+
+    padding:0 15px;
+
+    font-size:16px;
+}
+
 .userSection button{
 
     flex:1 1 150px;

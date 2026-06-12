@@ -579,6 +579,10 @@ function startVoice(){
         );
     }
 
+    speak(
+        "Please select date from calendar first"
+    ); 
+
     let voiceStarted = false;
 
     function startVoiceFlow(){
@@ -593,15 +597,6 @@ function startVoice(){
     }
 
     /* WAIT FOR DATE */
-
-    setTimeout(()=>{
-
-        if(dateInput.value){
-
-            startVoiceFlow();
-        }
-
-    },300);
 
     dateInput.onchange =
     ()=>{
@@ -2040,6 +2035,10 @@ function startSplitVoice(){
         );
     }
 
+    speak(
+        "Please select date from calendar first"
+    );
+
     /* WAIT FOR DATE */
 
     let splitVoiceStarted =
@@ -2056,17 +2055,6 @@ function startSplitVoice(){
 
         startSplitVoiceFlow();
     }
-
-    /* WAIT FOR DATE */
-
-    setTimeout(()=>{
-
-        if(dateInput.value){
-
-            startSplitFlow();
-        }
-
-    },300);
 
     dateInput.onchange =
     ()=>{
@@ -4726,12 +4714,16 @@ function openBarChartWindow(){
             Object.values(totals)
         );
 
-    const chartWindow =
-        window.open(
-            "",
-            "_blank",
-            "width=1400,height=900"
-        );
+    const chartWindow = window.open(
+        "",
+        "_blank",
+        "width=1400,height=900"
+    );
+
+    if (!chartWindow) {
+        alert("Popup blocked. Please allow popups for this site.");
+        return;
+    }
 
     chartWindow.document.write(`
 
@@ -4962,6 +4954,100 @@ borderRadius:14
     chartWindow.document.close();
 }
 
+
+
+function openLineChartWindow(){
+
+    const expenses = getFilteredNormalExpenses();
+
+    const totals = {};
+
+    expenses.forEach(exp => {
+
+        const date = exp.date;
+
+        totals[date] =
+            (totals[date] || 0) +
+            Number(exp.price);
+
+    });
+
+    const labels = Object.keys(totals).sort();
+
+    const values = labels.map(
+        date => totals[date]
+    );
+
+    const chartWindow = window.open(
+        "",
+        "_blank",
+        "width=1400,height=900"
+    );
+
+    if(!chartWindow){
+        alert("Popup blocked");
+        return;
+    }
+
+    chartWindow.document.write(`
+<html>
+<head>
+<title>Trend Graph</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+    background:#111827;
+    color:white;
+    font-family:Arial;
+    padding:30px;
+}
+canvas{
+    width:100% !important;
+    height:75vh !important;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📈 Expense Trend Graph</h1>
+
+<canvas id="trendChart"></canvas>
+
+<script>
+
+new Chart(
+document.getElementById("trendChart"),
+{
+    type:"line",
+
+    data:{
+        labels:${JSON.stringify(labels)},
+        datasets:[{
+            label:"Expense Trend",
+            data:${JSON.stringify(values)},
+            borderColor:"#22c55e",
+            backgroundColor:"#22c55e",
+            tension:0.3
+        }]
+    },
+
+    options:{
+        responsive:true,
+        maintainAspectRatio:false
+    }
+});
+
+</script>
+
+</body>
+</html>
+`);
+
+    chartWindow.document.close();
+}
 /* ================= PIE GRAPH WINDOW ================= */
 
 function openPieChartWindow(){
