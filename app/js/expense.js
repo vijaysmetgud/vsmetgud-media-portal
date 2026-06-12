@@ -579,10 +579,6 @@ function startVoice(){
         );
     }
 
-    speak(
-        "Please select date from calendar first"
-    ); 
-
     let voiceStarted = false;
 
     function startVoiceFlow(){
@@ -597,6 +593,15 @@ function startVoice(){
     }
 
     /* WAIT FOR DATE */
+
+    setTimeout(()=>{
+
+        if(dateInput.value){
+
+            startVoiceFlow();
+        }
+
+    },300);
 
     dateInput.onchange =
     ()=>{
@@ -2035,10 +2040,6 @@ function startSplitVoice(){
         );
     }
 
-    speak(
-        "Please select date from calendar first"
-    );
-
     /* WAIT FOR DATE */
 
     let splitVoiceStarted =
@@ -2055,6 +2056,17 @@ function startSplitVoice(){
 
         startSplitVoiceFlow();
     }
+
+    /* WAIT FOR DATE */
+
+    setTimeout(()=>{
+
+        if(dateInput.value){
+
+            startSplitFlow();
+        }
+
+    },300);
 
     dateInput.onchange =
     ()=>{
@@ -2093,22 +2105,22 @@ function startSplitVoiceFlow(){
 
     askUsers();
 
-    function speakThenListen(
-        message,
-        callback
-    ){
+    function speakThenListen(message, callback){
 
-        speechSynthesis.cancel();
+        console.log(
+            "Speaking:",
+            message
+        );
 
         const speech =
-            new SpeechSynthesisUtterance(
-                message
-            );
-
-        speech.lang = "en-IN";
-        speech.rate = 0.9;
+            new SpeechSynthesisUtterance(message);
 
         speech.onend = ()=>{
+
+            console.log(
+                "Speech finished:",
+                message
+            );
 
             const recognition =
                 new (
@@ -2116,68 +2128,47 @@ function startSplitVoiceFlow(){
                     window.webkitSpeechRecognition
                 )();
 
-            recognition.lang =
-                "en-IN";
+            recognition.lang = "en-IN";
 
-            recognition.continuous =
-                false;
-
-            recognition.interimResults =
-                false;
-
-            recognition.maxAlternatives =
-                1;
+            console.log(
+                "Starting recognition"
+            );
 
             recognition.start();
-
-            const voiceStatus =
-                document.getElementById(
-                    "voiceStatus"
-                );
-
-            if(voiceStatus){
-
-                voiceStatus.innerText =
-                    "🎤 Listening...";
-            }
 
             recognition.onresult =
             (event)=>{
 
                 const text =
-                    event.results[0][0]
-                    .transcript
-                    .trim();
+                    event.results[0][0].transcript;
 
-                if(voiceStatus){
-
-                    voiceStatus.innerText =
-                        "✅ " + text;
-                }
-
-                recognition.stop();
+                console.log(
+                    "Recognized:",
+                    text
+                );
 
                 callback(text);
             };
 
             recognition.onerror =
+            (event)=>{
+
+                console.log(
+                    "Recognition error:",
+                    event.error
+                );
+            };
+
+            recognition.onend =
             ()=>{
 
-                if(voiceStatus){
-
-                    voiceStatus.innerText =
-                        "❌ Could not hear";
-                }
-
-                recognition.stop();
-
-                callback("");
+                console.log(
+                    "Recognition ended"
+                );
             };
         };
 
-        speechSynthesis.speak(
-            speech
-        );
+        speechSynthesis.speak(speech);
     }
 
     function askUsers(){
@@ -4714,16 +4705,12 @@ function openBarChartWindow(){
             Object.values(totals)
         );
 
-    const chartWindow = window.open(
-        "",
-        "_blank",
-        "width=1400,height=900"
-    );
-
-    if (!chartWindow) {
-        alert("Popup blocked. Please allow popups for this site.");
-        return;
-    }
+    const chartWindow =
+        window.open(
+            "",
+            "_blank",
+            "width=1400,height=900"
+        );
 
     chartWindow.document.write(`
 
@@ -4954,100 +4941,6 @@ borderRadius:14
     chartWindow.document.close();
 }
 
-
-
-function openLineChartWindow(){
-
-    const expenses = getFilteredNormalExpenses();
-
-    const totals = {};
-
-    expenses.forEach(exp => {
-
-        const date = exp.date;
-
-        totals[date] =
-            (totals[date] || 0) +
-            Number(exp.price);
-
-    });
-
-    const labels = Object.keys(totals).sort();
-
-    const values = labels.map(
-        date => totals[date]
-    );
-
-    const chartWindow = window.open(
-        "",
-        "_blank",
-        "width=1400,height=900"
-    );
-
-    if(!chartWindow){
-        alert("Popup blocked");
-        return;
-    }
-
-    chartWindow.document.write(`
-<html>
-<head>
-<title>Trend Graph</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-body{
-    background:#111827;
-    color:white;
-    font-family:Arial;
-    padding:30px;
-}
-canvas{
-    width:100% !important;
-    height:75vh !important;
-}
-</style>
-</head>
-
-<body>
-
-<h1>📈 Expense Trend Graph</h1>
-
-<canvas id="trendChart"></canvas>
-
-<script>
-
-new Chart(
-document.getElementById("trendChart"),
-{
-    type:"line",
-
-    data:{
-        labels:${JSON.stringify(labels)},
-        datasets:[{
-            label:"Expense Trend",
-            data:${JSON.stringify(values)},
-            borderColor:"#22c55e",
-            backgroundColor:"#22c55e",
-            tension:0.3
-        }]
-    },
-
-    options:{
-        responsive:true,
-        maintainAspectRatio:false
-    }
-});
-
-</script>
-
-</body>
-</html>
-`);
-
-    chartWindow.document.close();
-}
 /* ================= PIE GRAPH WINDOW ================= */
 
 function openPieChartWindow(){
