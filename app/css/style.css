@@ -561,7 +561,6 @@ body.light .dateLabel {
 
         padding: 8px 12px;
     }
-}
 
     .top-center-container {
 
@@ -653,25 +652,33 @@ body.light .dateLabel {
 
 }
 
+
 /* RIGHT SIDE QUICK APPS */
 
 .quickApps{
-    position: fixed;
 
-    right: 20px;
+    position: fixed !important;
 
-    bottom: 330px; /* above chatbot */
+    top: 220px !important;
 
-    display: flex;
+    right: 20px !important;
 
-    flex-direction: column; /* stack buttons vertically */
+    left: auto !important;
 
-    align-items: flex-end;
+    bottom: auto !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    align-items: flex-end !important;
 
     gap: 10px;
 
-    z-index: 999999;
+    z-index: 999999 !important;
 }
+
+
 /* EXPENSE */
 
 #expenseTrackerBtn{
