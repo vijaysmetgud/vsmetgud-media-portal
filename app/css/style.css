@@ -657,19 +657,26 @@ body.light .dateLabel {
 
 .quickApps{
     position: fixed;
-    right: 25px;
-    bottom: 280px;   /* above chatbot */
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
-    z-index: 99999;
-}
 
+    right: 20px;
+
+    bottom: 330px; /* above chatbot */
+
+    display: flex;
+
+    flex-direction: column; /* stack buttons vertically */
+
+    align-items: flex-end;
+
+    gap: 10px;
+
+    z-index: 999999;
+}
 /* EXPENSE */
 
 #expenseTrackerBtn{
 
-    width:300px;
+    width:220px;
 
     padding:18px;
 
@@ -733,7 +740,7 @@ body.light .dateLabel {
 
 #theatrePlayerBtn{
 
-    width:300px;
+    width:220px;
 
     padding:18px;
 
