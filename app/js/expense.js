@@ -2105,22 +2105,22 @@ function startSplitVoiceFlow(){
 
     askUsers();
 
-    function speakThenListen(message, callback){
+    function speakThenListen(
+        message,
+        callback
+    ){
 
-        console.log(
-            "Speaking:",
-            message
-        );
+        speechSynthesis.cancel();
 
         const speech =
-            new SpeechSynthesisUtterance(message);
-
-        speech.onend = ()=>{
-
-            console.log(
-                "Speech finished:",
+            new SpeechSynthesisUtterance(
                 message
             );
+
+        speech.lang = "en-IN";
+        speech.rate = 0.9;
+
+        speech.onend = ()=>{
 
             const recognition =
                 new (
@@ -2128,47 +2128,68 @@ function startSplitVoiceFlow(){
                     window.webkitSpeechRecognition
                 )();
 
-            recognition.lang = "en-IN";
+            recognition.lang =
+                "en-IN";
 
-            console.log(
-                "Starting recognition"
-            );
+            recognition.continuous =
+                false;
+
+            recognition.interimResults =
+                false;
+
+            recognition.maxAlternatives =
+                1;
 
             recognition.start();
+
+            const voiceStatus =
+                document.getElementById(
+                    "voiceStatus"
+                );
+
+            if(voiceStatus){
+
+                voiceStatus.innerText =
+                    "🎤 Listening...";
+            }
 
             recognition.onresult =
             (event)=>{
 
                 const text =
-                    event.results[0][0].transcript;
+                    event.results[0][0]
+                    .transcript
+                    .trim();
 
-                console.log(
-                    "Recognized:",
-                    text
-                );
+                if(voiceStatus){
+
+                    voiceStatus.innerText =
+                        "✅ " + text;
+                }
+
+                recognition.stop();
 
                 callback(text);
             };
 
             recognition.onerror =
-            (event)=>{
-
-                console.log(
-                    "Recognition error:",
-                    event.error
-                );
-            };
-
-            recognition.onend =
             ()=>{
 
-                console.log(
-                    "Recognition ended"
-                );
+                if(voiceStatus){
+
+                    voiceStatus.innerText =
+                        "❌ Could not hear";
+                }
+
+                recognition.stop();
+
+                callback("");
             };
         };
 
-        speechSynthesis.speak(speech);
+        speechSynthesis.speak(
+            speech
+        );
     }
 
     function askUsers(){
