@@ -69,38 +69,27 @@ body {
         0 0 10px rgba(124,58,237,.25);
 }
 
-.active-track::after {
-
-    content: "";
-
-    position: absolute;
-
-    top: 0;
-    left: -120%;
-
-    width: 60%;
-    height: 100%;
+.active-track {
 
     background:
         linear-gradient(
-            90deg,
-            transparent,
-            rgba(255,255,255,.18),
-            transparent
-        );
+            135deg,
+            #FFD700,
+            #FF9800
+        ) !important;
 
-    animation: goldShine 4s linear infinite;
-}
+    color: #000;
 
-@keyframes goldShine {
+    font-weight: 700;
 
-    from {
-        left: -120%;
-    }
+    border:
+        2px solid #FFD700;
 
-    to {
-        left: 150%;
-    }
+    box-shadow:
+        0 0 12px rgba(255,215,0,.8),
+        0 0 30px rgba(255,215,0,.4);
+
+    transform: scale(1.02);
 }
 
 .track.active-track::before {
