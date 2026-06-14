@@ -284,7 +284,8 @@ app.get('/api/visitors', (req, res) => {
 });
 
 const os = require("os");
-const { exec } = require("child_process");
+// const { exec } = require("child_process");
+const { exec, execSync } = require("child_process");
 
 app.get("/stream/*", (req, res)=>{
 
@@ -399,206 +400,82 @@ app.get("/stream/*", (req, res)=>{
 
 app.get("/api/metrics", (req, res) => {
 
-    const totalMem = os.totalmem();
+    try {
 
-    const freeMem = os.freemem();
+        const totalMem = os.totalmem();
+        const freeMem = os.freemem();
 
-    const usedMem =
-        ((totalMem - freeMem) / totalMem) * 100;
+        const usedMem =
+            ((totalMem - freeMem) / totalMem) * 100;
 
-    const cpuLoad =
-        (os.loadavg()[0] / os.cpus().length) * 100;
+        const cpuLoad =
+            (os.loadavg()[0] / os.cpus().length) * 100;
 
-    const command = `
-    TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+        const runningPods = parseInt(
+            execSync(
+                "kubectl get pods -A --field-selector=status.phase=Running --no-headers | wc -l",
+                { encoding: "utf8" }
+            ).trim(),
+            10
+        );
 
-    PODS=$(curl -s -k \
-    --header="Authorization: Bearer $TOKEN" \
-    https://kubernetes.default.svc/api/v1/pods)
+        const diskLine =
+            execSync(
+                "df -h / | tail -1",
+                { encoding: "utf8" }
+            ).trim();
 
-    DISK=$(df -h / | tail -1)
+        const diskParts =
+            diskLine.split(/\s+/);
 
-    echo "===PODS==="
-    echo "$PODS"
+        res.json({
 
-    echo "===DISK==="
-    echo "$DISK"
-    `;
+            cpu:
+                cpuLoad.toFixed(1) + "%",
 
-    exec(
-        command,
-        {
-            timeout: 15000,
-            maxBuffer: 1024 * 1024
-        },
+            memory:
+                usedMem.toFixed(1) + "%",
 
-        (error, stdout, stderr) => {  
+            pods:
+                runningPods,
 
-        if(error){
+            diskTotal:
+                diskParts[1] || "N/A",
 
-            console.log("K8S API ERROR:", error);
+            diskUsed:
+                diskParts[2] || "N/A",
 
-            console.log("STDERR:", stderr);
+            diskFree:
+                diskParts[3] || "N/A",
 
-            console.log("STDOUT:", stdout);
+            diskUsage:
+                diskParts[4] || "N/A",
 
-            return res.json({
+            health:
+                runningPods > 0
+                ? "Healthy"
+                : "Warning"
 
-                cpu:
-                    cpuLoad.toFixed(1) + "%",
+        });
 
-                memory:
-                    usedMem.toFixed(1) + "%",
+    } catch(err) {
 
-                pods: "0",
+        console.log("METRICS ERROR:", err);
 
-                diskTotal: "N/A",
+        res.json({
 
-                diskUsed: "N/A",
+            cpu: "N/A",
+            memory: "N/A",
+            pods: 0,
+            diskTotal: "N/A",
+            diskUsed: "N/A",
+            diskFree: "N/A",
+            diskUsage: "N/A",
+            health: "Unavailable"
 
-                diskFree: "N/A",
+        });
 
-                diskUsage: "N/A",
-
-                health: "Standalone Mode"
-            });
-        }
-
-        try{
-
-            // ===============================
-            // SPLIT OUTPUT
-            // ===============================
-
-            const podSection =
-                (stdout.split("===DISK===")[0] || "")
-                .replace("===PODS===","")
-                .trim();
-
-            const diskSection =
-                (stdout.split("===DISK===")[1] || "")
-                .trim();
-
-            // ===============================
-            // PODS
-            // ===============================
-
-            // const data = JSON.parse(podSection);
-            let data = { items: [] };
-
-            if (
-                podSection &&
-                podSection.startsWith("{") &&
-                podSection.endsWith("}")
-            ) {
-
-                try {
-
-                    data = JSON.parse(podSection);
-
-                } catch(parseErr) {
-
-                    console.log(
-                        "INVALID POD JSON:",
-                        parseErr.message
-                    );
-
-                }
-
-            } else {
-
-                console.log(
-                    "EMPTY OR INCOMPLETE POD JSON"
-                );
-
-            }
-
-            const runningPods =
-                (data.items || []).filter(
-                    pod =>
-                        pod?.status?.phase === "Running"
-                ).length;
-
-            // ===============================
-            // DISK
-            // ===============================
-            
-            console.log("DISK SECTION:", diskSection);
-
-            const diskParts =
-                diskSection.trim().split(/\s+/);
-
-            console.log("DISK PARTS:", diskParts);
-
-            const diskTotal =
-                diskParts[1] || "N/A";
-
-            const diskUsed =
-                diskParts[2] || "N/A";
-
-            const diskFree =
-                diskParts[3] || "N/A";
-
-            const diskUsage =
-                diskParts[4] || "N/A";
-
-            // ===============================
-            // RESPONSE
-            // ===============================
-
-            res.json({
-
-                cpu:
-                    cpuLoad.toFixed(1) + "%",
-
-                memory:
-                    usedMem.toFixed(1) + "%",
-
-                pods: runningPods,
-
-                diskTotal,
-
-                diskUsed,
-
-                diskFree,
-
-                diskUsage,
-
-                health:
-                    runningPods > 0
-                    ? "Healthy"
-                    : "Warning"
-
-            });
-
-        }
-        catch(err){
-
-            console.log("JSON PARSE ERROR:", err);
-
-            res.json({
-
-                cpu: "N/A",
-
-                memory: "N/A",
-
-                pods: "N/A",
-
-                diskTotal: "N/A",
-
-                diskUsed: "N/A",
-
-                diskFree: "N/A",
-
-                diskUsage: "N/A",
-
-                health: "Unavailable"
-
-            });
-
-        }
-
-    });
+    }
 
 });
 
