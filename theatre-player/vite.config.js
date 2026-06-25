@@ -18,8 +18,4 @@ export default defineConfig({
       'theatre.vsmetgud.online'
     ]
   }
-<<<<<<< Updated upstream
 })
-=======
-})
->>>>>>> Stashed changes
