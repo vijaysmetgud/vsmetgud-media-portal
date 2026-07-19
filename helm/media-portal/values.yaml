@@ -3,9 +3,9 @@ replicaCount: 1
 image:
   repository: vsmetgud/media-portal
 <<<<<<< Updated upstream
-  tag: "502b7abb83b512868c65234537a3f67e6c6d052e"
+  tag: "a830c5693a81d203ef2f96c0adb9c8d013101ce2"
 =======
-  tag: "502b7abb83b512868c65234537a3f67e6c6d052e"
+  tag: "a830c5693a81d203ef2f96c0adb9c8d013101ce2"
 >>>>>>> Stashed changes
   pullPolicy: Always
 
