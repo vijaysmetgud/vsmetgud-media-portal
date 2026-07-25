@@ -317,3 +317,7 @@ sudo apt update
 sudo apt install -y ffmpeg
 ffmpeg -version
 pm2 restart all
+
+
+systemctl status vboxadd-service--->> TO MOUNT E-DRIVE
+mount -t vboxsf e-drive /mount/sf_e-drive
