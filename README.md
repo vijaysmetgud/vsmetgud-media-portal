@@ -7,8 +7,8 @@ HELLO VIJAY METGUD
 In Master node:
 
 sudo  cp -r /media/sf_e-drive/AUDIOS--- /mnt/media/AUDIOS---
-sudo chown -R 101:101 /mnt/media
-sudo chmod -R 755 /mnt/media
+sudo chown -R 101:101 /media/sf_e-drive
+sudo chmod -R 755 /media/sf_e-drive
 
 
 In WORKER VM:
