@@ -195,6 +195,13 @@ function TheatrePlayer() {
     const audioContext =
       new window
         .AudioContext();
+    
+    const media = mediaRef.current;
+
+    console.log("currentSrc:", media.currentSrc);
+    console.log("readyState:", media.readyState);
+    console.log("networkState:", media.networkState);
+    console.log("error:", media.error);
 
     const source =
       audioContext
