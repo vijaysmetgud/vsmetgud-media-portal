@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Time Zones</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #22c55e, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            color: #60a5fa;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .timezone-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .timezone-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .timezone-card:hover {
+            background: rgba(51, 65, 85, 0.9);
+            border-color: rgba(148, 163, 184, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .timezone-card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            color: #f8fafc;
+        }
+
+        .timezone-card .city {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .timezone-card .time {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #22c55e;
+            margin-bottom: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .timezone-card .date {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .timezone-card .offset {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            color: #86efac;
+            display: inline-block;
+            margin-top: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .map-section {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .map-section h2 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .map-placeholder {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px dashed rgba(148, 163, 184, 0.3);
+            border-radius: 8px;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .search-box {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 8px;
+            color: #f8fafc;
+            font-size: 1rem;
+        }
+
+        .search-box input::placeholder {
+            color: #64748b;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.6);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .current-time {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            color: #86efac;
+        }
+
+        .current-time h3 {
+            margin-bottom: 10px;
+        }
+
+        .current-time .time {
+            font-size: 2.5rem;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html" class="back-button">← Back to Portal</a>
+            <h1>🌍 World Time Zones</h1>
+            <p>View current time across different time zones</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search timezone or city..." onkeyup="filterTimezones()">
+        </div>
+
+        <div class="map-section">
+            <h2>🗺️ World Map</h2>
+            <div class="map-placeholder">
+                Showing current time zones across the globe
+            </div>
+        </div>
+
+        <div class="timezone-grid" id="timezoneGrid"></div>
+
+        <div class="current-time">
+            <h3>Your Local Time</h3>
+            <div class="time" id="localTime"></div>
+            <div id="localDate"></div>
+            <div id="localTimezone"></div>
+        </div>
+    </div>
+
+    <script>
+        const timezones = [
+            { name: 'London', zone: 'Europe/London', city: 'London, UK' },
+            { name: 'New York', zone: 'America/New_York', city: 'New York, USA' },
+            { name: 'Tokyo', zone: 'Asia/Tokyo', city: 'Tokyo, Japan' },
+            { name: 'Sydney', zone: 'Australia/Sydney', city: 'Sydney, Australia' },
+            { name: 'Dubai', zone: 'Asia/Dubai', city: 'Dubai, UAE' },
+            { name: 'Singapore', zone: 'Asia/Singapore', city: 'Singapore' },
+            { name: 'Hong Kong', zone: 'Asia/Hong_Kong', city: 'Hong Kong' },
+            { name: 'Mumbai', zone: 'Asia/Kolkata', city: 'Mumbai, India' },
+            { name: 'Berlin', zone: 'Europe/Berlin', city: 'Berlin, Germany' },
+            { name: 'Paris', zone: 'Europe/Paris', city: 'Paris, France' },
+            { name: 'Toronto', zone: 'America/Toronto', city: 'Toronto, Canada' },
+            { name: 'Los Angeles', zone: 'America/Los_Angeles', city: 'Los Angeles, USA' },
+            { name: 'Mexico City', zone: 'America/Mexico_City', city: 'Mexico City, Mexico' },
+            { name: 'São Paulo', zone: 'America/Sao_Paulo', city: 'São Paulo, Brazil' },
+            { name: 'Bangkok', zone: 'Asia/Bangkok', city: 'Bangkok, Thailand' },
+            { name: 'Istanbul', zone: 'Europe/Istanbul', city: 'Istanbul, Turkey' }
+        ];
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function getTimezoneOffset(zone) {
+            const date = new Date();
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: zone,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            const parts = formatter.formatToParts(date);
+            const tzDate = new Date(date.toLocaleString('en-US', { timeZone: zone }));
+            const offset = (date - tzDate) / 60000;
+            const hours = Math.floor(offset / 60);
+            const mins = Math.abs(offset % 60);
+            return `UTC${hours >= 0 ? '+' : ''}${hours}:${mins.toString().padStart(2, '0')}`;
+        }
+
+        function renderTimezones(filter = '') {
+            const grid = document.getElementById('timezoneGrid');
+            grid.innerHTML = '';
+
+            timezones.filter(tz => 
+                tz.name.toLowerCase().includes(filter.toLowerCase()) ||
+                tz.city.toLowerCase().includes(filter.toLowerCase())
+            ).forEach(tz => {
+                const date = new Date(new Date().toLocaleString('en-US', { timeZone: tz.zone }));
+                const card = document.createElement('div');
+                card.className = 'timezone-card';
+                card.innerHTML = `
+                    <h2>${tz.name}</h2>
+                    <div class="city">${tz.city}</div>
+                    <div class="time">${formatTime(date)}</div>
+                    <div class="date">${formatDate(date)}</div>
+                    <div class="offset">${getTimezoneOffset(tz.zone)}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateLocalTime() {
+            const now = new Date();
+            document.getElementById('localTime').textContent = formatTime(now);
+            document.getElementById('localDate').textContent = formatDate(now);
+            document.getElementById('localTimezone').textContent = `Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
+        }
+
+        function filterTimezones() {
+            const filter = document.getElementById('searchInput').value;
+            renderTimezones(filter);
+        }
+
+        // Update times every second
+        setInterval(() => {
+            renderTimezones(document.getElementById('searchInput').value);
+            updateLocalTime();
+        }, 1000);
+
+        // Initial render
+        renderTimezones();
+        updateLocalTime();
+    </script>
+</body>
+</html>
