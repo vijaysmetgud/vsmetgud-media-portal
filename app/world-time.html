@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Time Zones</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(15, 23, 42, 0.9);
+      --panel-soft: rgba(30, 41, 59, 0.9);
+      --primary: #60a5fa;
+      --accent: #34d399;
+      --text: #e2e8f0;
+      --muted: #cbd5e1;
+      --border: rgba(148, 163, 184, 0.2);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #020817, #0f172a 35%, #111827);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 18px 60px;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 0 0 18px;
+      color: #f8fafc;
+      font-size: clamp(28px, 4vw, 42px);
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.4);
+      padding: 20px;
+      margin-bottom: 22px;
+    }
+
+    .timezoneRadios {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .timezoneRadio {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .timezoneRadio input {
+      margin: 0;
+      accent-color: var(--accent);
+      width: auto;
+    }
+
+    .mapPanel {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .mapWrap {
+      background: rgba(9, 16, 31, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      min-height: 360px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mapSvg {
+      width: 100%;
+      height: 100%;
+      min-height: 320px;
+      display: block;
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.18), transparent 30%),
+        linear-gradient(180deg, rgba(15, 118, 110, 0.08), rgba(15, 23, 42, 0.05));
+    }
+
+    .cityMarker {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #facc15;
+      border: 2px solid #fff;
+      box-shadow: 0 0 15px rgba(250, 204, 21, 0.8);
+      transform: translate(-50%, -50%);
+    }
+
+    .cityMarker.active {
+      background: var(--accent);
+      box-shadow: 0 0 18px rgba(52, 211, 153, 0.9);
+    }
+
+    .cityLabel {
+      position: absolute;
+      transform: translate(-50%, -110%);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 8px;
+      padding: 4px 7px;
+      font-size: 11px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .timeCard {
+      background: var(--panel-soft);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .timeCard h2 {
+      margin: 0;
+      color: #f8fafc;
+      font-size: 20px;
+    }
+
+    .time-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .time-item {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .time-item strong {
+      display: block;
+      color: #fbbf24;
+      margin-bottom: 3px;
+    }
+
+    .time-item span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .currentTime {
+      font-size: clamp(30px, 5vw, 42px);
+      font-weight: bold;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin: 8px 0 0;
+    }
+
+    @media (max-width: 820px) {
+      .mapPanel {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌍 World Time Zones</h1>
+
+    <div class="panel">
+      <div class="timezoneRadios" id="timezoneRadios"></div>
+
+      <div class="mapPanel">
+        <div class="mapWrap">
+          <svg class="mapSvg" viewBox="0 0 800 420" role="img" aria-label="World map with timezone markers">
+            <path d="M70 110 L120 95 L160 80 L200 95 L250 85 L280 95 L330 80 L360 100 L400 110 L420 140 L455 150 L490 170 L530 160 L560 180 L610 150 L670 170 L720 150 L745 200 L700 235 L710 280 L670 310 L625 300 L565 295 L540 325 L500 320 L470 345 L420 335 L390 300 L350 310 L310 290 L270 300 L220 275 L175 275 L150 250 L120 230 L90 195 L75 160 Z" fill="rgba(96,165,250,0.13)" stroke="rgba(96,165,250,0.35)" stroke-width="2"/>
+            <circle cx="355" cy="165" r="25" fill="rgba(255,255,255,0.04)" />
+            <circle cx="610" cy="150" r="25" fill="rgba(255,255,255,0.04)" />
+            <circle cx="468" cy="300" r="22" fill="rgba(255,255,255,0.04)" />
+            <circle cx="235" cy="220" r="18" fill="rgba(255,255,255,0.04)" />
+          </svg>
+          <div id="mapMarkers"></div>
+        </div>
+
+        <div class="timeCard">
+          <div>
+            <h2 id="selectedZoneLabel">UTC</h2>
+            <div class="currentTime" id="selectedTime">--:--:--</div>
+          </div>
+
+          <div class="time-grid" id="timeList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const timezones = [
+      { id: 'all', label: 'All', city: 'Global', offset: 0, region: 'all', x: 50, y: 50 },
+      { id: 'utc', label: 'UTC', city: 'London', offset: 0, region: 'global', x: 46, y: 28 },
+      { id: 'ist', label: 'IST', city: 'India', offset: 5.5, region: 'asia', x: 62, y: 40 },
+      { id: 'est', label: 'EST', city: 'New York', offset: -5, region: 'america', x: 28, y: 34 },
+      { id: 'pst', label: 'PST', city: 'Los Angeles', offset: -8, region: 'america', x: 18, y: 36 },
+      { id: 'cest', label: 'CET', city: 'Paris', offset: 1, region: 'europe', x: 48, y: 24 },
+      { id: 'jst', label: 'JST', city: 'Tokyo', offset: 9, region: 'asia', x: 75, y: 32 },
+      { id: 'aest', label: 'AEST', city: 'Sydney', offset: 10, region: 'oceania', x: 82, y: 68 },
+      { id: 'gmt', label: 'GMT', city: 'UK', offset: 0, region: 'europe', x: 46, y: 25 }
+    ];
+
+    const radioContainer = document.getElementById('timezoneRadios');
+    const mapMarkers = document.getElementById('mapMarkers');
+    const timeList = document.getElementById('timeList');
+    const selectedZoneLabel = document.getElementById('selectedZoneLabel');
+    const selectedTime = document.getElementById('selectedTime');
+
+    function getLocalTimeForOffset(offsetHours) {
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const curve = new Date(utc + 3600000 * offsetHours);
+      return curve;
+    }
+
+    function formatTime(date) {
+      return new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        timeZone: 'UTC'
+      }).format(date);
+    }
+
+    function renderRadioButtons() {
+      const radios = [
+        { id: 'all', label: 'All' },
+        { id: 'utc', label: 'UTC' },
+        { id: 'ist', label: 'IST' },
+        { id: 'est', label: 'EST' },
+        { id: 'pst', label: 'PST' },
+        { id: 'cest', label: 'CET' },
+        { id: 'jst', label: 'JST' },
+        { id: 'aest', label: 'AEST' },
+        { id: 'gmt', label: 'GMT' }
+      ];
+
+      radioContainer.innerHTML = radios.map((radio) => `
+        <label class="timezoneRadio">
+          <input type="radio" name="timezone" value="${radio.id}" ${radio.id === 'all' ? 'checked' : ''}>
+          <span>${radio.label}</span>
+        </label>
+      `).join('');
+
+      document.querySelectorAll('input[name="timezone"]').forEach((input) => {
+        input.addEventListener('change', renderSelectedZone);
+      });
+    }
+
+    function renderSelectedZone() {
+      const selected = document.querySelector('input[name="timezone"]:checked')?.value || 'all';
+      const selectedZone = timezones.find(t => t.id === selected) || timezones[0];
+
+      const visibleZones = selected === 'all'
+        ? timezones.filter(t => t.id !== 'all')
+        : timezones.filter(t => t.id === selected || (selectedZone.region !== 'all' && t.region === selectedZone.region));
+
+      mapMarkers.innerHTML = '';
+
+      visibleZones.forEach((zone) => {
+        const marker = document.createElement('div');
+        marker.className = 'cityMarker' + (zone.id === selected ? ' active' : '');
+        marker.style.left = `${zone.x}%`;
+        marker.style.top = `${zone.y}%`;
+
+        const label = document.createElement('div');
+        label.className = 'cityLabel';
+        label.textContent = `${zone.label} · ${zone.city}`;
+        label.style.left = `${zone.x}%`;
+        label.style.top = `${zone.y}%`;
+
+        mapMarkers.appendChild(marker);
+        mapMarkers.appendChild(label);
+      });
+
+      const slotTime = getLocalTimeForOffset(selectedZone.offset);
+      selectedZoneLabel.textContent = `${selectedZone.label} · ${selectedZone.city}`;
+      selectedTime.textContent = formatTime(slotTime);
+
+      const list = selected === 'all' ? timezones.filter(t => t.id !== 'all') : [selectedZone];
+
+      timeList.innerHTML = list.map((zone) => {
+        const now = getLocalTimeForOffset(zone.offset);
+        return `
+          <div class="time-item">
+            <strong>${zone.label} (${zone.city})</strong>
+            <span>${new Intl.DateTimeFormat('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: true,
+              timeZone: 'UTC'
+            }).format(now)} </span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    renderRadioButtons();
+    renderSelectedZone();
+    setInterval(renderSelectedZone, 1000);
+  </script>
+</body>
+</html>

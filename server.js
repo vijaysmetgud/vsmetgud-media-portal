@@ -1,11 +1,14 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const multer = require('multer');
 
 const Database = require('better-sqlite3');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+const ADMIN_USERNAME = 'Vijay';
+const ADMIN_PASSWORD = 'Yajiv';
 
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'visitors.db');
@@ -31,6 +34,7 @@ db.prepare(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ip TEXT,
     username TEXT,
+    visitorName TEXT,
     email TEXT,
     authMethod TEXT,
     url TEXT,
@@ -44,13 +48,101 @@ db.prepare(`
   )
 `).run();
 
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS logged_in_users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
+    name TEXT,
+    email TEXT,
+    authMethod TEXT,
+    ip TEXT,
+    userAgent TEXT,
+    platform TEXT,
+    language TEXT,
+    screen TEXT,
+    timezone TEXT,
+    timestamp TEXT
+  )
+`).run();
+
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS portal_activity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
+    name TEXT,
+    email TEXT,
+    authMethod TEXT,
+    action TEXT,
+    page TEXT,
+    details TEXT,
+    ip TEXT,
+    userAgent TEXT,
+    platform TEXT,
+    language TEXT,
+    screen TEXT,
+    timezone TEXT,
+    timestamp TEXT
+  )
+`).run();
+
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS media_payment_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    visitorName TEXT,
+    username TEXT,
+    email TEXT,
+    phone TEXT,
+    amount REAL,
+    currency TEXT,
+    paymentMethod TEXT,
+    paymentReference TEXT,
+    transactionId TEXT,
+    visitorType TEXT,
+    status TEXT,
+    sourcePage TEXT,
+    ip TEXT,
+    userAgent TEXT,
+    platform TEXT,
+    language TEXT,
+    timezone TEXT,
+    paidAt TEXT,
+    validUntil TEXT,
+    accessGranted BOOLEAN DEFAULT 0,
+    whatsappSent BOOLEAN DEFAULT 0,
+    details TEXT,
+    createdAt TEXT
+  )
+`).run();
+
 app.use(express.json());
 app.set('trust proxy', true);
+app.use('/bank-qr', express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'app')));
 
 const MEDIA_DIR = path.join(__dirname, "media");
 
+if (!fs.existsSync(MEDIA_DIR)) {
+  fs.mkdirSync(MEDIA_DIR, { recursive: true });
+}
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, MEDIA_DIR),
+    filename: (req, file, cb) => {
+      const safeName = String(file.originalname || 'upload').replace(/[^a-zA-Z0-9._-]/g, '_');
+      cb(null, `${Date.now()}-${safeName}`);
+    }
+  })
+});
+
 app.use('/media', express.static(MEDIA_DIR));
+
+function isValidAdminRequest(req) {
+  const username = String(req.headers['x-admin-user'] || '');
+  const token = String(req.headers['x-admin-token'] || '');
+  const expectedToken = Buffer.from(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}`).toString('base64');
+  return username === ADMIN_USERNAME && token === expectedToken;
+}
 
 function getAllMediaFiles(dir, basePath = '') {
   let results = [];
@@ -87,6 +179,28 @@ app.get('/media-index.json', (req, res) => {
   }
 });
 
+app.post('/api/upload-media', upload.array('files', 50), (req, res) => {
+  try {
+    if (!isValidAdminRequest(req)) {
+      return res.status(403).json({ success: false, error: 'Admin access required' });
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, error: 'No files uploaded' });
+    }
+
+    const uploaded = req.files.map(file => {
+      const relativePath = path.relative(MEDIA_DIR, file.path).replace(/\\/g, '/');
+      return relativePath;
+    });
+
+    return res.json({ success: true, uploaded, count: uploaded.length });
+  } catch (err) {
+    console.error('Upload failure:', err);
+    return res.status(500).json({ success: false, error: 'Unable to publish media file' });
+  }
+});
+
 // app.post('/api/visitor', (req, res) => {
 //   const ip = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
 //   const {
@@ -112,6 +226,7 @@ app.post('/api/visitor', (req, res) => {
 
     const {
       username = '',
+      visitorName = '',
       email = '',
       authMethod = 'anonymous',
       url = '/',
@@ -133,6 +248,7 @@ app.post('/api/visitor', (req, res) => {
       (
         ip,
         username,
+        visitorName,
         email,
         authMethod,
         url,
@@ -144,12 +260,13 @@ app.post('/api/visitor', (req, res) => {
         referrer,
         timestamp
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
       ip,
       username,
+      visitorName || username || 'Visitor',
       email,
       authMethod,
       url,
@@ -207,6 +324,7 @@ app.get('/api/visitor-stats', (req, res) => {
         SELECT
           ip,
           username,
+          visitorName,
           email,
           authMethod,
           url,
@@ -252,6 +370,7 @@ app.get('/api/visitors', (req, res) => {
         SELECT
           ip,
           username,
+          visitorName,
           email,
           authMethod,
           url,
@@ -281,6 +400,335 @@ app.get('/api/visitors', (req, res) => {
 
   }
 
+});
+
+app.post('/api/login-user', (req, res) => {
+  try {
+    const ip = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+    const payload = req.body || {};
+    const timestamp = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO logged_in_users (
+        username, name, email, authMethod, ip, userAgent, platform, language, screen, timezone, timestamp
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      payload.username || '',
+      payload.name || payload.username || 'User',
+      payload.email || '',
+      payload.authMethod || 'local',
+      ip,
+      payload.userAgent || '',
+      payload.platform || '',
+      payload.language || '',
+      payload.screen || '',
+      payload.timezone || '',
+      timestamp
+    );
+
+    db.prepare(`
+      INSERT INTO portal_activity (
+        username, name, email, authMethod, action, page, details, ip, userAgent, platform, language, screen, timezone, timestamp
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      payload.username || '',
+      payload.name || payload.username || 'User',
+      payload.email || '',
+      payload.authMethod || 'local',
+      'login',
+      'portal',
+      'User logged in to the portal',
+      ip,
+      payload.userAgent || '',
+      payload.platform || '',
+      payload.language || '',
+      payload.screen || '',
+      payload.timezone || '',
+      timestamp
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Login record error:', err);
+    res.status(500).json({ success: false, error: 'Failed to record login activity' });
+  }
+});
+
+function getActivityQueryFilters(req) {
+  const from = req.query.from || '';
+  const to = req.query.to || '';
+  const where = [];
+  const params = [];
+
+  if (from) {
+    where.push('timestamp >= ?');
+    params.push(from + 'T00:00:00.000Z');
+  }
+
+  if (to) {
+    where.push('timestamp <= ?');
+    params.push(to + 'T23:59:59.999Z');
+  }
+
+  const sql = `
+    SELECT username, name, email, authMethod, action, page, details, ip, userAgent, platform, language, screen, timezone, timestamp
+    FROM portal_activity
+    ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+    ORDER BY timestamp DESC
+  `;
+
+  return { sql, params };
+}
+
+app.post('/api/log-activity', (req, res) => {
+  try {
+    const ip = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+    const payload = req.body || {};
+    const timestamp = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO portal_activity (
+        username, name, email, authMethod, action, page, details, ip, userAgent, platform, language, screen, timezone, timestamp
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      payload.username || '',
+      payload.name || payload.username || 'User',
+      payload.email || '',
+      payload.authMethod || 'local',
+      payload.action || 'page_view',
+      payload.page || 'portal',
+      payload.details || '',
+      ip,
+      payload.userAgent || '',
+      payload.platform || '',
+      payload.language || '',
+      payload.screen || '',
+      payload.timezone || '',
+      timestamp
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Activity log error:', err);
+    res.status(500).json({ success: false, error: 'Failed to save activity log' });
+  }
+});
+
+app.get('/api/activity-report', (req, res) => {
+  try {
+    const { sql, params } = getActivityQueryFilters(req);
+    const rows = db.prepare(sql).all(...params);
+
+    res.json({
+      success: true,
+      rows: rows.map(row => ({
+        ...row,
+        timestamp: row.timestamp || ''
+      }))
+    });
+  } catch (err) {
+    console.error('Activity report error:', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch activity report' });
+  }
+});
+
+app.get('/api/activity-report.xlsx', async (req, res) => {
+  try {
+    const ExcelJS = require('exceljs');
+    const { sql, params } = getActivityQueryFilters(req);
+    const rows = db.prepare(sql).all(...params);
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Media Portal';
+    workbook.created = new Date();
+
+    const sheet = workbook.addWorksheet('Portal Activity');
+    sheet.columns = [
+      { header: 'Timestamp', key: 'timestamp', width: 22 },
+      { header: 'Username', key: 'username', width: 18 },
+      { header: 'Name', key: 'name', width: 20 },
+      { header: 'Email', key: 'email', width: 24 },
+      { header: 'Auth Method', key: 'authMethod', width: 16 },
+      { header: 'Action', key: 'action', width: 18 },
+      { header: 'Page', key: 'page', width: 22 },
+      { header: 'Details', key: 'details', width: 40 },
+      { header: 'IP', key: 'ip', width: 18 },
+      { header: 'Platform', key: 'platform', width: 16 },
+      { header: 'Language', key: 'language', width: 18 },
+      { header: 'Timezone', key: 'timezone', width: 24 }
+    ];
+
+    rows.forEach(row => {
+      sheet.addRow({
+        timestamp: row.timestamp || '',
+        username: row.username || '',
+        name: row.name || '',
+        email: row.email || '',
+        authMethod: row.authMethod || '',
+        action: row.action || '',
+        page: row.page || '',
+        details: row.details || '',
+        ip: row.ip || '',
+        platform: row.platform || '',
+        language: row.language || '',
+        timezone: row.timezone || ''
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="portal-activity-report.xlsx"');
+    res.send(buffer);
+  } catch (err) {
+    console.error('Excel report error:', err);
+    res.status(500).json({ success: false, error: 'Failed to generate Excel report' });
+  }
+});
+
+function sendWhatsAppAdminNotification(transaction) {
+  const adminPhone = process.env.WHATSAPP_ADMIN_PHONE || '919035287965';
+  const adminMessage = process.env.WHATSAPP_MESSAGE || 'Media payment received';
+  const token = process.env.WHATSAPP_TOKEN || '';
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+
+  if (!adminPhone && !token && !phoneNumberId) {
+    console.log('[WhatsApp] Admin notification queued but not configured:', transaction);
+    return { success: true, skipped: true };
+  }
+
+  const text = `${adminMessage}\nVisitor: ${transaction.visitorName || 'External Visitor'}\nEmail: ${transaction.email || '-'}\nPhone: ${transaction.phone || '-'}\nAmount: ₹${Number(transaction.amount || 0).toFixed(2)}\nReference: ${transaction.paymentReference || transaction.transactionId || '-'}\nValid Until: ${transaction.validUntil || '-'}\nStatus: ${transaction.status || 'paid'}`;
+
+  const endpoint = process.env.WHATSAPP_WEBHOOK_URL || `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': token ? `Bearer ${token}` : undefined
+  };
+
+  return fetch(endpoint, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to: adminPhone,
+      type: 'text',
+      text: { body: text }
+    })
+  }).then(async response => {
+    const body = await response.text();
+    if (!response.ok) {
+      console.error('[WhatsApp] Notification failed:', response.status, body);
+      return { success: false, error: body };
+    }
+    return { success: true, body };
+  }).catch(err => {
+    console.error('[WhatsApp] Notification error:', err);
+    return { success: false, error: err.message };
+  });
+}
+
+app.post('/api/media-payment', (req, res) => {
+  try {
+    const ip = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+    const payload = req.body || {};
+    const paidAt = new Date().toISOString();
+    const validUntil = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+    const transactionId = payload.transactionId || `MEDIA-${Date.now()}`;
+    const amount = Number(payload.amount || 100);
+
+    const visitorName = payload.visitorName || payload.name || 'External Visitor';
+    const username = payload.username || '';
+    const email = payload.email || '';
+    const phone = payload.phone || '';
+
+    const insert = db.prepare(`
+      INSERT INTO media_payment_transactions (
+        visitorName, username, email, phone, amount, currency, paymentMethod, paymentReference,
+        transactionId, visitorType, status, sourcePage, ip, userAgent, platform, language,
+        timezone, paidAt, validUntil, accessGranted, whatsappSent, details, createdAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const result = insert.run(
+      visitorName,
+      username,
+      email,
+      phone,
+      amount,
+      payload.currency || 'INR',
+      payload.paymentMethod || 'QR',
+      payload.paymentReference || transactionId,
+      transactionId,
+      payload.visitorType || 'external',
+      'paid',
+      payload.sourcePage || 'portal',
+      ip,
+      payload.userAgent || '',
+      payload.platform || '',
+      payload.language || '',
+      payload.timezone || '',
+      paidAt,
+      validUntil,
+      1,
+      0,
+      payload.details || 'Media access payment received',
+      paidAt
+    );
+
+    const record = {
+      id: result.lastInsertRowid,
+      visitorName,
+      username,
+      email,
+      phone,
+      amount,
+      currency: 'INR',
+      paymentReference: payload.paymentReference || transactionId,
+      transactionId,
+      status: 'paid',
+      paidAt,
+      validUntil,
+      accessGranted: 1,
+      visitorType: payload.visitorType || 'external'
+    };
+
+    sendWhatsAppAdminNotification(record)
+      .then((waResult) => {
+        if (waResult && waResult.success) {
+          db.prepare(`UPDATE media_payment_transactions SET whatsappSent = 1 WHERE transactionId = ?`).run(transactionId);
+        }
+      })
+      .catch(err => console.error('WhatsApp update error:', err));
+
+    res.json({
+      success: true,
+      transactionId,
+      paidAt,
+      validUntil,
+      amount,
+      status: 'paid'
+    });
+  } catch (err) {
+    console.error('Media payment insert error:', err);
+    res.status(500).json({ success: false, error: 'Failed to record media payment' });
+  }
+});
+
+app.get('/api/media-payment-transactions', (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT id, visitorName, username, email, phone, amount, currency, paymentMethod, paymentReference,
+             transactionId, visitorType, status, sourcePage, ip, userAgent, platform, language,
+             timezone, paidAt, validUntil, accessGranted, whatsappSent, details, createdAt
+      FROM media_payment_transactions
+      ORDER BY createdAt DESC
+      LIMIT 100
+    `).all();
+
+    res.json({ success: true, rows });
+  } catch (err) {
+    console.error('Media payment fetch error:', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch payment records' });
+  }
 });
 
 const os = require("os");
@@ -409,24 +857,44 @@ app.get("/api/metrics", (req, res) => {
             ((totalMem - freeMem) / totalMem) * 100;
 
         const cpuLoad =
-            (os.loadavg()[0] / os.cpus().length) * 100;
+            (os.loadavg()[0] / Math.max(1, os.cpus().length)) * 100;
 
-        const runningPods = parseInt(
-            execSync(
-                "kubectl get pods -A --field-selector=status.phase=Running --no-headers | wc -l",
-                { encoding: "utf8" }
-            ).trim(),
-            10
-        );
+        let runningPods = 0;
+        try {
+            const kubectlAvailable = execSync("kubectl version --client --short", { encoding: "utf8", stdio: ['ignore', 'pipe', 'pipe'] });
+            if (kubectlAvailable) {
+                runningPods = parseInt(
+                    execSync(
+                        "kubectl get pods -A --field-selector=status.phase=Running --no-headers | wc -l",
+                        { encoding: "utf8", stdio: ['ignore', 'pipe', 'pipe'] }
+                    ).trim(),
+                    10
+                ) || 0;
+            }
+        } catch (kubectlError) {
+            runningPods = 0;
+        }
 
-        const diskLine =
-            execSync(
-                "df -h / | tail -1",
-                { encoding: "utf8" }
-            ).trim();
+        let diskTotal = "N/A";
+        let diskUsed = "N/A";
+        let diskFree = "N/A";
+        let diskUsage = "N/A";
 
-        const diskParts =
-            diskLine.split(/\s+/);
+        try {
+            const diskLine =
+                execSync(
+                    "df -h / | tail -1",
+                    { encoding: "utf8", stdio: ['ignore', 'pipe', 'pipe'] }
+                ).trim();
+
+            const diskParts = diskLine.split(/\s+/);
+            diskTotal = diskParts[1] || "N/A";
+            diskUsed = diskParts[2] || "N/A";
+            diskFree = diskParts[3] || "N/A";
+            diskUsage = diskParts[4] || "N/A";
+        } catch (diskError) {
+            // ignore on systems without df or restricted shells
+        }
 
         res.json({
 
@@ -439,20 +907,13 @@ app.get("/api/metrics", (req, res) => {
             pods:
                 runningPods,
 
-            diskTotal:
-                diskParts[1] || "N/A",
-
-            diskUsed:
-                diskParts[2] || "N/A",
-
-            diskFree:
-                diskParts[3] || "N/A",
-
-            diskUsage:
-                diskParts[4] || "N/A",
+            diskTotal,
+            diskUsed,
+            diskFree,
+            diskUsage,
 
             health:
-                runningPods > 0
+                runningPods > 0 || diskTotal !== "N/A"
                 ? "Healthy"
                 : "Warning"
 
