@@ -317,3 +317,5 @@ sudo apt update
 sudo apt install -y ffmpeg
 ffmpeg -version
 pm2 restart all
+
+Added new features
