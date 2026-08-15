@@ -14,6 +14,411 @@ let expenses = [];
 
 let filteredExpenses = [];
 
+let expenseChart = null;
+
+let pieChart = null;
+
+function formatMoney(amount) {
+    return `₹${Number(amount || 0).toFixed(2)}`;
+}
+
+function getTopExpenseByPeriod(data, periodLabel) {
+    if(!Array.isArray(data) || data.length === 0){
+        return { item: "No data", amount: 0 };
+    }
+
+    const totals = {};
+
+    data.forEach(exp => {
+        const itemName = exp.item || "Unknown";
+        totals[itemName] = (totals[itemName] || 0) + Number(exp.price || 0);
+    });
+
+    const top = Object.entries(totals).reduce((max, [item, value]) => {
+        if(value > max.amount){
+            return { item, amount: value };
+        }
+        return max;
+    }, { item: "No data", amount: -1 });
+
+    if(top.amount < 0){
+        return { item: "No data", amount: 0 };
+    }
+
+    return { item: top.item, amount: top.amount };
+}
+
+function updateSummaryInsights() {
+    const today = new Date();
+    const todayString = today.toISOString().split("T")[0];
+    const dayStart = new Date(todayString + "T00:00:00");
+
+    const dailyTop = getTopExpenseByPeriod(expenses.filter(exp => exp.date === todayString), "Today");
+    const weeklyTop = getTopExpenseByPeriod(expenses.filter(exp => {
+        const expDate = new Date(exp.date + "T00:00:00");
+        const diffDays = Math.floor((today - expDate) / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 && diffDays <= 6;
+    }), "Week");
+    const monthlyTop = getTopExpenseByPeriod(expenses.filter(exp => exp.date.startsWith(today.toISOString().slice(0, 7))), "Month");
+    const yearlyTop = getTopExpenseByPeriod(expenses.filter(exp => exp.date.startsWith(String(today.getFullYear()))), "Year");
+    const overallTop = getTopExpenseByPeriod(expenses, "Overall");
+
+    document.getElementById("dailyInsight").textContent = `Peak: ${dailyTop.item} • ${formatMoney(dailyTop.amount)}`;
+    document.getElementById("weeklyInsight").textContent = `Peak: ${weeklyTop.item} • ${formatMoney(weeklyTop.amount)}`;
+    document.getElementById("monthlyInsight").textContent = `Peak: ${monthlyTop.item} • ${formatMoney(monthlyTop.amount)}`;
+    document.getElementById("yearlyInsight").textContent = `Peak: ${yearlyTop.item} • ${formatMoney(yearlyTop.amount)}`;
+    document.getElementById("overallInsight").textContent = `Peak: ${overallTop.item} • ${formatMoney(overallTop.amount)}`;
+}
+
+function getTopCategoryForGraphData(data) {
+    if(!Array.isArray(data) || data.length === 0){
+        return { name: "No data", value: 0 };
+    }
+
+    const totals = {};
+
+    data.forEach(item => {
+        const key = item.item || item.name || "Unknown";
+        totals[key] = (totals[key] || 0) + Number(item.price || item.total || item.amount || 0);
+    });
+
+    const top = Object.entries(totals).reduce((max, [label, value]) => {
+        if(value > max.value){
+            return { name: label, value };
+        }
+        return max;
+    }, { name: "No data", value: -1 });
+
+    return top.value >= 0 ? top : { name: "No data", value: 0 };
+}
+
+function updateChartInsightText(){
+    const graphType = document.getElementById("graphType")?.value || "normal";
+    const filtered = graphType === "normal" ? getFilteredNormalExpenses() : getFilteredSplitHistory();
+    const top = getTopCategoryForGraphData(filtered);
+    const label = graphType === "normal" ? "Top category" : "Top split";
+    const valueText = top.name === "No data" ? "No data" : `${top.name} • ${formatMoney(top.value)}`;
+
+    if(document.getElementById("chartInsight")){
+        document.getElementById("chartInsight").textContent = `${label}: ${valueText}`;
+    }
+
+    if(document.getElementById("pieInsight")){
+        document.getElementById("pieInsight").textContent = `${label}: ${valueText}`;
+    }
+}
+
+function toggleTheme(){
+    const root = document.body;
+    const isLight = root.classList.toggle("light-theme");
+    localStorage.setItem("expenseTheme", isLight ? "light" : "dark");
+}
+
+function applySavedTheme(){
+    const theme = localStorage.getItem("expenseTheme");
+    if(theme === "light"){
+        document.body.classList.add("light-theme");
+    }
+}
+
+function saveMonthlyBudget(){
+    const amount = Number(document.getElementById("monthlyBudgetInput")?.value || 0);
+    if(!amount || amount <= 0){
+        alert("Please enter a valid monthly budget");
+        return;
+    }
+
+    localStorage.setItem("monthlyBudget", String(amount));
+    updateBudgetInfo();
+    updateSmartInsight();
+}
+
+function getCurrentMonthTotal(){
+    const now = new Date();
+    const monthKey = now.toISOString().slice(0, 7);
+    const all = getAllExpensesForGraph();
+    return all
+        .filter(exp => exp.date && exp.date.startsWith(monthKey))
+        .reduce((sum, exp) => sum + Number(exp.price || 0), 0);
+}
+
+function updateBudgetInfo(){
+    const budgetInput = document.getElementById("monthlyBudgetInput");
+    const budget = Number(localStorage.getItem("monthlyBudget") || 0);
+    const currentMonthTotal = getCurrentMonthTotal();
+
+    if(budgetInput){
+        budgetInput.value = budget > 0 ? String(budget) : "";
+    }
+
+    const used = document.getElementById("budgetUsed");
+    const remaining = document.getElementById("budgetRemaining");
+    const status = document.getElementById("budgetStatus");
+    const progress = document.getElementById("budgetProgressBar");
+
+    const usedAmount = Math.min(currentMonthTotal, budget || currentMonthTotal);
+    const remainingAmount = budget > 0 ? budget - currentMonthTotal : 0;
+    const percentage = budget > 0 ? Math.min((currentMonthTotal / budget) * 100, 100) : 0;
+
+    if(used){ used.textContent = `Used: ${formatMoney(usedAmount)}`; }
+    if(remaining){ remaining.textContent = `Remaining: ${formatMoney(Math.max(remainingAmount, 0))}`; }
+    if(status){
+        if(budget <= 0){
+            status.textContent = "Budget status: not set";
+        } else if(currentMonthTotal <= budget){
+            status.textContent = `Budget status: within plan (${formatMoney(remainingAmount)} left)`;
+        } else {
+            status.textContent = `Budget status: exceeded by ${formatMoney(currentMonthTotal - budget)}`;
+        }
+    }
+    if(progress){
+        progress.style.width = `${budget > 0 ? percentage : 0}%`;
+    }
+}
+
+function updateSmartInsight(){
+    const insight = document.getElementById("dashboardInsight");
+    if(!insight){ return; }
+
+    const allExpenses = getAllExpensesForGraph();
+    if(!allExpenses.length){
+        insight.textContent = "Your expense dashboard is ready. Add your first expense to see insights.";
+        return;
+    }
+
+    const totals = {};
+    allExpenses.forEach(exp => {
+        const key = exp.item || "Unknown";
+        totals[key] = (totals[key] || 0) + Number(exp.price || 0);
+    });
+
+    const maxItem = Object.entries(totals).sort((a, b) => b[1] - a[1])[0];
+    const totalSpend = allExpenses.reduce((sum, exp) => sum + Number(exp.price || 0), 0);
+    const budget = Number(localStorage.getItem("monthlyBudget") || 0);
+
+    if(maxItem){
+        let message = `Top spending category: ${maxItem[0]} (${formatMoney(maxItem[1])}).`;
+        if(budget > 0){
+            const delta = totalSpend - budget;
+            message += delta > 0 ? ` You are ${formatMoney(delta)} above the monthly budget.` : ` You are ${formatMoney(Math.abs(delta))} below the monthly budget.`;
+        }
+        insight.textContent = message;
+    } else {
+        insight.textContent = "Your expense dashboard is ready.";
+    }
+}
+
+function getSearchableExpenses(){
+    const searchInput = document.getElementById("expenseSearch");
+    const query = (searchInput?.value || "").trim().toLowerCase();
+    let list = [...expenses];
+
+    if(query){
+        list = list.filter(exp => {
+            return (
+                (exp.item || "").toLowerCase().includes(query) ||
+                (exp.user || "").toLowerCase().includes(query) ||
+                (exp.date || "").toLowerCase().includes(query)
+            );
+        });
+    }
+
+    const sortValue = document.getElementById("expenseSort")?.value || "newest";
+    list.sort((a, b) => {
+        if(sortValue === "oldest") return new Date(a.date) - new Date(b.date);
+        if(sortValue === "highest") return Number(b.price) - Number(a.price);
+        if(sortValue === "lowest") return Number(a.price) - Number(b.price);
+        return new Date(b.date) - new Date(a.date);
+    });
+
+    return list;
+}
+
+function downloadCsvExport(){
+    const rows = getSearchableExpenses();
+    if(!rows.length){
+        alert("No expense data available to export");
+        return;
+    }
+
+    const header = ["Date", "User", "Item", "Price"];
+    const csvRows = [header.join(",")];
+
+    rows.forEach(exp => {
+        csvRows.push([
+            exp.date,
+            exp.user,
+            `"${String(exp.item || "").replace(/"/g, '""')}"`,
+            Number(exp.price || 0)
+        ].join(","));
+    });
+
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `expense-export-${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    speak("Expense CSV exported");
+}
+
+const healthTipSchedule = [
+    {
+        id: "walk",
+        label: "Walk",
+        time: "09:15",
+        message: "Walk for 10 minutes now to refresh your energy and improve focus."
+    },
+    {
+        id: "exercise",
+        label: "Exercise",
+        time: "12:30",
+        message: "Do a light exercise or stretch break to keep your body active."
+    },
+    {
+        id: "tea",
+        label: "Tea Break",
+        time: "15:00",
+        message: "Tea break time: stand up, hydrate, and take a short reset."
+    },
+    {
+        id: "lunch",
+        label: "Lunch Break",
+        time: "13:00",
+        message: "It is lunch break time. Eat mindfully and take a short rest."
+    },
+    {
+        id: "sitting",
+        label: "Prolonged Sitting",
+        time: "11:00",
+        message: "You have been sitting for long. Stand up, stretch your legs, and walk for 2 minutes."
+    },
+    {
+        id: "office",
+        label: "Office Leaving Time",
+        time: "18:00",
+        message: "Office leaving time. Wrap up your work and finish your day calmly."
+    },
+    {
+        id: "compliment",
+        label: "Compliment",
+        time: "17:30",
+        message: "Excellent work today. Keep up the good effort—you are doing great!"
+    },
+    {
+        id: "run",
+        label: "Run",
+        time: "18:30",
+        message: "Evening run or brisk walk will help keep you energetic and healthy."
+    }
+];
+
+function getSelectedHealthReminderType(){
+    const selected = document.querySelector('input[name="healthReminderType"]:checked');
+    return selected ? selected.value : "all";
+}
+
+function renderHealthTips(){
+    const list = document.getElementById("healthReminderList");
+    if(!list){
+        return;
+    }
+
+    const selectedType = getSelectedHealthReminderType();
+    const filteredTips = selectedType === "all"
+        ? healthTipSchedule
+        : healthTipSchedule.filter(tip => tip.id === selectedType);
+
+    list.innerHTML = filteredTips.map((tip) => `
+        <div class="healthReminderItem">
+            <span class="tipTime">${tip.time}</span>
+            <strong>${tip.label}</strong>
+            <p>${tip.message}</p>
+        </div>
+    `).join("");
+}
+
+function getHealthTipKey(tip){
+    const today = new Date().toISOString().split("T")[0];
+    return `${today}-${tip.id}`;
+}
+
+function showHealthReminderToast(message){
+    let toast = document.getElementById("healthReminderToast");
+
+    if(!toast){
+        toast = document.createElement("div");
+        toast.id = "healthReminderToast";
+        document.body.appendChild(toast);
+    }
+
+    toast.textContent = message;
+    toast.style.display = "block";
+
+    clearTimeout(showHealthReminderToast.timeoutId);
+    showHealthReminderToast.timeoutId = setTimeout(() => {
+        toast.style.display = "none";
+    }, 5000);
+}
+
+function triggerHealthTip(tip){
+    if(!tip){
+        return;
+    }
+
+    const logKey = getHealthTipKey(tip);
+    const reminderLog = JSON.parse(localStorage.getItem("healthReminderLog") || "{}");
+
+    if(reminderLog[logKey]){
+        return;
+    }
+
+    reminderLog[logKey] = new Date().toISOString();
+    localStorage.setItem("healthReminderLog", JSON.stringify(reminderLog));
+
+    showHealthReminderToast(tip.message);
+
+    if(Notification && Notification.permission === "granted"){
+        try{
+            new Notification(tip.label, { body: tip.message });
+        }
+        catch(error){
+            console.log("Health notification blocked", error);
+        }
+    }
+
+    if(typeof speak === "function"){
+        speak(tip.message);
+    }
+}
+
+function startHealthReminderChecker(){
+    renderHealthTips();
+
+    document.querySelectorAll('input[name="healthReminderType"]').forEach(radio => {
+        radio.addEventListener("change", renderHealthTips);
+    });
+
+    const checkNow = () => {
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const selectedType = getSelectedHealthReminderType();
+
+        for(const tip of healthTipSchedule){
+            const [hour, minute] = tip.time.split(":").map(Number);
+            const targetMinutes = hour * 60 + minute;
+            const matchesSelectedType = selectedType === "all" || tip.id === selectedType;
+
+            if(matchesSelectedType && Math.abs(currentMinutes - targetMinutes) <= 2){
+                triggerHealthTip(tip);
+                break;
+            }
+        }
+    };
+
+    checkNow();
+    setInterval(checkNow, 60000);
+}
+
 /* ================= SAVE ================= */
 
 function getExpenseKey(user){
@@ -555,6 +960,10 @@ function startVoice(){
     let selectedUser = "";
     let item = "";
     let amount = 0;
+    let userRetries = 0;
+    let itemRetries = 0;
+    let amountRetries = 0;
+    const MAX_RETRIES = 2;
 
     const dateInput =
 
@@ -650,7 +1059,7 @@ function startVoice(){
                 false;
 
             recognition.maxAlternatives =
-                1;
+                2;
 
             recognition.start();
 
@@ -665,8 +1074,30 @@ function startVoice(){
                     "🎤 Listening...";
             }
 
+            let resultReceived = false;
+
+            const timeout = setTimeout(()=>{
+
+                if(!resultReceived){
+
+                    recognition.abort();
+
+                    if(voiceStatus){
+
+                        voiceStatus.innerText =
+                            "❌ No input received (timeout)";
+                    }
+
+                    callback("");
+                }
+
+            }, 5000);
+
             recognition.onresult =
             (event)=>{
+
+                resultReceived = true;
+                clearTimeout(timeout);
 
                 const text =
                     event.results[0][0]
@@ -685,17 +1116,40 @@ function startVoice(){
             };
 
             recognition.onerror =
-            ()=>{
+            (event)=>{
+
+                resultReceived = true;
+                clearTimeout(timeout);
+
+                const errorMessage =
+                    event.error || "unknown error";
 
                 if(voiceStatus){
 
                     voiceStatus.innerText =
-                        "❌ Could not hear";
+                        `❌ Error: ${errorMessage}`;
                 }
 
-                recognition.stop();
+                recognition.abort();
 
                 callback("");
+            };
+
+            recognition.onend = ()=>{
+
+                if(!resultReceived){
+
+                    resultReceived = true;
+                    clearTimeout(timeout);
+
+                    if(voiceStatus){
+
+                        voiceStatus.innerText =
+                            "❌ Listening ended";
+                    }
+
+                    callback("");
+                }
             };
         };
 
@@ -708,6 +1162,62 @@ function startVoice(){
 
     function askUser(){
 
+        if(userRetries >= MAX_RETRIES){
+
+            speak("Switching to manual input");
+
+            const name = prompt(
+                "Enter user name"
+            );
+
+            if(!name){
+                alert("Voice input cancelled");
+                return;
+            }
+
+            selectedUser =
+                name.trim();
+
+            const existingUser =
+                users.find(
+                    user =>
+                        user.toLowerCase() ===
+                        selectedUser.toLowerCase()
+                );
+
+            if(existingUser){
+                selectedUser = existingUser;
+            } else {
+                users.push(selectedUser);
+                localStorage.setItem(
+                    "expenseUsers",
+                    JSON.stringify(users)
+                );
+                loadUsers();
+                loadGraphUsers();
+            }
+
+            currentUser = selectedUser;
+            document.getElementById(
+                "currentUserName"
+            ).innerText =
+                "User : " + selectedUser;
+
+            localStorage.setItem(
+                "expenseUser",
+                selectedUser
+            );
+
+            loadExpenses();
+            renderExpenses();
+
+            speak("User selected. Say expense item or say cancel");
+
+            askItemOrCommand();
+
+            return;
+        }
+
         speakThenListen(
 
             "Please say user name",
@@ -716,15 +1226,19 @@ function startVoice(){
 
                 if(!text.trim()){
 
+                    userRetries++;
+
                     speakThenListen(
 
-                        "Please say user name again",
+                        "Sorry, I didn't catch that. Please say user name again",
 
                         ()=> askUser()
                     );
 
                     return;
                 }
+
+                userRetries = 0;
 
                 selectedUser =
                     text.trim();
@@ -810,78 +1324,115 @@ function startVoice(){
                 speakThenListen(
 
                     message +
-                    ". Say expense item or command",
+                    ". Say expense item or say cancel",
 
                     (text)=>{
 
-                        const voiceText =
-
-                            text
-                            .toLowerCase()
-                            .trim();
-
-                        if(
-
-                            voiceText.includes("today")
-
-                            ||
-
-                            voiceText.includes("month")
-
-                            ||
-
-                            voiceText.includes("year")
-
-                            ||
-
-                            voiceText.includes("settlement")
-
-                            ||
-
-                            voiceText.includes("split")
-
-                            ||
-
-                            voiceText.startsWith(
-                                "add user"
-                            )
-
-                        ){
-
-                            processVoiceExpense(
-                                voiceText
-                            );
-
-                            return;
-                        }
-
-                        const hasNumber =
-                            /\d/.test(
-                                voiceText
-                            );
-
-                        if(hasNumber){
-
-                            processVoiceExpense(
-                                voiceText
-                            );
-
-                            return;
-                        }
-
-                        item =
-                            voiceText;
-
-                        askAmount();
+                        askItemOrCommand(text);
                     }
                 );
             }
         );
     }
 
+    function askItemOrCommand(text=""){
+
+        const voiceText =
+            text.toLowerCase().trim();
+
+        if(voiceText === "cancel" || voiceText.includes("cancel")){
+            speak("Voice input cancelled");
+            return;
+        }
+
+        if(
+
+            voiceText.includes("today")
+
+            ||
+
+            voiceText.includes("month")
+
+            ||
+
+            voiceText.includes("year")
+
+            ||
+
+            voiceText.includes("settlement")
+
+            ||
+
+            voiceText.includes("split")
+
+            ||
+
+            voiceText.startsWith(
+                "add user"
+            )
+
+        ){
+
+            processVoiceExpense(
+                voiceText
+            );
+
+            return;
+        }
+
+        const hasNumber =
+            /\d/.test(
+                voiceText
+            );
+
+        if(hasNumber){
+
+            processVoiceExpense(
+                voiceText
+            );
+
+            return;
+        }
+
+        if(!voiceText){
+            askItem();
+            return;
+        }
+
+        item =
+            voiceText;
+
+        askAmount();
+    }
+
     /* ================= AMOUNT ================= */
 
     function askAmount(){
+
+        if(amountRetries >= MAX_RETRIES){
+
+            const amountInput = prompt(
+                "Enter amount for " + item
+            );
+
+            if(!amountInput){
+                speak("Amount cancelled");
+                return;
+            }
+
+            amount = Number(
+                amountInput.replace(/[^0-9]/g, "")
+            );
+
+            if(!amount || amount <= 0){
+                speak("Invalid amount");
+                return;
+            }
+
+            addExpenseFromVoice();
+
+            return;
+        }
 
         speakThenListen(
 
@@ -900,7 +1451,7 @@ function startVoice(){
 
                 /* direct numeric */
 
-                let amount =
+                let parsedAmount =
 
                     Number(
 
@@ -912,7 +1463,7 @@ function startVoice(){
 
                 /* words support */
 
-                if(!amount){
+                if(!parsedAmount){
 
                     const words = {
 
@@ -930,14 +1481,14 @@ function startVoice(){
                         thousand:1000
                     };
 
-                    amount = 0;
+                    parsedAmount = 0;
 
                     text.split(" ")
                     .forEach(word=>{
 
                         if(words[word]){
 
-                            amount +=
+                            parsedAmount +=
                                 words[word];
                         }
                     });
@@ -945,38 +1496,71 @@ function startVoice(){
 
                 if(
 
-                    !amount ||
+                    !parsedAmount ||
 
-                    amount <= 0
+                    parsedAmount <= 0
                 ){
 
+                    amountRetries++;
+
                     speak(
-                        "Invalid amount"
+                        "Invalid amount. Please say again"
                     );
+
+                    askAmount();
 
                     return;
                 }
 
-                /* AUTO FILL */
+                amountRetries = 0;
 
-                document.getElementById(
-                    "item"
-                ).value =
-                    item;
+                amount = parsedAmount;
 
-                document.getElementById(
-                    "price"
-                ).value =
-                    amount;
+                addExpenseFromVoice();
+            }
+        );
+    }
 
-                addExpense();
+    function addExpenseFromVoice(){
 
-                alert(
+        const selectedDate =
+
+            document.getElementById(
+                "date"
+            ).value ||
+
+            new Date()
+            .toISOString()
+            .split("T")[0];
+
+        expenses.push({
+
+            id:Date.now(),
+
+            user:currentUser,
+
+            date:selectedDate,
+
+            item:item,
+
+            price:Number(amount)
+        });
+
+        saveExpenses();
+
+        renderExpenses();
+
+        speak(
+
+            `${item} expense of ${amount} rupees added`
+        );
+
+        alert(
 
     `Expense Added
 
     Date:
-    ${dateInput.value}
+    ${selectedDate}
 
     User:
     ${selectedUser}
@@ -986,7 +1570,54 @@ function startVoice(){
 
     Amount:
     ₹${amount}`
-                );
+        );
+    }
+
+    function askItem(){
+
+        if(itemRetries >= MAX_RETRIES){
+
+            const itemInput = prompt(
+                "Enter expense item"
+            );
+
+            if(!itemInput){
+                speak("Item cancelled");
+                return;
+            }
+
+            item = itemInput.trim();
+
+            askAmount();
+
+            return;
+        }
+
+        speakThenListen(
+
+            "Please say expense item",
+
+            (text)=>{
+
+                if(!text.trim()){
+
+                    itemRetries++;
+
+                    speak(
+                        "Sorry, I didn't catch that. Please say the item again"
+                    );
+
+                    askItem();
+
+                    return;
+                }
+
+                itemRetries = 0;
+
+                item =
+                    text.trim();
+
+                askAmount();
             }
         );
     }
@@ -1333,8 +1964,7 @@ function processVoiceExpense(text){
 
 function renderExpenses(){
 
-    filteredExpenses =
-        [...expenses];
+    filteredExpenses = getSearchableExpenses();
 
     const expenseList =
         document.getElementById(
@@ -1343,7 +1973,7 @@ function renderExpenses(){
 
     expenseList.innerHTML = "";
 
-    if(!expenses || expenses.length === 0){
+    if(!filteredExpenses || filteredExpenses.length === 0){
 
         expenseList.innerHTML = `
 
@@ -1365,6 +1995,10 @@ function renderExpenses(){
     ).innerText = "₹0";
 
     document.getElementById(
+        "weeklyTotal"
+    ).innerText = "₹0";
+
+    document.getElementById(
         "monthlyTotal"
     ).innerText = "₹0";
 
@@ -1376,6 +2010,7 @@ function renderExpenses(){
         "overallTotal"
     ).innerText = "₹0";
 
+    updateSummaryInsights();
     renderChart();
 
     renderPieChart();
@@ -1387,6 +2022,8 @@ function renderExpenses(){
 
 
     let daily = 0;
+
+    let weekly = 0;
 
     let monthly = 0;
 
@@ -1401,7 +2038,7 @@ function renderExpenses(){
         now.toISOString()
         .split("T")[0];
 
-    expenses
+    filteredExpenses
     .slice()
     .reverse()
 
@@ -1415,6 +2052,12 @@ function renderExpenses(){
         if(exp.date === today){
 
             daily += exp.price;
+        }
+
+        const diffDays = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+
+        if(diffDays >= 0 && diffDays <= 6){
+            weekly += exp.price;
         }
 
         if(
@@ -1472,6 +2115,11 @@ function renderExpenses(){
         "₹" + daily;
 
     document.getElementById(
+        "weeklyTotal"
+    ).innerText =
+        "₹" + weekly;
+
+    document.getElementById(
         "monthlyTotal"
     ).innerText =
         "₹" + monthly;
@@ -1485,6 +2133,10 @@ function renderExpenses(){
         "overallTotal"
     ).innerText =
         "₹" + overall;
+
+    updateSummaryInsights();
+    updateBudgetInfo();
+    updateSmartInsight();
     
     renderChart();    
 
@@ -3658,58 +4310,119 @@ TOTAL:
     );
 }
 
-function shareSettlementWhatsApp(){
+function getExpenseSummaryRows(){
+    const allUsers = users.length ? users : [currentUser].filter(Boolean);
+    const splitHistory = JSON.parse(localStorage.getItem("splitHistory") || "[]");
+    const rows = [];
 
-    const result =
-        getSettlementData();
+    allUsers.forEach(user => {
+        const userExpenses = JSON.parse(localStorage.getItem(getExpenseKey(user)) || "[]");
+        const personalTotal = userExpenses.reduce((sum, exp) => sum + Number(exp.price || 0), 0);
 
-    const text =
-        encodeURIComponent(
+        const daily = userExpenses.filter(exp => exp.date === new Date().toISOString().split("T")[0]).reduce((sum, exp) => sum + Number(exp.price || 0), 0);
+        const weekly = userExpenses.filter(exp => {
+            const expDate = new Date(exp.date + "T00:00:00");
+            const now = new Date();
+            const diffDays = Math.floor((now - expDate) / (1000 * 60 * 60 * 24));
+            return diffDays >= 0 && diffDays <= 6;
+        }).reduce((sum, exp) => sum + Number(exp.price || 0), 0);
+        const monthly = userExpenses.filter(exp => exp.date.startsWith(new Date().toISOString().slice(0, 7))).reduce((sum, exp) => sum + Number(exp.price || 0), 0);
+        const yearly = userExpenses.filter(exp => exp.date.startsWith(new Date().getFullYear().toString())).reduce((sum, exp) => sum + Number(exp.price || 0), 0);
 
-`💰 FINAL SETTLEMENT
+        const splitPaid = splitHistory.filter(split => split.paidBy === user).reduce((sum, split) => sum + Number(split.total || 0), 0);
+        const splitOwed = splitHistory.filter(split => split.users.includes(user)).reduce((sum, split) => sum + Number(split.each || 0), 0);
 
-TOTAL:
-₹${result.total}
+        rows.push({
+            user,
+            daily,
+            weekly,
+            monthly,
+            yearly,
+            splitPaid,
+            splitOwed,
+            personalTotal,
+            total: personalTotal + splitPaid + splitOwed
+        });
+    });
 
-${result.oweHtml
-.replace(/<[^>]*>/g,"")}
-`
-        );
-
-    window.open(
-
-        `https://wa.me/?text=${text}`,
-
-        "_blank"
-    );
+    return rows.sort((a, b) => b.total - a.total);
 }
 
-function sendSettlementEmail(){
+function getExpenseSummaryTableHtml(){
+    const rows = getExpenseSummaryRows();
+    const maxRows = rows.length ? rows.reduce((max, row) => row.total > max.total ? row : max, rows[0]) : null;
+    const minRows = rows.length ? rows.reduce((min, row) => row.total < min.total ? row : min, rows[0]) : null;
 
-    const result =
-        getSettlementData();
+    const tableRows = rows.map(row => `
+        <tr>
+            <td>${row.user}</td>
+            <td>₹${row.daily.toFixed(2)}</td>
+            <td>₹${row.weekly.toFixed(2)}</td>
+            <td>₹${row.monthly.toFixed(2)}</td>
+            <td>₹${row.yearly.toFixed(2)}</td>
+            <td>₹${row.splitPaid.toFixed(2)}</td>
+            <td>₹${row.splitOwed.toFixed(2)}</td>
+            <td>₹${row.total.toFixed(2)}</td>
+        </tr>
+    `).join("");
 
-    const subject =
-        encodeURIComponent(
-            "Expense Settlement"
-        );
+    const insight = rows.length
+        ? `Highest spender: ${maxRows.user} (₹${maxRows.total.toFixed(2)}) | Lowest spender: ${minRows.user} (₹${minRows.total.toFixed(2)})`
+        : "No expense data available";
 
-    const body =
-        encodeURIComponent(
+    return `
+        <div style="padding:20px; font-family:Arial, sans-serif; background:#111827; color:#fff; max-width:1100px; margin:20px auto;">
+            <h2 style="text-align:center; margin-bottom:12px;">Expense Summary Table</h2>
+            <p style="text-align:center; margin-bottom:20px; color:#cfe7ff;">${insight}</p>
+            <table style="width:100%; border-collapse:collapse; background:#1f2937; color:#fff; border:1px solid #374151;">
+                <thead>
+                    <tr>
+                        <th style="border:1px solid #374151; padding:10px;">User</th>
+                        <th style="border:1px solid #374151; padding:10px;">Daily</th>
+                        <th style="border:1px solid #374151; padding:10px;">Weekly</th>
+                        <th style="border:1px solid #374151; padding:10px;">Monthly</th>
+                        <th style="border:1px solid #374151; padding:10px;">Yearly</th>
+                        <th style="border:1px solid #374151; padding:10px;">Split Paid</th>
+                        <th style="border:1px solid #374151; padding:10px;">Split Owed</th>
+                        <th style="border:1px solid #374151; padding:10px;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>${tableRows}</tbody>
+            </table>
+        </div>
+    `;
+}
 
-`FINAL SETTLEMENT
+function showExpenseSummaryTable(){
+    const summary = getExpenseSummaryTableHtml();
+    const popup = window.open("", "_blank", "width=1200,height=800");
+    if(!popup){
+        alert("Popup blocked. Please allow pop-ups for the expense summary table.");
+        return;
+    }
+    popup.document.write(summary);
+    popup.document.close();
+    speak("Expense summary table opened");
+}
 
-TOTAL:
-₹${result.total}
+function shareExpenseSummary(mode){
+    const summaryHtml = getExpenseSummaryTableHtml();
+    const plainText = summaryHtml.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+    const message = encodeURIComponent(`Expense Summary\n\n${plainText}`);
 
-${result.oweHtml
-.replace(/<[^>]*>/g,"")}
-`
-        );
+    if(mode === "whatsapp"){
+        window.open(`https://wa.me/?text=${message}`, "_blank");
+        return;
+    }
 
-    window.location.href =
+    if(mode === "telegram"){
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${message}`, "_blank");
+        return;
+    }
 
-`mailto:?subject=${subject}&body=${body}`;
+    const subject = encodeURIComponent("Expense Summary Report");
+    const body = encodeURIComponent(`Expense Summary\n\n${plainText}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
 /* ================= DOWNLOAD ================= */
@@ -3799,9 +4512,21 @@ document.getElementById(
     .toISOString()
     .split("T")[0];
 
+applySavedTheme();
+
 loadUsers();
 
 loadGraphUsers();
+
+const expenseSearch = document.getElementById("expenseSearch");
+if(expenseSearch){
+    expenseSearch.addEventListener("input", renderExpenses);
+}
+
+const expenseSort = document.getElementById("expenseSort");
+if(expenseSort){
+    expenseSort.addEventListener("change", renderExpenses);
+}
 
 if(users.length === 0){
 
@@ -3829,6 +4554,8 @@ else{
     renderExpenses();
 
     renderSplitHistory();
+    updateBudgetInfo();
+    updateSmartInsight();
 }
 
 function deleteUser(){
@@ -3944,158 +4671,68 @@ function deleteUser(){
     );
 
     loadGraphUsers();
+    updateBudgetInfo();
+    updateSmartInsight();
 }
 
 /* ======================================================
    GRAPH ENGINE
 ====================================================== */
 
-let expenseChart;
-let pieChart;
-
-/* ================= USER FILTER ================= */
-
-function getSelectedGraphUser(){
-
-    return document.getElementById(
-        "graphUser"
-    )?.value || currentUser;
+function getSelectedChartType(){
+    return document.querySelector('input[name="chartKind"]:checked')?.value || "bar";
 }
 
-/* ================= LOAD USER EXPENSES ================= */
+function getSelectedGraphUser(){
+    const selectedValue = document.getElementById("graphUser")?.value || "all";
+    if(selectedValue === "current"){
+        return currentUser || "all";
+    }
+    return selectedValue;
+}
 
 function getAllExpensesForGraph(){
-
-    const selectedUser =
-        getSelectedGraphUser();
-
-    let allExpenses = [];
-
-    /* ALL USERS */
+    const selectedUser = getSelectedGraphUser();
 
     if(selectedUser === "all"){
-
-        users.forEach(user=>{
-
-            const userExpenses =
-
-                JSON.parse(
-
-                    localStorage.getItem(
-                        getExpenseKey(user)
-                    )
-
-                ) || [];
-
-            allExpenses.push(
-                ...userExpenses
+        let allExpenses = [];
+        users.forEach(user => {
+            const userExpenses = JSON.parse(localStorage.getItem(getExpenseKey(user))) || [];
+            allExpenses = allExpenses.concat(
+                userExpenses.map(exp => ({ ...exp, user }))
             );
         });
-
         return allExpenses;
     }
 
-    /* CURRENT USER */
-
-    return JSON.parse(
-
-        localStorage.getItem(
-
-            getExpenseKey(
-                selectedUser
-            )
-
-        )
-
-    ) || [];
+    const owner = selectedUser === "current" ? (currentUser || "all") : selectedUser;
+    const expensesForUser = JSON.parse(localStorage.getItem(getExpenseKey(owner))) || [];
+    return expensesForUser.map(exp => ({ ...exp, user: owner }));
 }
 
-/* ================= NORMAL FILTER ================= */
-
 function getFilteredNormalExpenses(){
+    let data = getAllExpensesForGraph();
 
-    let data =
-        getAllExpensesForGraph();
-
-    const filter =
-
-        document.getElementById(
-            "graphFilter"
-        )?.value || "overall";
-
-    const selectedDate =
-
-        document.getElementById(
-            "graphDate"
-        )?.value;
-
-    const selectedMonth =
-
-        document.getElementById(
-            "graphMonth"
-        )?.value;
-
-    const selectedYear =
-
-        document.getElementById(
-            "graphYear"
-        )?.value;
-
-    const today =
-        new Date()
-        .toISOString()
-        .split("T")[0];
+    const filter = document.getElementById("graphFilter")?.value || "overall";
+    const selectedDate = document.getElementById("graphDate")?.value;
+    const selectedMonth = document.getElementById("graphMonth")?.value;
+    const selectedYear = document.getElementById("graphYear")?.value;
+    const today = new Date().toISOString().split("T")[0];
 
     switch(filter){
-
         case "today":
-
-            data = data.filter(
-
-                exp =>
-                    exp.date === today
-            );
-
+            data = data.filter(exp => exp.date === today);
             break;
-
         case "date":
-
-            data = data.filter(
-
-                exp =>
-                    exp.date === selectedDate
-            );
-
+            data = data.filter(exp => exp.date === selectedDate);
             break;
-
         case "month":
-
-            data = data.filter(
-
-                exp =>
-
-                    exp.date.startsWith(
-                        selectedMonth
-                    )
-            );
-
+            data = data.filter(exp => exp.date.startsWith(selectedMonth));
             break;
-
         case "year":
-
-            data = data.filter(
-
-                exp =>
-
-                    exp.date.startsWith(
-                        selectedYear
-                    )
-            );
-
+            data = data.filter(exp => exp.date.startsWith(selectedYear));
             break;
-
         case "overall":
-
         default:
             break;
     }
@@ -4103,105 +4740,34 @@ function getFilteredNormalExpenses(){
     return data;
 }
 
-/* ================= SPLIT FILTER ================= */
-
 function getFilteredSplitHistory(){
-
-    let splitHistory =
-        JSON.parse(
-            localStorage.getItem(
-                "splitHistory"
-            )
-        ) || [];
-
-    const selectedUser =
-        getSelectedGraphUser();
-
-    const filter =
-        document.getElementById(
-            "graphFilter"
-        )?.value || "overall";
-
-    const selectedDate =
-        document.getElementById(
-            "graphDate"
-        )?.value;
-
-    const selectedMonth =
-        document.getElementById(
-            "graphMonth"
-        )?.value;
-
-    const selectedYear =
-        document.getElementById(
-            "graphYear"
-        )?.value;
-
-    const today =
-        new Date()
-        .toISOString()
-        .split("T")[0];
-
-    /* USER FILTER */
+    let splitHistory = JSON.parse(localStorage.getItem("splitHistory")) || [];
+    const selectedUser = getSelectedGraphUser();
+    const filter = document.getElementById("graphFilter")?.value || "overall";
+    const selectedDate = document.getElementById("graphDate")?.value;
+    const selectedMonth = document.getElementById("graphMonth")?.value;
+    const selectedYear = document.getElementById("graphYear")?.value;
+    const today = new Date().toISOString().split("T")[0];
 
     if(selectedUser !== "all"){
-
-        splitHistory =
-            splitHistory.filter(split=>
-
-                split.paidBy === selectedUser ||
-
-                split.users.includes(
-                    selectedUser
-                )
-            );
+        splitHistory = splitHistory.filter(split =>
+            split.paidBy === selectedUser || split.users.includes(selectedUser)
+        );
     }
 
-    /* DATE FILTER */
-
     switch(filter){
-
         case "today":
-
-            splitHistory =
-                splitHistory.filter(
-                    split =>
-                    split.date === today
-                );
+            splitHistory = splitHistory.filter(split => split.date === today);
             break;
-
         case "date":
-
-            splitHistory =
-                splitHistory.filter(
-                    split =>
-                    split.date ===
-                    selectedDate
-                );
+            splitHistory = splitHistory.filter(split => split.date === selectedDate);
             break;
-
         case "month":
-
-            splitHistory =
-                splitHistory.filter(
-                    split =>
-                    split.date.startsWith(
-                        selectedMonth
-                    )
-                );
+            splitHistory = splitHistory.filter(split => split.date.startsWith(selectedMonth));
             break;
-
         case "year":
-
-            splitHistory =
-                splitHistory.filter(
-                    split =>
-                    split.date.startsWith(
-                        selectedYear
-                    )
-                );
+            splitHistory = splitHistory.filter(split => split.date.startsWith(selectedYear));
             break;
-
         case "overall":
         default:
             break;
@@ -4210,375 +4776,389 @@ function getFilteredSplitHistory(){
     return splitHistory;
 }
 
-/* ================= RENDER BAR CHART ================= */
+function getTimelineLabels(filterValue, selectedDate, selectedMonth, selectedYear){
+    const today = new Date();
 
-function renderChart(){
-
-    const canvas =
-        document.getElementById(
-            "expenseChart"
-        );
-
-    if(!canvas){
-        return;
+    if(filterValue === "today"){
+        const labels = [];
+        for(let i = 6; i >= 0; i--){
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            labels.push(d.toISOString().split("T")[0]);
+        }
+        return labels;
     }
 
-    const ctx =
-        canvas.getContext("2d");
-
-    const totals = {};
-
-    const graphType =
-
-        document.getElementById(
-            "graphType"
-        )?.value || "normal";
-
-    /* NORMAL */
-
-    if(graphType === "normal"){
-
-        const expenses =
-            getFilteredNormalExpenses();
-
-        expenses.forEach(exp=>{
-
-            totals[exp.item] =
-
-                (
-                    totals[exp.item]
-                    || 0
-                )
-
-                +
-
-                Number(exp.price);
-        });
+    if(filterValue === "week"){
+        const labels = [];
+        for(let i = 6; i >= 0; i--){
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            labels.push(d.toISOString().split("T")[0]);
+        }
+        return labels;
     }
 
-    /* SPLIT */
+    if(filterValue === "date" && selectedDate){
+        return [selectedDate];
+    }
 
-    else{
+    if(filterValue === "month" && selectedMonth){
+        const [year, month] = selectedMonth.split("-").map(Number);
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const labels = [];
+        for(let day = 1; day <= daysInMonth; day++){
+            const date = new Date(year, month - 1, day);
+            labels.push(date.toISOString().split("T")[0]);
+        }
+        return labels;
+    }
 
-        const splitHistory =
-            getFilteredSplitHistory();
-
-        const payerTotals = {};
-
-        const oweTotals = {};
-
-        splitHistory.forEach(split=>{
-
-            /* payer totals */
-
-            payerTotals[
-                split.paidBy
-            ] =
-
-                (
-                    payerTotals[
-                        split.paidBy
-                    ] || 0
-                )
-
-                +
-
-                split.total;
-
-            /* owe totals */
-
-            split.users.forEach(user=>{
-
-                if(
-                    user === split.paidBy
-                ){
-                    return;
-                }
-
-                oweTotals[user] =
-
-                    (
-                        oweTotals[user]
-                        || 0
-                    )
-
-                    +
-
-                    split.each;
-            });
-        });
-
-        const allUsers = [
-
-            ...new Set([
-
-                ...Object.keys(
-                    payerTotals
-                ),
-
-                ...Object.keys(
-                    oweTotals
-                )
-            ])
+    if(filterValue === "year" && selectedYear){
+        return [
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
         ];
+    }
 
-        if(expenseChart){
+    const years = new Set();
+    const items = getAllExpensesForGraph().concat(JSON.parse(localStorage.getItem("splitHistory") || "[]"));
+    items.forEach(item => {
+        const date = item.date || item.timestamp || "";
+        if(date) {
+            const match = date.match(/^(\d{4})/);
+            if(match) years.add(match[1]);
+        }
+    });
 
-            expenseChart.destroy();
+    return [...years].sort();
+}
+
+function getBucketForFilter(dateValue, filterValue, selectedDate, selectedMonth, selectedYear){
+    if(!dateValue) return "Unknown";
+
+    if(filterValue === "today" || filterValue === "week" || filterValue === "date"){
+        return dateValue;
+    }
+
+    if(filterValue === "month"){
+        return dateValue;
+    }
+
+    if(filterValue === "year"){
+        const monthIndex = new Date(`${dateValue}T00:00:00`).getMonth();
+        return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][monthIndex];
+    }
+
+    const yearMatch = String(dateValue).match(/^(\d{4})/);
+    return yearMatch ? yearMatch[1] : "Unknown";
+}
+
+function buildNormalChartData(){
+    const expenses = getFilteredNormalExpenses();
+    const filter = document.getElementById("graphFilter")?.value || "overall";
+    const selectedDate = document.getElementById("graphDate")?.value;
+    const selectedMonth = document.getElementById("graphMonth")?.value;
+    const selectedYear = document.getElementById("graphYear")?.value;
+    const labels = getTimelineLabels(filter, selectedDate, selectedMonth, selectedYear);
+    const seriesByUser = {};
+    const usersInScope = new Set();
+
+    expenses.forEach(exp => {
+        const owner = exp.user || currentUser || "Unknown";
+        usersInScope.add(owner);
+        if(!seriesByUser[owner]){
+            seriesByUser[owner] = Object.fromEntries(labels.map(label => [label, 0]));
         }
 
-        expenseChart =
-            new Chart(ctx,{
+        const bucket = getBucketForFilter(exp.date, filter, selectedDate, selectedMonth, selectedYear);
+        if(seriesByUser[owner][bucket] !== undefined){
+            seriesByUser[owner][bucket] += Number(exp.price || 0);
+        }
+    });
 
-                type:"bar",
+    const totals = {};
+    expenses.forEach(exp => {
+        totals[exp.item] = (totals[exp.item] || 0) + Number(exp.price);
+    });
 
-                data:{
+    const chartUsers = getSelectedGraphUser() === "all" ? [...usersInScope] : [getSelectedGraphUser() === "current" ? (currentUser || "Unknown") : getSelectedGraphUser()];
 
-                    labels:allUsers,
+    return {
+        labels: Object.keys(totals),
+        values: Object.values(totals),
+        lineDatasets: chartUsers.map(user => ({
+            label: user,
+            data: labels.map(label => seriesByUser[user]?.[label] || 0),
+            borderColor: ["#22c55e", "#3b82f6", "#f97316", "#a78bfa", "#facc15", "#34d399"][chartUsers.indexOf(user) % 6],
+            backgroundColor: "rgba(255,255,255,0.06)",
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: ["#22c55e", "#3b82f6", "#f97316", "#a78bfa", "#facc15", "#34d399"][chartUsers.indexOf(user) % 6],
+            fill: false,
+            tension: 0.28
+        }))
+    };
+}
 
-                    datasets:[
+function buildSplitChartData(){
+    const splitHistory = getFilteredSplitHistory();
+    const filter = document.getElementById("graphFilter")?.value || "overall";
+    const selectedDate = document.getElementById("graphDate")?.value;
+    const selectedMonth = document.getElementById("graphMonth")?.value;
+    const selectedYear = document.getElementById("graphYear")?.value;
+    const labels = getTimelineLabels(filter, selectedDate, selectedMonth, selectedYear);
+    const payerTotals = {};
+    const oweTotals = {};
+    const seriesByUser = {};
 
-                    {
+    splitHistory.forEach(split => {
+        const bucket = getBucketForFilter(split.date, filter, selectedDate, selectedMonth, selectedYear);
+        const participants = new Set([...(split.users || []), split.paidBy]);
 
-                        label:
-                            "Paid Amount",
+        participants.forEach(user => {
+            if(!seriesByUser[user]){
+                seriesByUser[user] = Object.fromEntries(labels.map(label => [label, 0]));
+            }
+        });
 
-                        data:
+        payerTotals[split.paidBy] = (payerTotals[split.paidBy] || 0) + split.total;
 
-                            allUsers.map(
-                                user =>
+        if(seriesByUser[split.paidBy] && seriesByUser[split.paidBy][bucket] !== undefined){
+            seriesByUser[split.paidBy][bucket] += Number(split.total || 0);
+        }
 
-                                payerTotals[
-                                    user
-                                ] || 0
-                            ),
+        split.users.forEach(user => {
+            if(user === split.paidBy) return;
+            oweTotals[user] = (oweTotals[user] || 0) + split.each;
+            if(seriesByUser[user] && seriesByUser[user][bucket] !== undefined){
+                seriesByUser[user][bucket] += Number(split.each || 0);
+            }
+        });
+    });
 
-                        backgroundColor:
-                            "#3b82f6",
+    const labelsForBar = [...new Set([...Object.keys(payerTotals), ...Object.keys(oweTotals)])];
 
-                        borderRadius:14
-                    },
+    return {
+        labels: labelsForBar,
+        paidValues: labelsForBar.map(user => payerTotals[user] || 0),
+        oweValues: labelsForBar.map(user => oweTotals[user] || 0),
+        lineDatasets: (getSelectedGraphUser() === "all" ? Object.keys(seriesByUser) : [getSelectedGraphUser() === "current" ? (currentUser || "Unknown") : getSelectedGraphUser()]).map((user, idx) => ({
+            label: user,
+            data: labels.map(label => seriesByUser[user]?.[label] || 0),
+            borderColor: ["#3b82f6", "#ef4444", "#22c55e", "#f59e0b", "#8b5cf6", "#14b8a6"][idx % 6],
+            backgroundColor: "rgba(255,255,255,0.06)",
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: ["#3b82f6", "#ef4444", "#22c55e", "#f59e0b", "#8b5cf6", "#14b8a6"][idx % 6],
+            fill: false,
+            tension: 0.28
+        }))
+    };
+}
 
-                    {
+function renderChart(){
+    const canvas = document.getElementById("expenseChart");
+    if(!canvas){ return; }
 
-                        label:
-                            "Owe Amount",
+    const chartKind = getSelectedChartType();
+    const graphType = document.getElementById("graphType")?.value || "normal";
+    const ctx = canvas.getContext("2d");
 
-                        data:
-
-                            allUsers.map(
-                                user =>
-
-                                oweTotals[
-                                    user
-                                ] || 0
-                            ),
-
-                        backgroundColor:
-                            "#ef4444",
-
-                        borderRadius:14
-                    }
-
-                    ]
-                },
-
-                options:{
-
-                    responsive:true,
-
-                    maintainAspectRatio:false,
-
-                    scales:{
-
-                        y:{
-                            beginAtZero:true
-                        }
-                    }
-                }
-            });
-
+    if(chartKind === "pie" || chartKind === "doughnut"){
+        renderPieChart();
         return;
     }
 
-    const labels =
-        Object.keys(totals);
+    let labels = [];
+    let datasets = [];
 
-    const values =
-        Object.values(totals);
+    if(graphType === "normal"){
+        const normalData = buildNormalChartData();
+
+        if(chartKind === "line"){
+            labels = getTimelineLabels(
+                document.getElementById("graphFilter")?.value || "overall",
+                document.getElementById("graphDate")?.value,
+                document.getElementById("graphMonth")?.value,
+                document.getElementById("graphYear")?.value
+            );
+            datasets = normalData.lineDatasets || [{
+                label: "Expense Trend",
+                data: normalData.values,
+                borderColor: "#22c55e",
+                backgroundColor: "rgba(34,197,94,0.2)",
+                borderWidth: 3,
+                pointRadius: 4,
+                pointBackgroundColor: "#22c55e",
+                fill: false,
+                tension: 0.28
+            }];
+        } else {
+            labels = normalData.labels;
+            datasets = [{
+                label: "Expenses",
+                data: normalData.values,
+                backgroundColor: "#facc15",
+                borderRadius: 12
+            }];
+        }
+    } else {
+        const splitData = buildSplitChartData();
+
+        if(chartKind === "line"){
+            labels = getTimelineLabels(
+                document.getElementById("graphFilter")?.value || "overall",
+                document.getElementById("graphDate")?.value,
+                document.getElementById("graphMonth")?.value,
+                document.getElementById("graphYear")?.value
+            );
+            datasets = splitData.lineDatasets || [
+                {
+                    label: "Paid Amount",
+                    data: splitData.paidValues,
+                    borderColor: "#3b82f6",
+                    backgroundColor: "rgba(59,130,246,0.18)",
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointBackgroundColor: "#3b82f6",
+                    fill: false,
+                    tension: 0.28
+                },
+                {
+                    label: "Owe Amount",
+                    data: splitData.oweValues,
+                    borderColor: "#ef4444",
+                    backgroundColor: "rgba(239,68,68,0.18)",
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointBackgroundColor: "#ef4444",
+                    fill: false,
+                    tension: 0.28
+                }
+            ];
+        } else {
+            labels = splitData.labels;
+            datasets = [
+                {
+                    label: "Paid Amount",
+                    data: splitData.paidValues,
+                    backgroundColor: "#3b82f6",
+                    borderRadius: 12
+                },
+                {
+                    label: "Owe Amount",
+                    data: splitData.oweValues,
+                    backgroundColor: "#ef4444",
+                    borderRadius: 12
+                }
+            ];
+        }
+    }
 
     if(expenseChart){
-
         expenseChart.destroy();
     }
 
-    expenseChart =
-        new Chart(ctx,{
-
-            type:"bar",
-
-            data:{
-
-                labels,
-
-                datasets:[{
-
-                    label:
-
-                        graphType ===
-                        "normal"
-
-                        ?
-
-                        "Expenses"
-
-                        :
-
-                        "Split Share",
-
-                    data:values,
-
-                    backgroundColor:
-
-                    graphType === "normal"
-
-                    ?
-
-                    "#facc15"
-
-                    :
-
-                    labels.map(label=>{
-
-                        const splitHistory =
-                            getFilteredSplitHistory();
-
-                        const payers =
-                            splitHistory.map(
-                                s=>s.paidBy
-                            );
-
-                        return payers.includes(label)
-
-                            ?
-
-                            "#3b82f6"
-
-                            :
-
-                            "#ef4444";
-                    }),
-
-                    borderRadius:14
-                }]
+    expenseChart = new Chart(ctx, {
+        type: chartKind === "line" ? "line" : "bar",
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: "white" } }
             },
-
-            options:{
-
-                responsive:true,
-
-                maintainAspectRatio:false,
-
-                scales:{
-
-                    y:{
-                        suggestedMin:
-                            Math.min(...values) - 50,
-
-                        suggestedMax:
-                            Math.max(...values) + 50
-                    }
+            scales: {
+                x: {
+                    ticks: { color: "white" },
+                    grid: { color: "rgba(255,255,255,0.08)" },
+                    title: { display: true, text: chartKind === "line" ? (graphType === "normal" ? "Time Period" : "Time Period") : (graphType === "normal" ? "Expense Item" : "Users"), color: "white" }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: "white" },
+                    grid: { color: "rgba(255,255,255,0.08)" },
+                    title: { display: true, text: "Amount (₹)", color: "white" }
                 }
             }
-        });
-}
-
-/* ================= PIE CHART ================= */
-
-function renderPieChart(){
-
-    const graphType =
-        document.getElementById(
-            "graphType"
-        )?.value || "normal";
-
-    if(graphType === "split"){
-
-        if(pieChart){
-            pieChart.destroy();
         }
-
-        return;
-    }
-
-    const canvas =
-
-        document.getElementById(
-            "expensePieChart"
-        );
-
-    if(!canvas){
-        return;
-    }
-
-    const ctx =
-        canvas.getContext("2d");
-
-    const totals = {};
-
-    const expenses =
-        getFilteredNormalExpenses();
-
-    expenses.forEach(exp=>{
-
-        totals[exp.item] =
-
-            (
-                totals[exp.item]
-                || 0
-            )
-
-            +
-
-            Number(exp.price);
     });
 
-    const labels =
-        Object.keys(totals);
+    updateChartInsightText();
+}
 
-    const data =
-        Object.values(totals);
+function renderPieChart(){
+    const pieCanvas = document.getElementById("expensePieChart");
+    if(!pieCanvas){ return; }
+
+    const chartKind = getSelectedChartType();
+    if(chartKind !== "pie" && chartKind !== "doughnut"){
+        if(pieChart){ pieChart.destroy(); }
+        pieCanvas.parentElement.style.display = "none";
+        return;
+    }
+
+    pieCanvas.parentElement.style.display = "block";
+
+    const graphType = document.getElementById("graphType")?.value || "normal";
+    const ctx = pieCanvas.getContext("2d");
+
+    let labels = [];
+    let values = [];
+
+    if(graphType === "normal"){
+        const normalData = buildNormalChartData();
+        labels = normalData.labels;
+        values = normalData.values;
+    } else {
+        const splitData = buildSplitChartData();
+        labels = splitData.labels;
+        values = splitData.paidValues;
+    }
+
+    const maxValue = Math.max(...values, 0);
 
     if(pieChart){
-
         pieChart.destroy();
     }
 
-    pieChart =
-        new Chart(ctx,{
-
-            type:"pie",
-
-            data:{
-
-                labels,
-
-                datasets:[{
-
-                    data
-                }]
-            },
-
-            options:{
-
-                responsive:true,
-
-                maintainAspectRatio:false
+    pieChart = new Chart(ctx, {
+        type: chartKind === "doughnut" ? "doughnut" : "pie",
+        data: {
+            labels,
+            datasets: [{
+                data: values,
+                offset: values.map(v => v === maxValue && maxValue > 0 ? 18 : 0),
+                backgroundColor: values.map((v, idx) => v === maxValue ? "#facc15" : [
+                    "#fbbf24", "#60a5fa", "#34d399", "#f87171", "#a78bfa", "#f472b6",
+                    "#38bdf8", "#f59e0b", "#4ade80", "#fb7185", "#c084fc", "#2dd4bf"
+                ][idx % 12]),
+                borderColor: values.map(v => v === maxValue ? "#f59e0b" : "rgba(255,255,255,0.15)"),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: "white" } }
             }
-        });
+        }
+    });
+
+    updateChartInsightText();
 }
 
-/* ================= AUTO REFRESH ================= */
+function initChartTypeRadios(){
+    const radios = document.querySelectorAll('input[name="chartKind"]');
+    radios.forEach(radio => {
+        radio.addEventListener("change", () => {
+            renderChart();
+            renderPieChart();
+        });
+    });
+}
 
 [
     "graphType",
@@ -4587,492 +5167,140 @@ function renderPieChart(){
     "graphMonth",
     "graphYear",
     "graphUser"
-]
-
-.forEach(id=>{
-
-    document
-    .getElementById(id)
-    ?.addEventListener(
-
-        "change",
-
-        ()=>{
-
-            renderChart();
-            renderPieChart();
-        }
-    );
+].forEach(id => {
+    document.getElementById(id)?.addEventListener("change", () => {
+        renderChart();
+        renderPieChart();
+    });
 });
 
-/* INITIAL */
+initChartTypeRadios();
 
-setTimeout(()=>{
+startHealthReminderChecker();
 
+setTimeout(() => {
     renderChart();
     renderPieChart();
+}, 500);
 
-},500);
-
-
-/* ======================================================
-   GRAPH WINDOWS
-====================================================== */
-
-/* ================= BAR GRAPH WINDOW ================= */
-
-function openBarChartWindow(){
-
-    const graphType =
-        document.getElementById(
-            "graphType"
-        ).value;
-
-    const totals = {};    
-    const payerTotals = {};
-    const oweTotals = {};
-
-    /* NORMAL EXPENSE */
+function openChartWindow(chartType, title, headingText){
+    const graphType = document.getElementById("graphType")?.value || "normal";
+    let labels = [];
+    let datasets = [];
+    let summary = "";
 
     if(graphType === "normal"){
+        const normalData = buildNormalChartData();
+        labels = normalData.labels;
+        const values = normalData.values;
 
-        const expenses =
-            getFilteredNormalExpenses();
+        if(chartType === "line"){
+            datasets = [{
+                label: "Expense Trend",
+                data: values,
+                borderColor: "#22c55e",
+                backgroundColor: "rgba(34,197,94,0.2)",
+                borderWidth: 3,
+                fill: false,
+                tension: 0.3,
+                pointRadius: 4
+            }];
+        } else if(chartType === "pie"){
+            summary = `labels:${JSON.stringify(labels)}, data:${JSON.stringify(values)}`;
+            datasets = [{ data: values, backgroundColor: ["#fbbf24", "#60a5fa", "#34d399", "#f87171", "#a78bfa", "#f472b6", "#38bdf8", "#f59e0b", "#4ade80"] }];
+        } else if(chartType === "doughnut"){
+            datasets = [{ data: values, backgroundColor: ["#fbbf24", "#60a5fa", "#34d399", "#f87171", "#a78bfa", "#f472b6", "#38bdf8", "#f59e0b", "#4ade80"] }];
+        } else {
+            datasets = [{ label: "Expenses", data: values, backgroundColor: "#facc15", borderRadius: 12 }];
+        }
+    } else {
+        const splitData = buildSplitChartData();
+        labels = splitData.labels;
 
-        expenses.forEach(exp=>{
-
-            totals[exp.item] =
-
-                (
-                    totals[exp.item]
-                    || 0
-                )
-
-                +
-
-                Number(exp.price);
-        });
+        if(chartType === "line"){
+            datasets = [
+                { label: "Paid Amount", data: splitData.paidValues, borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.15)", borderWidth: 3, fill: false, tension: 0.3, pointRadius: 4 },
+                { label: "Owe Amount", data: splitData.oweValues, borderColor: "#ef4444", backgroundColor: "rgba(239,68,68,0.15)", borderWidth: 3, fill: false, tension: 0.3, pointRadius: 4 }
+            ];
+        } else if(chartType === "pie"){
+            datasets = [{ data: splitData.paidValues, backgroundColor: ["#3b82f6", "#ef4444", "#22c55e", "#f59e0b", "#8b5cf6", "#14b8a6"] }];
+        } else if(chartType === "doughnut"){
+            datasets = [{ data: splitData.paidValues, backgroundColor: ["#3b82f6", "#ef4444", "#22c55e", "#f59e0b", "#8b5cf6", "#14b8a6"] }];
+        } else {
+            datasets = [
+                { label: "Paid Amount", data: splitData.paidValues, backgroundColor: "#3b82f6", borderRadius: 12 },
+                { label: "Owe Amount", data: splitData.oweValues, backgroundColor: "#ef4444", borderRadius: 12 }
+            ];
+        }
     }
 
-    /* SPLIT SHARE */
-
-    else{
-
-        const splitHistory =
-            getFilteredSplitHistory();
-
-        splitHistory.forEach(split=>{
-
-            payerTotals[
-                split.paidBy
-            ] =
-
-                (
-                    payerTotals[
-                        split.paidBy
-                    ] || 0
-                )
-
-                +
-
-                split.total;
-
-            split.users.forEach(user=>{
-
-                if(user === split.paidBy){
-                    return;
-                }
-
-                oweTotals[user] =
-
-                    (
-                        oweTotals[user]
-                        || 0
-                    )
-
-                    +
-
-                    split.each;
-            });
-        });
-    }
-
-    const labels =
-
-        graphType === "normal"
-
-        ?
-
-        Object.keys(totals)
-
-        :
-
-        [
-
-            ...new Set([
-
-                ...Object.keys(
-                    payerTotals
-                ),
-
-                ...Object.keys(
-                    oweTotals
-                )
-            ])
-        ];
-
-    const data =
-        JSON.stringify(
-            Object.values(totals)
-        );
-
-    const chartWindow =
-        window.open(
-            "",
-            "_blank",
-            "width=1400,height=900"
-        );
-
+    const chartWindow = window.open("", "_blank", "width=1400,height=900");
     chartWindow.document.write(`
-
 <html>
-
 <head>
-
-<title>
-Expense Graph
-</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<title>${title}</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
 <style>
-
-body{
-    background:#111827;
-    color:white;
-    font-family:Arial;
-    padding:30px;
-    margin:0;
-}
-
-h1{
-    text-align:center;
-}
-
-canvas{
-    width:100% !important;
-    height:70vh !important;
-}
-
+body{background:#111827;color:white;font-family:Arial;padding:30px;margin:0;}
+h1{text-align:center;margin-bottom:20px;}
+canvas{width:100% !important;height:72vh !important;}
 </style>
-
 </head>
-
 <body>
-
-<h1>
-
-${
-graphType === "normal"
-
-?
-
-"📊 Normal Expense Graph"
-
-:
-
-"💰 Split Share Graph"
-}
-
-</h1>
-
-<p
-style="
-text-align:center;
-font-size:20px;
-margin-bottom:25px;
-"
->
-
-Filter:
-
-${
-document
-.getElementById(
-"graphFilter"
-)
-.value
-}
-
-</p>
-
+<h1>${headingText}</h1>
 <canvas id="graph"></canvas>
-
 <script>
-
-const ctx =
-
-document
-.getElementById(
-    "graph"
-)
-.getContext("2d");
-
-new Chart(ctx,{
-
-    type:"bar",
-
-    data:{
-
-        labels:${JSON.stringify(labels)},
-
-        datasets:
-
-graphType === "normal"
-
-?
-
-[{
-
-label:"Expenses",
-
-data:${data},
-
-backgroundColor:"#facc15",
-
-borderRadius:14
-
-}]
-
-:
-
-[
-
-{
-
-label:"Paid Amount",
-
-data:${JSON.stringify(
-labels.map(user=>
-payerTotals[user] || 0
-)
-)},
-
-backgroundColor:"#3b82f6",
-
-borderRadius:14
-},
-
-{
-
-label:"Owe Amount",
-
-data:${JSON.stringify(
-labels.map(user=>
-oweTotals[user] || 0
-)
-)},
-
-backgroundColor:"#ef4444",
-
-borderRadius:14
-}
-
-]
+const ctx = document.getElementById('graph').getContext('2d');
+new Chart(ctx, {
+    type: '${chartType === 'line' ? 'line' : chartType === 'pie' ? 'pie' : chartType === 'doughnut' ? 'doughnut' : 'bar'}',
+    data: {
+        labels: ${JSON.stringify(labels)},
+        datasets: ${JSON.stringify(datasets)}
     },
-
-    options:{
-
-    responsive:true,
-
-    maintainAspectRatio:false,
-
-    plugins:{
-
-    legend:{
-    labels:{
-    color:"white"
-    }
-    }
-    },
-
-    scales:{
-
-    x:{
-
-    ticks:{
-    color:"white"
-    },
-
-    title:{
-    display:true,
-    text:
-
-    graphType === "normal"
-
-    ?
-
-    "Expense Items"
-
-    :
-
-    "Users",
-
-    color:"white"
-    }
-    },
-
-    y:{
-
-    beginAtZero:true,
-
-    ticks:{
-    color:"white"
-    },
-
-    title:{
-    display:true,
-    text:
-
-    graphType === "normal"
-
-    ?
-
-    "Expense Amount"
-
-    :
-
-    "Paid / Owe Amount",
-
-    color:"white"
-    }
-    }
-    }
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: 'white' } } },
+        scales: ${JSON.stringify(chartType === 'line' || chartType === 'bar' ? {
+            x: { ticks: { color: 'white' }, title: { display: true, text: graphType === 'normal' ? 'Expense Item' : 'Users', color: 'white' } },
+            y: { beginAtZero: true, ticks: { color: 'white' }, title: { display: true, text: 'Amount (₹)', color: 'white' } }
+        } : {})}
     }
 });
-
-</script>
-
+<\/script>
 </body>
-
-</html>
-
-`);
-
+</html>`);
     chartWindow.document.close();
 }
 
-/* ================= PIE GRAPH WINDOW ================= */
+function openBarChartWindow(){
+    openChartWindow("bar", "Expense Bar Graph", "📊 Bar Graph - Individual Expense Breakdown");
+}
 
 function openPieChartWindow(){
+    openChartWindow("pie", "Expense Pie Graph", "🥧 Pie Graph - Individual Expense Share");
+}
 
-    const expenses =
-        getFilteredNormalExpenses();
+function openLineChartWindow(){
+    openChartWindow("line", "Expense Trend Graph", "📈 Line Graph - Individual Expense Trend");
+}
 
-    const totals = {};
+function loadGraphUsers(){
+    const graphUser = document.getElementById("graphUser");
+    if(!graphUser){ return; }
 
-    expenses.forEach(exp=>{
+    graphUser.innerHTML = '<option value="all">All Users</option>';
 
-        totals[exp.item] =
-
-            (
-                totals[exp.item]
-                || 0
-            )
-
-            +
-
-            Number(exp.price);
+    users.forEach(user => {
+        graphUser.innerHTML += `<option value="${user}">${user}</option>`;
     });
 
-    const labels =
-        JSON.stringify(
-            Object.keys(totals)
-        );
-
-    const data =
-        JSON.stringify(
-            Object.values(totals)
-        );
-
-    const chartWindow =
-        window.open(
-            "",
-            "_blank",
-            "width=1300,height=900"
-        );
-
-    chartWindow.document.write(`
-
-<html>
-
-<head>
-
-<title>
-Pie Graph
-</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-
-body{
-    background:#111827;
-    color:white;
-    font-family:Arial;
-    text-align:center;
-    padding:30px;
-}
-
-canvas{
-    width:100% !important;
-    height:75vh !important;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<h1>
-🥧 Expense Pie Graph
-</h1>
-
-<canvas id="pie"></canvas>
-
-<script>
-
-new Chart(
-
-document
-.getElementById(
-"pie"
-),
-
-{
-type:"pie",
-
-data:{
-
-labels:${labels},
-
-datasets:[{
-
-data:${data}
-}]
-}
-});
-
-</script>
-
-</body>
-
-</html>
-
-`);
-
-    chartWindow.document.close();
+    const currentValue = currentUser || "all";
+    if([...graphUser.options].some(option => option.value === currentValue)){
+        graphUser.value = currentValue;
+    } else {
+        graphUser.value = "all";
+    }
 }
 
 /* ================= SPLIT GRAPH ================= */
