@@ -1,12 +1,18 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 import Playlist from "./Playlist";
 import EqualizerPanel from "./EqualizerPanel";
 import "../styles/theatre.css";
 
+import {
+  FaPlay,
+  FaPause,
+  FaExpand,
+  FaVolumeUp
+} from "react-icons/fa";
+
 function TheatrePlayer() {
 
   const mediaRef = useRef(null);
-  const recognitionRef = useRef(null);
 
   const audioContextRef =
     useRef(null);
@@ -53,21 +59,19 @@ function TheatrePlayer() {
     useState(1);
   
   const [mediaSrc, setMediaSrc] = useState("");
-  const [currentFileName, setCurrentFileName] = useState("");
-  const [voiceStatus, setVoiceStatus] = useState("Voice assistant ready");
-  const [voiceTranscript, setVoiceTranscript] = useState("");
-  const [isListening, setIsListening] = useState(false);
-  const [commandInput, setCommandInput] = useState("");
+  const [currentFileName, setCurrentFileName] = useState("");  
 
   const currentFile =
     playlist[currentIndex] || null;
 
   const isVideo =
     currentFile?.type?.startsWith("video/") ||
-    /\.(mp4|mkv|webm|mov|avi)$/i.exec(currentFileName || "") !== null;
+    currentFileName.match(
+      /\.(mp4|mkv|webm|mov|avi)$/i
+    );
   
 
-  const playPrevious = useCallback(async () => {
+  const playPrevious = async () => {
     if (playlist.length === 0) return;
 
     const prevIndex =
@@ -85,48 +89,17 @@ function TheatrePlayer() {
         console.error(err);
       }
     }, 100);
-  }, [currentIndex, playlist.length]);
+  };
 
-  const playNext = useCallback(() => {
+  const playNext = () => {
     if (playlist.length === 0) return;
 
-    const nextIndex =
-      currentIndex === playlist.length - 1
+    setCurrentIndex(prev =>
+      prev === playlist.length - 1
         ? 0
-        : currentIndex + 1;
-
-    setCurrentIndex(nextIndex);
-
-    setTimeout(async () => {
-      try {
-        await mediaRef.current?.play();
-        setPlaying(true);
-      } catch (err) {
-        console.error(err);
-      }
-    }, 120);
-  }, [currentIndex, playlist.length]);
-
-  const stopPlayback = useCallback(() => {
-    if (!mediaRef.current) return;
-
-    mediaRef.current.pause();
-    setPlaying(false);
-    setVoiceStatus("Playback stopped");
-  }, []);
-
-  const playCurrentTrack = useCallback(async () => {
-    if (!mediaRef.current) return;
-
-    try {
-      await mediaRef.current.play();
-      setPlaying(true);
-      setVoiceStatus("Playback started");
-    } catch (err) {
-      console.error(err);
-      setVoiceStatus("Playback could not start");
-    }
-  }, []);
+        : prev + 1
+    );
+  };
 
   // volume
   useEffect(() => {
@@ -159,7 +132,7 @@ function TheatrePlayer() {
 
     setCurrentFileName(
       decodeURIComponent(
-        parts.at(-1) || ""
+        parts[parts.length - 1]
       )
     );
 
@@ -398,7 +371,7 @@ function TheatrePlayer() {
       for (let i = 0; i < length; i++) {
 
         data[i] =
-          ((i % 13) / 13 - 0.5) *
+          (Math.random() * 2 - 1) *
           Math.pow(
             1 - i / length,
             2
@@ -468,112 +441,44 @@ function TheatrePlayer() {
     setCurrentIndex(0);
   };
 
-  const togglePlay = useCallback(async () => {
-    if (!mediaRef.current) return;
+  const togglePlay =
+    async () => {
+
+    if (
+      !mediaRef.current
+    ) return;
 
     try {
-      if (!audioContextRef.current) {
+
+      if (
+        !audioContextRef
+          .current
+      ) {
+
         setupAudio();
       }
 
       if (playing) {
-        mediaRef.current.pause();
+
+        mediaRef.current
+          .pause();
+
         setPlaying(false);
-        setVoiceStatus("Playback paused");
+
       } else {
-        await mediaRef.current.play();
+
+        await mediaRef
+          .current
+          .play();
+
         setPlaying(true);
-        setVoiceStatus("Playback started");
       }
+
     } catch (err) {
+
       console.error("Audio setup error:", err);
-      setVoiceStatus("Playback command failed");
     }
-  }, [playing]);
-
-  const handleVoiceCommand = useCallback((rawCommand) => {
-    const command = (rawCommand || "").trim().toLowerCase();
-
-    if (!command) return;
-
-    if (/\b(next|skip|forward)\b/.test(command) || /next song/.test(command)) {
-      playNext();
-      setVoiceStatus("Playing next track");
-      return;
-    }
-
-    if (/\b(previous|back|rewind)\b/.test(command) || /previous song/.test(command)) {
-      playPrevious();
-      setVoiceStatus("Playing previous track");
-      return;
-    }
-
-    if (/\b(pause|hold)\b/.test(command)) {
-      stopPlayback();
-      return;
-    }
-
-    if (/\b(stop)\b/.test(command)) {
-      stopPlayback();
-      return;
-    }
-
-    if (/\b(start|play|resume|continue)\b/.test(command)) {
-      if (playing) {
-        setVoiceStatus("Playback already running");
-        return;
-      }
-
-      void playCurrentTrack();
-      return;
-    }
-
-    setVoiceStatus(`Heard: "${rawCommand}". Try play, pause, stop, next, or previous.`);
-  }, [playCurrentTrack, playNext, playPrevious, playing, stopPlayback]);
-
-  const startVoiceAssistant = useCallback(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      setVoiceStatus("Voice recognition is not supported in this browser.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .map((result) => result[0].transcript)
-        .join(" ");
-
-      setVoiceTranscript(transcript);
-      handleVoiceCommand(transcript);
-    };
-
-    recognition.onerror = (event) => {
-      setVoiceStatus(`Voice recognition error: ${event.error}`);
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-    setVoiceStatus("Listening for a command...");
-  }, [handleVoiceCommand]);
-
-  const stopVoiceAssistant = useCallback(() => {
-    recognitionRef.current?.stop();
-    setIsListening(false);
-    setVoiceStatus("Voice assistant stopped");
-  }, []);
+  };
 
   const handleLoadedMedia = async () => {
 
@@ -643,16 +548,6 @@ function TheatrePlayer() {
     }
   };
 
-  const handleCommandSubmit = (event) => {
-    event.preventDefault();
-
-    if (!commandInput.trim()) return;
-
-    handleVoiceCommand(commandInput);
-    setVoiceTranscript(commandInput);
-    setCommandInput("");
-  };
-
   return (
 
     <div className="theatre-container">
@@ -663,34 +558,6 @@ function TheatrePlayer() {
         <h1 className="title">
           🎬 THEATRE MEDIA PLAYER
         </h1>
-
-        <div className="voice-assistant">
-          <div className="voice-assistant-header">
-            <h2>Voice Assistant</h2>
-            <button
-              type="button"
-              className={isListening ? "voice-button listening" : "voice-button"}
-              onClick={isListening ? stopVoiceAssistant : startVoiceAssistant}
-            >
-              {isListening ? "🎤 Listening..." : "🎙️ Use Mic"}
-            </button>
-          </div>
-
-          <form className="voice-form" onSubmit={handleCommandSubmit}>
-            <input
-              type="text"
-              value={commandInput}
-              onChange={(event) => setCommandInput(event.target.value)}
-              placeholder="Try: play, pause, stop, next, previous"
-            />
-            <button type="submit">Send</button>
-          </form>
-
-          <div className="voice-status">{voiceStatus}</div>
-          <div className="voice-transcript">
-            {voiceTranscript || "Say: next, previous, pause, stop, play, start"}
-          </div>
-        </div>
 
         <input
           type="file"
@@ -720,9 +587,7 @@ function TheatrePlayer() {
               onLoadedMetadata={handleLoadedMedia}
               onTimeUpdate={handleTimeUpdate}
               onEnded={playNext}
-            >
-              <track kind="captions" srcLang="en" label="English captions" default />
-            </video>
+            />
           </div>
         )}
 
@@ -734,9 +599,7 @@ function TheatrePlayer() {
             onLoadedMetadata={handleLoadedMedia}
             onTimeUpdate={handleTimeUpdate}
             onEnded={playNext}
-          >
-            <track kind="captions" srcLang="en" label="English captions" default />
-          </audio>
+          />
         )}
 
         {/* EQUALIZER */}

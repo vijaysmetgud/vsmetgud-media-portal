@@ -72,58 +72,17 @@
             📄 Report
         </button>
 
-        <button onclick="showExpenseSummaryTable()">
-            📑 Summary Table
+        <button onclick="shareSettlementWhatsApp()">
+            📲 WhatsApp
         </button>
 
-        <button onclick="shareExpenseSummary('whatsapp')">
-            📲 WhatsApp Summary
-        </button>
-
-        <button onclick="shareExpenseSummary('telegram')">
-            📣 Telegram Summary
-        </button>
-
-        <button onclick="shareExpenseSummary('email')">
-            📧 Email Summary
-        </button>
-
-        <button onclick="downloadCsvExport()">
-            📤 CSV Export
-        </button>
-
-        <button onclick="toggleTheme()">
-            🌗 Theme
+        <button onclick="sendSettlementEmail()">
+            📧 Email
         </button>
 
         <button onclick="clearAllExpenseData()">
             🗑 Delete All Data
         </button>
-
-    </div>
-
-    <div class="dashboardStrip">
-
-        <div class="budgetPanel">
-            <h3>💼 Monthly Budget</h3>
-            <div class="budgetRow">
-                <input type="number" id="monthlyBudgetInput" placeholder="Set budget" min="0" step="100">
-                <button onclick="saveMonthlyBudget()">Save</button>
-            </div>
-            <div class="budgetMeta">
-                <span id="budgetUsed">Used: ₹0</span>
-                <span id="budgetRemaining">Remaining: ₹0</span>
-            </div>
-            <div class="budgetProgress">
-                <div id="budgetProgressBar"></div>
-            </div>
-            <small id="budgetStatus">Budget status: not set</small>
-        </div>
-
-        <div class="insightPanel">
-            <h3>📈 Smart Insight</h3>
-            <p id="dashboardInsight">Your expense dashboard is ready.</p>
-        </div>
 
     </div>
 
@@ -178,66 +137,6 @@
 
     </div>
 
-    <div class="toolRow">
-        <div class="searchBox">
-            <input type="search" id="expenseSearch" placeholder="Search item, user, or date">
-        </div>
-
-        <div class="selectBox">
-            <select id="expenseSort">
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="highest">Highest amount</option>
-                <option value="lowest">Lowest amount</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="healthReminderPanel">
-        <h3>💚 Health Care Tips</h3>
-
-        <div class="healthReminderRadios" aria-label="Health reminder function selector">
-            <label class="healthRadio">
-                <input type="radio" name="healthReminderType" value="all" checked>
-                <span>All</span>
-            </label>
-            <label class="healthRadio">
-                <input type="radio" name="healthReminderType" value="walk">
-                <span>Walk</span>
-            </label>
-            <label class="healthRadio">
-                <input type="radio" name="healthReminderType" value="run">
-                <span>Run</span>
-            </label>
-            <label class="healthRadio">
-                <input type="radio" name="healthReminderType" value="exercise">
-                <span>Exercise</span>
-            </label>
-            <label class="healthRadio">
-                <input type="radio" name="healthReminderType" value="tea">
-                <span>Tea Break</span>
-            </label>
-            <label class="healthRadio">
-                <input type="radio" name="healthReminderType" value="lunch">
-                <span>Lunch Break</span>
-            </label>
-            <label class="healthRadio">
-                <input type="radio" name="healthReminderType" value="sitting">
-                <span>Prolonged Sitting</span>
-            </label>
-            <label class="healthRadio">
-                <input type="radio" name="healthReminderType" value="office">
-                <span>Office Leave</span>
-            </label>
-            <label class="healthRadio">
-                <input type="radio" name="healthReminderType" value="compliment">
-                <span>Compliment</span>
-            </label>
-        </div>
-
-        <div id="healthReminderList" class="healthReminderList"></div>
-    </div>
-
     <!-- SUMMARY -->
 
     <div class="summary">
@@ -250,24 +149,6 @@
                 ₹0
             </p>
 
-            <small id="dailyInsight" class="insightText">
-                Peak: -
-            </small>
-
-        </div>
-
-        <div class="summaryCard">
-
-            <h3>Week</h3>
-
-            <p id="weeklyTotal">
-                ₹0
-            </p>
-
-            <small id="weeklyInsight" class="insightText">
-                Peak: -
-            </small>
-
         </div>
 
         <div class="summaryCard">
@@ -277,10 +158,6 @@
             <p id="monthlyTotal">
                 ₹0
             </p>
-
-            <small id="monthlyInsight" class="insightText">
-                Peak: -
-            </small>
 
         </div>
 
@@ -292,10 +169,6 @@
                 ₹0
             </p>
 
-            <small id="yearlyInsight" class="insightText">
-                Peak: -
-            </small>
-
         </div>
 
         <div class="summaryCard">
@@ -305,10 +178,6 @@
             <p id="overallTotal">
                 ₹0
             </p>
-
-            <small id="overallInsight" class="insightText">
-                Peak: -
-            </small>
 
         </div>
 
@@ -391,25 +260,6 @@
         📊 Expense Analytics
     </h2>
 
-    <div class="graphTypeRadios" aria-label="Chart type selector">
-        <label class="chartRadio">
-            <input type="radio" name="chartKind" value="bar" checked>
-            <span>Bar</span>
-        </label>
-        <label class="chartRadio">
-            <input type="radio" name="chartKind" value="line">
-            <span>Line</span>
-        </label>
-        <label class="chartRadio">
-            <input type="radio" name="chartKind" value="pie">
-            <span>Pie</span>
-        </label>
-        <label class="chartRadio">
-            <input type="radio" name="chartKind" value="doughnut">
-            <span>Doughnut</span>
-        </label>
-    </div>
-
     <div class="graphControls">
 
         <!-- USER -->
@@ -421,9 +271,15 @@
             </label>
 
             <select id="graphUser">
+
+                <option value="current">
+                    Current User
+                </option>
+
                 <option value="all">
                     All Users
                 </option>
+
             </select>
 
         </div>
@@ -433,17 +289,21 @@
         <div class="graphInput">
 
             <label>
-                Expense Type
+                Graph Type
             </label>
 
             <select id="graphType">
 
                 <option value="normal">
-                    Individual Expenses
+                    Normal Expenses
                 </option>
 
                 <option value="split">
                     Split Share Expenses
+                </option>
+
+                <option value="all">
+                    All Expenses
                 </option>
 
             </select>
@@ -464,10 +324,6 @@
                     Today
                 </option>
 
-                <option value="week">
-                    Week
-                </option>
-
                 <option value="date">
                     Selected Date
                 </option>
@@ -480,8 +336,8 @@
                     Year
                 </option>
 
-                <option value="overall" selected>
-                    Overall
+                <option value="overall">
+                    Overall Till Now
                 </option>
 
             </select>
@@ -551,10 +407,6 @@
 
     <div class="chartContainer">
 
-        <div id="chartInsight" class="chartInsight">
-            Top category: -
-        </div>
-
         <canvas
             id="expenseChart"
         ></canvas>
@@ -579,10 +431,6 @@
     <!-- PIE CHART -->
 
     <div class="chartContainer">
-
-        <div id="pieInsight" class="chartInsight">
-            Top category: -
-        </div>
 
         <canvas
             id="expensePieChart"
