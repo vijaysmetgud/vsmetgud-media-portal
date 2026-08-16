@@ -495,6 +495,28 @@ header {
     transform:translateY(-50%) scale(1.05);
 }
 
+
+.publish-btn {
+    position: absolute;
+    right: 145px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 10px 22px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 0 20px rgba(245,158,11,0.4);
+}
+
+.publish-btn:hover {
+    transform: translateY(-50%) scale(1.05);
+}
+
 .auth-info {
     display:flex;
     align-items:center;
@@ -866,10 +888,10 @@ body.light .metric h3 {
 
         </button>
 
-        <button class="signout-btn"
+                <button class="publish-btn"
                 onclick="toggleAdminUploadPanel()"
                 id="adminUploadToggle"
-                style="display:none; background:linear-gradient(135deg,#f59e0b,#d97706);">
+                style="display:none;">
 
             Publish Media
 
@@ -899,7 +921,7 @@ body.light .metric h3 {
         <div style="display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-bottom:18px;">
             <label style="display:flex; align-items:center; gap:8px; color:#e2e8f0; font-weight:600;">
                 <input type="checkbox" id="mediaPaywallToggle">
-                Enable ₹100 QR paywall before media viewing/download
+                Enable ₹10 QR paywall before media viewing/download
             </label>
             <button onclick="saveMediaPaywallSetting()" style="padding:10px 16px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:white; cursor:pointer; font-weight:700;">
                 Save Setting
@@ -910,9 +932,9 @@ body.light .metric h3 {
         </div>
 
         <div style="display:flex; flex-wrap:wrap; gap:24px; align-items:center; background:rgba(15,23,42,0.6); padding:18px; border-radius:14px;">
-            <img src="/bank-qr/AccountQRCodeCanara%20Bank%20-%201114_DARK_THEME.png" alt="Bank QR code" style="width:220px; height:220px; border-radius:12px; object-fit:cover; background:#fff; padding:10px; box-shadow:0 12px 28px rgba(0,0,0,0.25);">
+            <img src="/AccountQRCodeCanara%20Bank%20-%201114_DARK_THEME.png" alt="Bank QR code" style="width:220px; height:220px; border-radius:12px; object-fit:cover; background:#fff; padding:10px; box-shadow:0 12px 28px rgba(0,0,0,0.25);">
             <div style="max-width:480px; color:#cbd5e1;">
-                <p style="margin:0 0 10px; font-size:15px; font-weight:600; color:#f8fafc;">Minimum payment required: ₹100 INR</p>
+                <p style="margin:0 0 10px; font-size:15px; font-weight:600; color:#f8fafc;">Minimum Payment required: ₹10 INR</p>
                 <p style="margin:0; line-height:1.6;">
                     When this feature is enabled, every external visitor must scan the QR code and confirm payment before viewing or downloading media files, videos, PDFs, or audio from the portal. Admin access remains unrestricted.
                 </p>
@@ -1832,7 +1854,7 @@ function setMediaPaywallEnabled(enabled) {
     const status = document.getElementById('mediaPaywallStatus');
     if (status) {
         status.innerText = enabled
-            ? 'Media payment option is enabled. External visitors must scan and pay ₹100 before media access.'
+            ? 'Media payment option is enabled. External visitors must scan and pay ₹10 before media access.'
             : 'Media payment option is disabled. Media access is currently open to all visitors.';
     }
 
@@ -1933,14 +1955,14 @@ function showMediaPaywallModal(fileName = '', actionName = 'view/download') {
     box.innerHTML = `
         <h2 style="margin-top:0; margin-bottom:12px; color:#f8fafc;">Media Access Locked</h2>
         <p style="margin:0 0 12px; line-height:1.6;">
-            Scan the QR code and pay a minimum of <strong>₹100 INR</strong> before you can ${actionName} this media file.
+            Scan the QR code and pay a minimum of <strong>₹10 INR</strong> before you can ${actionName} this media file.
         </p>
         <p style="margin:0 0 16px; color:#cbd5e1; word-break:break-word;">
             <strong>Requested:</strong> ${escapeHtml(fileName || 'media file')}<br>
             <strong>Access validity:</strong> 2 days from payment time.
         </p>
         <div style="display:flex; justify-content:center; margin:10px 0 18px;">
-            <img src="/bank-qr/AccountQRCodeCanara%20Bank%20-%201114_DARK_THEME.png" alt="Bank QR code" style="width:220px; height:220px; border-radius:12px; background:#fff; padding:10px;">
+            <img src="/AccountQRCodeCanara%20Bank%20-%201114_DARK_THEME.png" alt="Bank QR code" style="width:220px; height:220px; border-radius:12px; background:#fff; padding:10px;">
         </div>
         <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
             <button onclick="confirmMediaPayment('${escapeHtml(fileName || 'media file').replace(/'/g, "\\'")}', '${actionName.replace(/'/g, "\\'")}' )" style="padding:12px 18px; border:none; border-radius:10px; background:linear-gradient(135deg,#22c55e,#16a34a); color:white; cursor:pointer; font-weight:700;">
@@ -1965,7 +1987,7 @@ async function confirmMediaPayment(fileName, actionName) {
     const paymentRecord = {
         paidAt: now.toISOString(),
         validUntil,
-        amount: 100,
+        amount: 10,
         currency: 'INR',
         visitorName: currentUser && currentUser.name ? currentUser.name : 'External Visitor',
         username: currentUser && currentUser.username ? currentUser.username : '',
@@ -1975,7 +1997,7 @@ async function confirmMediaPayment(fileName, actionName) {
         paymentReference: `QR-${Date.now()}`,
         sourcePage: window.location.pathname || 'portal',
         visitorType: 'external',
-        details: `External visitor paid ₹100 for ${fileName || 'media access'} (${actionName || 'view/download'})`
+        details: `External visitor paid ₹10 for ${fileName || 'media access'} (${actionName || 'view/download'})`
     };
 
     try {
@@ -1993,7 +2015,7 @@ async function confirmMediaPayment(fileName, actionName) {
         localStorage.setItem('portalMediaAccessPaid', JSON.stringify({
             paidAt: result.paidAt || paymentRecord.paidAt,
             validUntil: result.validUntil || paymentRecord.validUntil,
-            amount: 100,
+            amount: 10,
             transactionId: result.transactionId || paymentRecord.paymentReference,
             status: result.status || 'paid'
         }));
@@ -2004,7 +2026,7 @@ async function confirmMediaPayment(fileName, actionName) {
         localStorage.setItem('portalMediaAccessPaid', JSON.stringify({
             paidAt: paymentRecord.paidAt,
             validUntil: paymentRecord.validUntil,
-            amount: 100,
+            amount: 10,
             transactionId: paymentRecord.paymentReference,
             status: 'paid'
         }));
@@ -2092,6 +2114,7 @@ function showMainContent() {
     const mediaPaywallPanel = document.getElementById('mediaPaywallPanel');
     if (mediaPaywallPanel) {
         mediaPaywallPanel.style.display = isAdminUser() ? 'block' : 'none';
+        // mediaPaywallPanel.style.display = 'block';
     }
 
     const badge = document.getElementById('mediaPaymentStatusBadge');
@@ -2484,30 +2507,286 @@ function renderFiles(files){
 
 /* ================= CATEGORY FILTER ================= */
 
-function loadCategory(folder, element){
+function loadCategory(folder, element) {
+
     aiMemory.currentCategory = folder;
 
+    // Highlight selected category
     document.querySelectorAll(".nav-btn")
         .forEach(btn => btn.classList.remove("active"));
 
-    element.classList.add("active");
-
-    let filtered;
-
-    if(folder === ""){
-        filtered = allFiles;
+    if (element) {
+        element.classList.add("active");
     }
-    else{
 
-        filtered = allFiles.filter(file => 
-            file.includes(folder + "/") ||
-            file.startsWith(folder)
+    const container = document.getElementById("fileContainer");
+
+    if (!container) return;
+
+    // Show category search box
+    container.innerHTML = `
+        <div style="
+            grid-column:1/-1;
+            margin-bottom:20px;
+        ">
+
+            <div style="
+                display:flex;
+                gap:10px;
+                align-items:center;
+                margin-bottom:18px;
+                flex-wrap:wrap;
+            ">
+
+                <input
+                    id="categorySearch"
+                    type="text"
+                    placeholder="🔎 Search files in ${escapeHtml(folder)}..."
+                    oninput="filterCurrentCategory()"
+                    style="
+                        flex:1;
+                        min-width:250px;
+                        padding:12px 16px;
+                        border-radius:10px;
+                        border:1px solid #475569;
+                        background:#0f172a;
+                        color:white;
+                        font-size:15px;
+                        outline:none;
+                    "
+                >
+
+                <button
+                    onclick="clearCategorySearch()"
+                    style="
+                        padding:12px 18px;
+                        border:none;
+                        border-radius:10px;
+                        background:#475569;
+                        color:white;
+                        cursor:pointer;
+                        font-weight:600;
+                    "
+                >
+                    Clear
+                </button>
+
+            </div>
+
+            <div id="categoryResultCount"
+                 style="
+                    color:#94a3b8;
+                    margin-bottom:15px;
+                    font-size:14px;
+                 ">
+            </div>
+
+            <div id="categoryFileResults"
+                 style="
+                    display:grid;
+                    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+                    gap:16px;
+                 ">
+            </div>
+
+        </div>
+    `;
+
+    // Filter files belonging ONLY to this category
+    const filtered = getCategoryFiles(folder);
+
+    renderCategoryFiles(filtered);
+}
+
+function getCategoryFiles(folder) {
+
+    if (!folder) {
+        return [];
+    }
+
+    const normalizedFolder = folder
+        .trim()
+        .toLowerCase();
+
+    return allFiles.filter(file => {
+
+        const normalizedFile = String(file)
+            .replace(/\\/g, "/")
+            .toLowerCase();
+
+        // Exact folder/path match
+        return (
+            normalizedFile.startsWith(normalizedFolder + "/") ||
+            normalizedFile.startsWith(normalizedFolder)
         );
+    });
+}
 
+function filterCurrentCategory() {
+
+    const searchInput =
+        document.getElementById("categorySearch");
+
+    if (!searchInput) return;
+
+    const query =
+        searchInput.value.trim().toLowerCase();
+
+    const category =
+        aiMemory.currentCategory;
+
+    let files =
+        getCategoryFiles(category);
+
+    if (query) {
+
+        const terms =
+            query.split(/\s+/).filter(Boolean);
+
+        files = files.filter(file => {
+
+            const name =
+                String(file).toLowerCase();
+
+            return terms.every(term =>
+                name.includes(term)
+            );
+        });
     }
 
-    renderFiles(filtered);
+    renderCategoryFiles(files);
+}
 
+function renderCategoryFiles(files) {
+
+    const container =
+        document.getElementById("categoryFileResults");
+
+    const count =
+        document.getElementById("categoryResultCount");
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (count) {
+        count.innerText =
+            `${files.length} file${files.length === 1 ? "" : "s"} found`;
+    }
+
+    if (files.length === 0) {
+
+        container.innerHTML = `
+            <div style="
+                grid-column:1/-1;
+                text-align:center;
+                padding:40px;
+                color:#94a3b8;
+                background:#1e293b;
+                border-radius:12px;
+            ">
+                No files found in this category.
+            </div>
+        `;
+
+        return;
+    }
+
+    files.forEach(file => {
+
+        const card =
+            document.createElement("div");
+
+        card.style.background = "#1e293b";
+        card.style.color = "#fff";
+        card.style.padding = "16px";
+        card.style.borderRadius = "12px";
+        card.style.cursor = "pointer";
+
+        card.innerHTML = `
+            <div style="
+                font-size:14px;
+                word-break:break-word;
+                margin-bottom:12px;
+            ">
+                ${escapeHtml(file)}
+            </div>
+
+            <button
+                style="
+                    padding:7px 14px;
+                    border:none;
+                    border-radius:8px;
+                    background:#2563eb;
+                    color:white;
+                    cursor:pointer;
+                    font-weight:600;
+                "
+            >
+                Open In New Tab
+            </button>
+        `;
+
+        const button =
+            card.querySelector("button");
+
+        button.onclick = function(event) {
+
+            event.stopPropagation();
+
+            if (!canAccessMedia(
+                file,
+                "open/download"
+            )) {
+                return;
+            }
+
+            window.open(
+                "/media/" +
+                encodeURIComponent(file),
+                "_blank"
+            );
+        };
+
+        card.onclick = function() {
+
+            if (!canAccessMedia(file, "view")) {
+                return;
+            }
+
+            openFile(file);
+        };
+
+        card.ondblclick = function() {
+
+            if (!canAccessMedia(
+                file,
+                "open/download"
+            )) {
+                return;
+            }
+
+            window.open(
+                "/media/" +
+                encodeURIComponent(file),
+                "_blank"
+            );
+        };
+
+        container.appendChild(card);
+    });
+}
+
+function clearCategorySearch() {
+
+    const input =
+        document.getElementById("categorySearch");
+
+    if (input) {
+        input.value = "";
+    }
+
+    filterCurrentCategory();
 }
 
 /* ================= SMART FILE SEARCH ================= */
