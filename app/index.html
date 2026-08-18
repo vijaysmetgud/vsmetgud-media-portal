@@ -1979,58 +1979,101 @@ function showMediaPaywallModal(fileName = '', actionName = 'view/download') {
 }
 
 async function confirmMediaPayment(fileName, actionName) {
+
     const modal = document.getElementById('mediaAccessPaywallModal');
-    if (modal) modal.remove();
 
     const now = new Date();
-    const validUntil = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString();
+
     const paymentRecord = {
         paidAt: now.toISOString(),
-        validUntil,
         amount: 10,
         currency: 'INR',
-        visitorName: currentUser && currentUser.name ? currentUser.name : 'External Visitor',
-        username: currentUser && currentUser.username ? currentUser.username : '',
-        email: currentUser && currentUser.email ? currentUser.email : '',
+
+        visitorName:
+            currentUser && currentUser.name
+                ? currentUser.name
+                : 'External Visitor',
+
+        username:
+            currentUser && currentUser.username
+                ? currentUser.username
+                : '',
+
+        email:
+            currentUser && currentUser.email
+                ? currentUser.email
+                : '',
+
         phone: '',
+
         paymentMethod: 'QR',
+
         paymentReference: `QR-${Date.now()}`,
-        sourcePage: window.location.pathname || 'portal',
+
+        sourcePage:
+            window.location.pathname || 'portal',
+
         visitorType: 'external',
-        details: `External visitor paid ₹10 for ${fileName || 'media access'} (${actionName || 'view/download'})`
+
+        fileName: fileName || 'media access',
+
+        actionName: actionName || 'view/download',
+
+        details:
+            `External visitor claims payment of ₹10 for ${
+                fileName || 'media access'
+            }`
     };
 
     try {
+
         const response = await fetch('/api/media-payment', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(paymentRecord)
         });
+
         const result = await response.json();
 
         if (!response.ok || !result.success) {
-            throw new Error(result.error || 'Payment not recorded');
+            throw new Error(
+                result.error || 'Unable to submit payment confirmation'
+            );
         }
 
-        localStorage.setItem('portalMediaAccessPaid', JSON.stringify({
-            paidAt: result.paidAt || paymentRecord.paidAt,
-            validUntil: result.validUntil || paymentRecord.validUntil,
-            amount: 10,
-            transactionId: result.transactionId || paymentRecord.paymentReference,
-            status: result.status || 'paid'
-        }));
+        /*
+         * IMPORTANT:
+         * Do NOT grant media access here unless the server
+         * explicitly confirms that payment has been verified.
+         */
 
-        speak('Payment received successfully. Access is valid for 2 days.');
+        if (modal) {
+            modal.remove();
+        }
+
+        alert(
+            'Payment confirmation submitted successfully. ' +
+            'Your access will be enabled after the payment is verified by the administrator.'
+        );
+
     } catch (err) {
-        console.error('Payment confirmation error:', err);
-        localStorage.setItem('portalMediaAccessPaid', JSON.stringify({
-            paidAt: paymentRecord.paidAt,
-            validUntil: paymentRecord.validUntil,
-            amount: 10,
-            transactionId: paymentRecord.paymentReference,
-            status: 'paid'
-        }));
-        speak('Payment saved locally. Admin notification will be processed on the server.');
+
+        console.error(
+            'Payment confirmation error:',
+            err
+        );
+
+        /*
+         * IMPORTANT:
+         * DO NOT write portalMediaAccessPaid here.
+         */
+
+        alert(
+            'Payment confirmation could not be submitted. ' +
+            'Please try again.'
+        );
     }
 }
 
