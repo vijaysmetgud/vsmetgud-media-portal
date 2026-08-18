@@ -628,24 +628,59 @@ function sendWhatsAppAdminNotification(transaction) {
 
 app.post('/api/media-payment', (req, res) => {
   try {
-    const ip = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
-    const payload = req.body || {};
-    const paidAt = new Date().toISOString();
-    const validUntil = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
-    const transactionId = payload.transactionId || `MEDIA-${Date.now()}`;
-    const amount = Number(payload.amount || 100);
+    const ip = (req.headers['x-forwarded-for'] || req.ip || '')
+      .split(',')[0]
+      .trim();
 
-    const visitorName = payload.visitorName || payload.name || 'External Visitor';
+    const payload = req.body || {};
+
+    const paidAt = new Date().toISOString();
+
+    // Payment is NOT approved yet
+    const validUntil = null;
+
+    const transactionId =
+      payload.transactionId || `MEDIA-${Date.now()}`;
+
+    // Fixed media access price
+    const amount = 10;
+
+    const visitorName =
+      payload.visitorName ||
+      payload.name ||
+      'External Visitor';
+
     const username = payload.username || '';
     const email = payload.email || '';
     const phone = payload.phone || '';
 
     const insert = db.prepare(`
       INSERT INTO media_payment_transactions (
-        visitorName, username, email, phone, amount, currency, paymentMethod, paymentReference,
-        transactionId, visitorType, status, sourcePage, ip, userAgent, platform, language,
-        timezone, paidAt, validUntil, accessGranted, whatsappSent, details, createdAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        visitorName,
+        username,
+        email,
+        phone,
+        amount,
+        currency,
+        paymentMethod,
+        paymentReference,
+        transactionId,
+        visitorType,
+        status,
+        sourcePage,
+        ip,
+        userAgent,
+        platform,
+        language,
+        timezone,
+        paidAt,
+        validUntil,
+        accessGranted,
+        whatsappSent,
+        details,
+        createdAt
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = insert.run(
@@ -659,7 +694,10 @@ app.post('/api/media-payment', (req, res) => {
       payload.paymentReference || transactionId,
       transactionId,
       payload.visitorType || 'external',
-      'paid',
+
+      // IMPORTANT
+      'pending',
+
       payload.sourcePage || 'portal',
       ip,
       payload.userAgent || '',
@@ -667,28 +705,37 @@ app.post('/api/media-payment', (req, res) => {
       payload.language || '',
       payload.timezone || '',
       paidAt,
+
+      // No access until admin approves
       validUntil,
-      1,
+
+      // Access NOT granted
       0,
-      payload.details || 'Media access payment received',
+
+      // WhatsApp notification not yet sent
+      0,
+
+      payload.details ||
+        'Media access payment awaiting admin verification',
+
       paidAt
     );
 
     const record = {
-      id: result.lastInsertRowid,
-      visitorName,
-      username,
-      email,
-      phone,
-      amount,
-      currency: 'INR',
-      paymentReference: payload.paymentReference || transactionId,
-      transactionId,
-      status: 'paid',
-      paidAt,
-      validUntil,
-      accessGranted: 1,
-      visitorType: payload.visitorType || 'external'
+        id: result.lastInsertRowid,
+        visitorName,
+        username,
+        email,
+        phone,
+        amount,
+        currency: 'INR',
+        paymentReference: payload.paymentReference || transactionId,
+        transactionId,
+        status: 'pending',
+        paidAt,
+        validUntil: null,
+        accessGranted: 0,
+        visitorType: payload.visitorType || 'external'
     };
 
     sendWhatsAppAdminNotification(record)
@@ -703,9 +750,9 @@ app.post('/api/media-payment', (req, res) => {
       success: true,
       transactionId,
       paidAt,
-      validUntil,
+      validUntil: null,
       amount,
-      status: 'paid'
+      status: 'pending'
     });
   } catch (err) {
     console.error('Media payment insert error:', err);
@@ -729,6 +776,75 @@ app.get('/api/media-payment-transactions', (req, res) => {
     console.error('Media payment fetch error:', err);
     res.status(500).json({ success: false, error: 'Failed to fetch payment records' });
   }
+});
+
+app.post('/api/media-payment/:id/approve', (req, res) => {
+
+    try {
+
+        const paymentId = Number(req.params.id);
+
+        if (!Number.isInteger(paymentId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid payment ID'
+            });
+        }
+
+        // ADMIN AUTH CHECK MUST BE HERE
+
+        const payment = db.prepare(`
+            SELECT *
+            FROM media_payment_transactions
+            WHERE id = ?
+        `).get(paymentId);
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                error: 'Payment transaction not found'
+            });
+        }
+
+        if (payment.status === 'approved') {
+            return res.json({
+                success: true,
+                message: 'Payment already approved',
+                validUntil: payment.validUntil
+            });
+        }
+
+        // const validUntil = new Date(
+        //     Date.now() + 2 * 24 * 60 * 60 * 1000
+        // ).toISOString();
+
+        db.prepare(`
+            UPDATE media_payment_transactions
+            SET
+                status = 'approved',
+                accessGranted = 1,
+                validUntil = ?
+            WHERE id = ?
+        `).run(
+            validUntil,
+            paymentId
+        );
+
+        res.json({
+            success: true,
+            message: 'Payment approved',
+            validUntil
+        });
+
+    } catch (err) {
+
+        console.error('Payment approval error:', err);
+
+        res.status(500).json({
+            success: false,
+            error: 'Failed to approve payment'
+        });
+    }
 });
 
 const os = require("os");

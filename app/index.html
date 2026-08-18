@@ -1828,23 +1828,22 @@ function getMediaPaywallEnabled() {
     return localStorage.getItem('portalMediaPaywallEnabled') === 'true';
 }
 
-function getMediaPaymentRecord() {
-    try {
-        const raw = localStorage.getItem('portalMediaAccessPaid');
-        return raw ? JSON.parse(raw) : null;
-    } catch (err) {
-        return null;
-    }
-}
+// function getMediaPaymentRecord() {
+//     try {
+//         const raw = localStorage.getItem('portalMediaAccessPaid');
+//         return raw ? JSON.parse(raw) : null;
+//     } catch (err) {
+//         return null;
+//     }
+// }
 
 function isMediaAccessValid() {
     if (!getMediaPaywallEnabled()) return true;
+
     if (isAdminUser()) return true;
 
-    const record = getMediaPaymentRecord();
-    if (!record || !record.validUntil) return false;
-
-    return Date.now() <= new Date(record.validUntil).getTime();
+    // Payment access must be verified by the server.
+    return false;
 }
 
 function setMediaPaywallEnabled(enabled) {
@@ -1902,10 +1901,44 @@ async function loadMediaPaymentTransactions() {
         const rows = data.rows.map(row => `
             <tr>
                 <td>${escapeHtml(row.paidAt || '')}</td>
+
                 <td>${escapeHtml(row.visitorName || '')}</td>
-                <td>${escapeHtml(row.amount || '')}</td>
+
+                <td>₹${escapeHtml(row.amount || '')}</td>
+
                 <td>${escapeHtml(row.transactionId || '')}</td>
+
                 <td>${escapeHtml(row.validUntil || '')}</td>
+
+                <td>
+                    ${
+                        row.status === 'approved'
+                            ? '<span style="color:#22c55e;font-weight:700;">APPROVED</span>'
+                            : '<span style="color:#f59e0b;font-weight:700;">PENDING</span>'
+                    }
+                </td>
+
+                <td>
+                    ${
+                        row.status === 'approved'
+                            ? '<span style="color:#22c55e;">Access Granted</span>'
+                            : `
+                                <button
+                                    onclick="approveMediaPayment(${Number(row.id)})"
+                                    style="
+                                        padding:6px 12px;
+                                        border:none;
+                                        border-radius:7px;
+                                        background:linear-gradient(135deg,#22c55e,#16a34a);
+                                        color:white;
+                                        cursor:pointer;
+                                        font-weight:700;
+                                    ">
+                                    Approve
+                                </button>
+                            `
+                    }
+                </td>
             </tr>
         `).join('');
 
@@ -1918,6 +1951,8 @@ async function loadMediaPaymentTransactions() {
                         <th style="padding:8px; text-align:left;">Amount</th>
                         <th style="padding:8px; text-align:left;">Txn ID</th>
                         <th style="padding:8px; text-align:left;">Valid Until</th>
+                        <th style="padding:8px; text-align:left;">Status</th>
+                        <th style="padding:8px; text-align:left;">Action</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
@@ -1925,6 +1960,52 @@ async function loadMediaPaymentTransactions() {
         `;
     } catch (err) {
         console.warn('Unable to load payment transactions:', err);
+    }
+}
+
+async function approveMediaPayment(paymentId) {
+
+    if (!confirm('Approve this payment and grant media access?')) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `/api/media-payment/${paymentId}/approve`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(
+                result.error || 'Unable to approve payment'
+            );
+        }
+
+        alert(
+            'Payment approved successfully.'
+        );
+
+        await loadMediaPaymentTransactions();
+
+    } catch (error) {
+
+        console.error(
+            'Payment approval error:',
+            error
+        );
+
+        alert(
+            error.message ||
+            'Unable to approve payment.'
+        );
     }
 }
 
