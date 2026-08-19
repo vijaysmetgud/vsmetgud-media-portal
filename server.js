@@ -779,7 +779,6 @@ app.get('/api/media-payment-transactions', (req, res) => {
 });
 
 app.post('/api/media-payment/:id/approve', (req, res) => {
-
     try {
 
         const paymentId = Number(req.params.id);
@@ -791,7 +790,7 @@ app.post('/api/media-payment/:id/approve', (req, res) => {
             });
         }
 
-        // ADMIN AUTH CHECK MUST BE HERE
+        // TODO: Keep/add your existing admin authentication check here.
 
         const payment = db.prepare(`
             SELECT *
@@ -806,17 +805,24 @@ app.post('/api/media-payment/:id/approve', (req, res) => {
             });
         }
 
-        if (payment.status === 'approved') {
+        // Already approved
+        if (
+            payment.status === 'approved' &&
+            payment.accessGranted === 1
+        ) {
             return res.json({
                 success: true,
                 message: 'Payment already approved',
-                validUntil: payment.validUntil
+                validUntil: payment.validUntil,
+                transactionId: payment.transactionId,
+                accessGranted: 1
             });
         }
 
-        // const validUntil = new Date(
-        //     Date.now() + 2 * 24 * 60 * 60 * 1000
-        // ).toISOString();
+        // Grant access for 2 days from ADMIN APPROVAL time
+        const validUntil = new Date(
+            Date.now() + 2 * 24 * 60 * 60 * 1000
+        ).toISOString();
 
         db.prepare(`
             UPDATE media_payment_transactions
@@ -830,19 +836,28 @@ app.post('/api/media-payment/:id/approve', (req, res) => {
             paymentId
         );
 
+        console.log(
+            `[MEDIA PAYMENT] Approved transaction ${payment.transactionId}`
+        );
+
         res.json({
             success: true,
             message: 'Payment approved',
-            validUntil
+            transactionId: payment.transactionId,
+            validUntil: validUntil,
+            accessGranted: 1
         });
 
     } catch (err) {
 
-        console.error('Payment approval error:', err);
+        console.error(
+            'Payment approval error:',
+            err
+        );
 
         res.status(500).json({
             success: false,
-            error: 'Failed to approve payment'
+            error: err.message || 'Failed to approve payment'
         });
     }
 });
