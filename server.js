@@ -484,7 +484,24 @@ app.post('/api/log-activity', (req, res) => {
   try {
     const ip = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
     const payload = req.body || {};
-    const timestamp = new Date().toISOString();
+    function getISTTimestamp() {
+        const now = new Date();
+
+        const parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hourCycle: 'h23'
+        }).formatToParts(now);
+
+        const get = type => parts.find(p => p.type === type)?.value;
+        
+        return `${get('year')}-${get('month')}-${get('day')} T ${get('hour')}:${get('minute')}:${get('second')}+05:30`;
+    }
 
     db.prepare(`
       INSERT INTO portal_activity (
