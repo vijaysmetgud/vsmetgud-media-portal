@@ -218,118 +218,600 @@
   </div>
 
   <script>
-    const timezones = [
-      { id: 'all', label: 'All', city: 'Global', offset: 0, region: 'all', x: 50, y: 50 },
-      { id: 'utc', label: 'UTC', city: 'London', offset: 0, region: 'global', x: 46, y: 28 },
-      { id: 'ist', label: 'IST', city: 'India', offset: 5.5, region: 'asia', x: 62, y: 40 },
-      { id: 'est', label: 'EST', city: 'New York', offset: -5, region: 'america', x: 28, y: 34 },
-      { id: 'pst', label: 'PST', city: 'Los Angeles', offset: -8, region: 'america', x: 18, y: 36 },
-      { id: 'cest', label: 'CET', city: 'Paris', offset: 1, region: 'europe', x: 48, y: 24 },
-      { id: 'jst', label: 'JST', city: 'Tokyo', offset: 9, region: 'asia', x: 75, y: 32 },
-      { id: 'aest', label: 'AEST', city: 'Sydney', offset: 10, region: 'oceania', x: 82, y: 68 },
-      { id: 'gmt', label: 'GMT', city: 'UK', offset: 0, region: 'europe', x: 46, y: 25 }
-    ];
+  const WORLD_TIME_ZONES = [
 
-    const radioContainer = document.getElementById('timezoneRadios');
-    const mapMarkers = document.getElementById('mapMarkers');
-    const timeList = document.getElementById('timeList');
-    const selectedZoneLabel = document.getElementById('selectedZoneLabel');
-    const selectedTime = document.getElementById('selectedTime');
+      {
+          city: "New Delhi",
+          country: "India",
+          timezone: "Asia/Kolkata",
+          lat: 28.6139,
+          lon: 77.2090
+      },
 
-    function getLocalTimeForOffset(offsetHours) {
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-      const curve = new Date(utc + 3600000 * offsetHours);
-      return curve;
-    }
+      {
+          city: "Dubai",
+          country: "UAE",
+          timezone: "Asia/Dubai",
+          lat: 25.2048,
+          lon: 55.2708
+      },
 
-    function formatTime(date) {
-      return new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true,
-        timeZone: 'UTC'
-      }).format(date);
-    }
+      {
+          city: "Singapore",
+          country: "Singapore",
+          timezone: "Asia/Singapore",
+          lat: 1.3521,
+          lon: 103.8198
+      },
 
-    function renderRadioButtons() {
-      const radios = [
-        { id: 'all', label: 'All' },
-        { id: 'utc', label: 'UTC' },
-        { id: 'ist', label: 'IST' },
-        { id: 'est', label: 'EST' },
-        { id: 'pst', label: 'PST' },
-        { id: 'cest', label: 'CET' },
-        { id: 'jst', label: 'JST' },
-        { id: 'aest', label: 'AEST' },
-        { id: 'gmt', label: 'GMT' }
-      ];
+      {
+          city: "Tokyo",
+          country: "Japan",
+          timezone: "Asia/Tokyo",
+          lat: 35.6762,
+          lon: 139.6503
+      },
 
-      radioContainer.innerHTML = radios.map((radio) => `
-        <label class="timezoneRadio">
-          <input type="radio" name="timezone" value="${radio.id}" ${radio.id === 'all' ? 'checked' : ''}>
-          <span>${radio.label}</span>
-        </label>
-      `).join('');
+      {
+          city: "Beijing",
+          country: "China",
+          timezone: "Asia/Shanghai",
+          lat: 39.9042,
+          lon: 116.4074
+      },
 
-      document.querySelectorAll('input[name="timezone"]').forEach((input) => {
-        input.addEventListener('change', renderSelectedZone);
+      {
+          city: "Sydney",
+          country: "Australia",
+          timezone: "Australia/Sydney",
+          lat: -33.8688,
+          lon: 151.2093
+      },
+
+      {
+          city: "London",
+          country: "UK",
+          timezone: "Europe/London",
+          lat: 51.5074,
+          lon: -0.1278
+      },
+
+      {
+          city: "Paris",
+          country: "France",
+          timezone: "Europe/Paris",
+          lat: 48.8566,
+          lon: 2.3522
+      },
+
+      {
+          city: "Berlin",
+          country: "Germany",
+          timezone: "Europe/Berlin",
+          lat: 52.5200,
+          lon: 13.4050
+      },
+
+      {
+          city: "New York",
+          country: "USA",
+          timezone: "America/New_York",
+          lat: 40.7128,
+          lon: -74.0060
+      },
+
+      {
+          city: "Chicago",
+          country: "USA",
+          timezone: "America/Chicago",
+          lat: 41.8781,
+          lon: -87.6298
+      },
+
+      {
+          city: "Denver",
+          country: "USA",
+          timezone: "America/Denver",
+          lat: 39.7392,
+          lon: -104.9903
+      },
+
+      {
+          city: "Los Angeles",
+          country: "USA",
+          timezone: "America/Los_Angeles",
+          lat: 34.0522,
+          lon: -118.2437
+      },
+
+      {
+          city: "Toronto",
+          country: "Canada",
+          timezone: "America/Toronto",
+          lat: 43.6532,
+          lon: -79.3832
+      },
+
+      {
+          city: "São Paulo",
+          country: "Brazil",
+          timezone: "America/Sao_Paulo",
+          lat: -23.5505,
+          lon: -46.6333
+      },
+
+      {
+          city: "Mexico City",
+          country: "Mexico",
+          timezone: "America/Mexico_City",
+          lat: 19.4326,
+          lon: -99.1332
+      },
+
+      {
+          city: "Johannesburg",
+          country: "South Africa",
+          timezone: "Africa/Johannesburg",
+          lat: -26.2041,
+          lon: 28.0473
+      },
+
+      {
+          city: "Cairo",
+          country: "Egypt",
+          timezone: "Africa/Cairo",
+          lat: 30.0444,
+          lon: 31.2357
+      },
+
+      {
+          city: "Moscow",
+          country: "Russia",
+          timezone: "Europe/Moscow",
+          lat: 55.7558,
+          lon: 37.6173
+      },
+
+      {
+          city: "Istanbul",
+          country: "Turkey",
+          timezone: "Europe/Istanbul",
+          lat: 41.0082,
+          lon: 28.9784
+      },
+
+      {
+          city: "Riyadh",
+          country: "Saudi Arabia",
+          timezone: "Asia/Riyadh",
+          lat: 24.7136,
+          lon: 46.6753
+      }
+
+  ];
+
+
+  // --------------------------------------------------
+  // FORMAT TIME
+  // --------------------------------------------------
+
+  function formatTime(timezone) {
+
+      return new Intl.DateTimeFormat("en-GB", {
+
+          timeZone: timezone,
+
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+
+          hour12: false
+
+      }).format(new Date());
+
+  }
+
+
+  // --------------------------------------------------
+  // FORMAT DATE
+  // --------------------------------------------------
+
+  function formatDate(timezone) {
+
+      return new Intl.DateTimeFormat("en-GB", {
+
+          timeZone: timezone,
+
+          weekday: "long",
+
+          day: "2-digit",
+          month: "long",
+          year: "numeric"
+
+      }).format(new Date());
+
+  }
+
+
+  // --------------------------------------------------
+  // TIMEZONE NAME
+  // --------------------------------------------------
+
+  function getTimeZoneName(timezone) {
+
+      try {
+
+          return new Intl.DateTimeFormat("en-US", {
+
+              timeZone: timezone,
+
+              timeZoneName: "long"
+
+          })
+          .formatToParts(new Date())
+          .find(
+              part => part.type === "timeZoneName"
+          )?.value || timezone;
+
+      } catch (error) {
+
+          return timezone;
+
+      }
+
+  }
+
+
+  // --------------------------------------------------
+  // CREATE RADIO BUTTONS
+  // --------------------------------------------------
+
+  function renderTimezoneRadios() {
+
+      const container =
+          document.getElementById("timezoneRadios");
+
+      if (!container) {
+          return;
+      }
+
+      container.innerHTML = "";
+
+      WORLD_TIME_ZONES.forEach((zone, index) => {
+
+          const label =
+              document.createElement("label");
+
+          label.className =
+              "timezoneRadio";
+
+          label.innerHTML = `
+
+              <input
+                  type="radio"
+                  name="timezone"
+                  value="${zone.timezone}"
+                  ${index === 0 ? "checked" : ""}
+              >
+
+              <span>
+                  ${zone.city}
+              </span>
+
+          `;
+
+          const radio =
+              label.querySelector("input");
+
+          radio.addEventListener(
+              "change",
+              () => {
+
+                  selectTimezone(
+                      zone.timezone
+                  );
+
+              }
+          );
+
+          container.appendChild(label);
+
       });
-    }
 
-    function renderSelectedZone() {
-      const selected = document.querySelector('input[name="timezone"]:checked')?.value || 'all';
-      const selectedZone = timezones.find(t => t.id === selected) || timezones[0];
+  }
 
-      const visibleZones = selected === 'all'
-        ? timezones.filter(t => t.id !== 'all')
-        : timezones.filter(t => t.id === selected || (selectedZone.region !== 'all' && t.region === selectedZone.region));
 
-      mapMarkers.innerHTML = '';
+  // --------------------------------------------------
+  // SELECT TIMEZONE
+  // --------------------------------------------------
 
-      visibleZones.forEach((zone) => {
-        const marker = document.createElement('div');
-        marker.className = 'cityMarker' + (zone.id === selected ? ' active' : '');
-        marker.style.left = `${zone.x}%`;
-        marker.style.top = `${zone.y}%`;
+  function selectTimezone(timezone) {
 
-        const label = document.createElement('div');
-        label.className = 'cityLabel';
-        label.textContent = `${zone.label} · ${zone.city}`;
-        label.style.left = `${zone.x}%`;
-        label.style.top = `${zone.y}%`;
+      const zone =
+          WORLD_TIME_ZONES.find(
+              item =>
+                  item.timezone === timezone
+          );
 
-        mapMarkers.appendChild(marker);
-        mapMarkers.appendChild(label);
+      if (!zone) {
+          return;
+      }
+
+
+      const selectedLabel =
+          document.getElementById(
+              "selectedZoneLabel"
+          );
+
+      const selectedTime =
+          document.getElementById(
+              "selectedTime"
+          );
+
+      const timeList =
+          document.getElementById(
+              "timeList"
+          );
+
+
+      if (selectedLabel) {
+
+          selectedLabel.textContent =
+              `${zone.city}, ${zone.country}`;
+
+      }
+
+
+      if (selectedTime) {
+
+          selectedTime.textContent =
+              formatTime(zone.timezone);
+
+      }
+
+
+      if (timeList) {
+
+          timeList.innerHTML = `
+
+              <div class="time-item">
+
+                  <strong>Local Time</strong>
+
+                  <span>
+                      ${formatTime(zone.timezone)}
+                  </span>
+
+              </div>
+
+              <div class="time-item">
+
+                  <strong>Date</strong>
+
+                  <span>
+                      ${formatDate(zone.timezone)}
+                  </span>
+
+              </div>
+
+              <div class="time-item">
+
+                  <strong>Time Zone</strong>
+
+                  <span>
+                      ${getTimeZoneName(zone.timezone)}
+                  </span>
+
+              </div>
+
+              <div class="time-item">
+
+                  <strong>IANA Zone</strong>
+
+                  <span>
+                      ${zone.timezone}
+                  </span>
+
+              </div>
+
+          `;
+
+      }
+
+
+      renderMapMarkers(
+          zone.timezone
+      );
+
+  }
+
+
+  // --------------------------------------------------
+  // UPDATE SELECTED TIME
+  // --------------------------------------------------
+
+  function updateSelectedTime() {
+
+      const selected =
+          document.querySelector(
+              'input[name="timezone"]:checked'
+          );
+
+      if (!selected) {
+          return;
+      }
+
+      const selectedTime =
+          document.getElementById(
+              "selectedTime"
+          );
+
+      if (!selectedTime) {
+          return;
+      }
+
+      selectedTime.textContent =
+          formatTime(
+              selected.value
+          );
+
+
+      const selectedZone =
+          WORLD_TIME_ZONES.find(
+              zone =>
+                  zone.timezone ===
+                  selected.value
+          );
+
+      if (selectedZone) {
+
+          const timeList =
+              document.getElementById(
+                  "timeList"
+              );
+
+          if (timeList) {
+
+              timeList.querySelector(
+                  ".time-item:nth-child(1) span"
+              ).textContent =
+                  formatTime(
+                      selectedZone.timezone
+                  );
+
+              timeList.querySelector(
+                  ".time-item:nth-child(2) span"
+              ).textContent =
+                  formatDate(
+                      selectedZone.timezone
+                  );
+
+              timeList.querySelector(
+                  ".time-item:nth-child(3) span"
+              ).textContent =
+                  getTimeZoneName(
+                      selectedZone.timezone
+                  );
+
+          }
+
+      }
+
+  }
+
+
+  // --------------------------------------------------
+  // MAP MARKERS
+  // --------------------------------------------------
+
+  function renderMapMarkers(
+      selectedTimezone
+  ) {
+
+      const container =
+          document.getElementById(
+              "mapMarkers"
+          );
+
+      if (!container) {
+          return;
+      }
+
+      container.innerHTML = "";
+
+
+      WORLD_TIME_ZONES.forEach(zone => {
+
+          // Convert longitude to percentage.
+          // Map covers approximately -180 to +180.
+
+          const left =
+              ((zone.lon + 180) / 360) * 100;
+
+
+          // Convert latitude to percentage.
+
+          const top =
+              ((90 - zone.lat) / 180) * 100;
+
+
+          const marker =
+              document.createElement("div");
+
+          marker.className =
+              "cityMarker";
+
+
+          if (
+              zone.timezone ===
+              selectedTimezone
+          ) {
+
+              marker.classList.add(
+                  "active"
+              );
+
+          }
+
+
+          marker.style.left =
+              `${left}%`;
+
+          marker.style.top =
+              `${top}%`;
+
+
+          marker.title =
+              `${zone.city} - ${formatTime(zone.timezone)}`;
+
+
+          container.appendChild(marker);
+
+
+          const label =
+              document.createElement("div");
+
+          label.className =
+              "cityLabel";
+
+          label.textContent =
+              zone.city;
+
+
+          label.style.left =
+              `${left}%`;
+
+          label.style.top =
+              `${top}%`;
+
+
+          container.appendChild(label);
+
       });
 
-      const slotTime = getLocalTimeForOffset(selectedZone.offset);
-      selectedZoneLabel.textContent = `${selectedZone.label} · ${selectedZone.city}`;
-      selectedTime.textContent = formatTime(slotTime);
+  }
 
-      const list = selected === 'all' ? timezones.filter(t => t.id !== 'all') : [selectedZone];
 
-      timeList.innerHTML = list.map((zone) => {
-        const now = getLocalTimeForOffset(zone.offset);
-        return `
-          <div class="time-item">
-            <strong>${zone.label} (${zone.city})</strong>
-            <span>${new Intl.DateTimeFormat('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: true,
-              timeZone: 'UTC'
-            }).format(now)} </span>
-          </div>
-        `;
-      }).join('');
-    }
+  // --------------------------------------------------
+  // INITIALIZE
+  // --------------------------------------------------
 
-    renderRadioButtons();
-    renderSelectedZone();
-    setInterval(renderSelectedZone, 1000);
-  </script>
+  renderTimezoneRadios();
+
+  selectTimezone(
+      WORLD_TIME_ZONES[0].timezone
+  );
+
+
+  // --------------------------------------------------
+  // UPDATE EVERY SECOND
+  // --------------------------------------------------
+
+  setInterval(
+      updateSelectedTime,
+      1000
+  );
+
+</script> 
 </body>
 </html>
