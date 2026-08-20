@@ -1988,18 +1988,10 @@ function isAdminUser() {
            currentUser.role === 'admin';
 }
 
-// function getMediaPaywallEnabled() {
-//     return localStorage.getItem('portalMediaPaywallEnabled') === 'true';
-// }
-
-// function getMediaPaywallEnabled() {
-//    const value = localStorage.getItem('portalMediaPaywallEnabled');
-
 function getMediaPaywallEnabled() {
-    return localStorage.getItem('portalMediaPaywallEnabled') === 'true';
-}    
+    const value = localStorage.getItem('portalMediaPaywallEnabled');
 
-    // New devices must have media protection enabled.
+    // On a new device, QR/payment protection is ON by default.
     if (value === null) {
         return true;
     }
