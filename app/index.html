@@ -1926,7 +1926,6 @@ function loginWithPassword(event) {
     const error =
         document.getElementById('loginError');
 
-    // Both fields are mandatory
     if (!username) {
         error.innerText = 'Please enter your name.';
         return;
@@ -1937,24 +1936,59 @@ function loginWithPassword(event) {
         return;
     }
 
-    // Allow any visitor name + password
+    // ADMIN LOGIN
+    // Username must be exactly "Vijay"
+    // AND the password must be correct.
+    if (username === 'Vijay') {
+
+        if (password !== 'YOUR_ADMIN_PASSWORD') {
+            error.innerText = 'Invalid Admin password.';
+            return;
+        }
+
+        const user = {
+            username: 'Vijay',
+            name: 'Vijay',
+            email: 'admin@portal.local',
+            authMethod: 'local',
+            role: 'admin'
+        };
+
+        loginUser(user);
+        return;
+    }
+
+    // ALL OTHER USERS
     const user = {
         username: username,
-        password: password,
         name: username,
         email: `${username}@portal.local`,
-        picture: 'https://www.gravatar.com/avatar/?d=identicon'
+        authMethod: 'local',
+        role: 'visitor'
     };
 
     loginUser(user);
 }
 
 function isAdminUser() {
-    return currentUser && currentUser.username === 'Vijay';
+    return currentUser &&
+           currentUser.username === 'Vijay' &&
+           currentUser.role === 'admin';
 }
 
+// function getMediaPaywallEnabled() {
+//     return localStorage.getItem('portalMediaPaywallEnabled') === 'true';
+// }
+
 function getMediaPaywallEnabled() {
-    return localStorage.getItem('portalMediaPaywallEnabled') === 'true';
+    const value = localStorage.getItem('portalMediaPaywallEnabled');
+
+    // New devices must have media protection enabled.
+    if (value === null) {
+        return true;
+    }
+
+    return value === 'true';
 }
 
 // function getMediaPaymentRecord() {
@@ -1967,11 +2001,16 @@ function getMediaPaywallEnabled() {
 // }
 
 function isMediaAccessValid() {
-    if (!getMediaPaywallEnabled()) return true;
+    // Admin does not need QR payment.
+    if (isAdminUser()) {
+        return true;
+    }
 
-    if (isAdminUser()) return true;
+    // Non-admin users need server-approved payment access.
+    if (!getMediaPaywallEnabled()) {
+        return false;
+    }
 
-    // Payment access must be verified by the server.
     return false;
 }
 
@@ -2288,11 +2327,20 @@ async function confirmMediaPayment(fileName, actionName) {
 }
 
 function canAccessMedia(fileName, action = 'view') {
-    if (!getMediaPaywallEnabled()) return true;
-    if (isAdminUser()) return true;
-    if (isMediaAccessValid()) return true;
 
+    // Only authenticated Admin gets automatic access.
+    if (isAdminUser()) {
+        return true;
+    }
+
+    // Every non-admin must have valid payment access.
+    if (isMediaAccessValid()) {
+        return true;
+    }
+
+    // Show QR/payment screen.
     showMediaPaywallModal(fileName, action);
+
     return false;
 }
 
