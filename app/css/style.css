@@ -1192,6 +1192,136 @@ body.light .dateLabel {
     color: white;
 }
 
+/* =========================================================
+   AUTOMATIC HEALTH REMINDER
+   ========================================================= */
+
+#automaticHealthReminder {
+    position: fixed;
+
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: 480px;
+    max-width: 85vw;
+
+    padding: 22px 28px;
+
+    background: rgba(0, 190, 115, 0.90);
+
+    color: white;
+
+    border: 2px solid rgba(255, 255, 255, 0.45);
+
+    border-radius: 16px;
+
+    text-align: center;
+
+    z-index: 999999;
+
+    display: none;
+
+    box-shadow:
+        0 0 15px rgba(0, 255, 150, 0.65),
+        0 0 35px rgba(0, 255, 150, 0.45),
+        0 0 70px rgba(0, 255, 150, 0.30);
+
+    backdrop-filter: blur(8px);
+}
+
+#automaticHealthReminder.show {
+    display: block;
+
+    animation:
+        healthReminderAppear 0.35s ease-out,
+        healthReminderGlow 1.5s ease-in-out infinite alternate;
+}
+
+
+.healthReminderTitle {
+    font-size: 22px;
+
+    font-weight: 700;
+
+    margin-bottom: 8px;
+}
+
+
+.healthReminderTime {
+    font-size: 16px;
+
+    font-weight: 600;
+
+    margin-bottom: 8px;
+}
+
+
+.healthReminderMessage {
+    font-size: 15px;
+
+    line-height: 1.5;
+
+    margin: 12px 0 18px;
+}
+
+
+.healthReminderClose {
+    padding: 9px 22px;
+
+    border: none;
+
+    border-radius: 20px;
+
+    background: rgba(255, 255, 255, 0.85);
+
+    color: #087a4a;
+
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+.healthReminderClose:hover {
+    background: white;
+}
+
+
+@keyframes healthReminderAppear {
+
+    from {
+        opacity: 0;
+        transform:
+            translate(-50%, -50%)
+            scale(0.85);
+    }
+
+    to {
+        opacity: 1;
+        transform:
+            translate(-50%, -50%)
+            scale(1);
+    }
+}
+
+
+@keyframes healthReminderGlow {
+
+    from {
+        box-shadow:
+            0 0 15px rgba(0, 255, 150, 0.55),
+            0 0 35px rgba(0, 255, 150, 0.35);
+    }
+
+    to {
+        box-shadow:
+            0 0 25px rgba(0, 255, 150, 0.85),
+            0 0 55px rgba(0, 255, 150, 0.60),
+            0 0 90px rgba(0, 255, 150, 0.35);
+    }
+}
 
 /* =========================================================
    MEDIA PLAYER

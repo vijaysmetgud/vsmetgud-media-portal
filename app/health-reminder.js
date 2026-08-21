@@ -70,6 +70,34 @@ const healthTipSchedule = [
 
 ];
 
+const savedHealthTipSchedule =
+    localStorage.getItem("healthTipSchedule");
+
+if (savedHealthTipSchedule) {
+
+    try {
+
+        const savedSchedule =
+            JSON.parse(savedHealthTipSchedule);
+
+        if (Array.isArray(savedSchedule)) {
+
+            healthTipSchedule.length = 0;
+
+            healthTipSchedule.push(
+                ...savedSchedule
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load saved health reminders:",
+            error
+        );
+
+    }
+}
 
 // =========================================================
 // RADIO FILTER
