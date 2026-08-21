@@ -170,6 +170,67 @@ function renderHealthTips() {
 
 }
 
+function renderHealthReminderRadioButtons() {
+
+    const container =
+        document.getElementById(
+            "healthReminderRadioList"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML =
+        healthTipSchedule.map(
+            (tip, index) => `
+                <label class="healthRadioOption">
+
+                    <input
+                        type="radio"
+                        name="healthReminderEdit"
+                        value="${tip.id}"
+                        ${index === 0 ? "checked" : ""}
+                    >
+
+                    <span class="healthRadioText">
+
+                        <strong>
+                            ${escapeHealthHtml(tip.label)}
+                        </strong>
+
+                        <span>
+                            ⏰ ${escapeHealthHtml(tip.time)}
+                        </span>
+
+                    </span>
+
+                </label>
+            `
+        ).join("");
+}
+
+
+function editSelectedHealthReminder() {
+
+    const selected =
+        document.querySelector(
+            'input[name="healthReminderEdit"]:checked'
+        );
+
+    if (!selected) {
+
+        alert(
+            "Please select a health reminder to edit."
+        );
+
+        return;
+    }
+
+    openHealthEditModal(
+        selected.value
+    );
+}
 
 // =========================================================
 // RADIO EVENTS
@@ -291,6 +352,25 @@ function updateNotificationStatus() {
 
 }
 
+
+<!-- =========================================================
+     EDIT HEALTH REMINDER SELECTOR
+     ========================================================= -->
+
+<div class="health-edit-selector">
+
+    <h3>✏️ Edit Health Reminder</h3>
+
+    <div id="healthReminderRadioList"></div>
+
+    <button
+        type="button"
+        class="healthEditSelectedBtn"
+        onclick="editSelectedHealthReminder()">
+        ✏️ Edit Selected Reminder
+    </button>
+
+</div>
 
 // =========================================================
 // OPEN EDIT MODAL
@@ -552,7 +632,12 @@ function saveHealthReminder() {
   // -------------------------------------------------------
 
   renderHealthTips();
+  
+  // -------------------------------------------------------
+  // HEALTH REMINDER RADIO BUTTONS
+  // -------------------------------------------------------  
 
+  renderHealthReminderRadioButtons();
 
   // -------------------------------------------------------
   // CLOSE MODAL
@@ -1032,6 +1117,8 @@ function startHealthReminderChecker() {
 loadHealthReminders();
 
 renderHealthTips();
+
+renderHealthReminderRadioButtons();
 
 updateNotificationStatus();
 

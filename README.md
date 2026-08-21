@@ -194,6 +194,7 @@ pm2 delete 1
 pm2 start "npm run dev -- --host" --name theatre-player
 
 pm2 list
+pm2 restart theatre-player --update-env
 
 open:  http://192.168.56.103:5173/
 
