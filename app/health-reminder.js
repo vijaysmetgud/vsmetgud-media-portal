@@ -352,26 +352,6 @@ function updateNotificationStatus() {
 
 }
 
-
-<!-- =========================================================
-     EDIT HEALTH REMINDER SELECTOR
-     ========================================================= -->
-
-<div class="health-edit-selector">
-
-    <h3>✏️ Edit Health Reminder</h3>
-
-    <div id="healthReminderRadioList"></div>
-
-    <button
-        type="button"
-        class="healthEditSelectedBtn"
-        onclick="editSelectedHealthReminder()">
-        ✏️ Edit Selected Reminder
-    </button>
-
-</div>
-
 // =========================================================
 // OPEN EDIT MODAL
 // =========================================================
@@ -472,6 +452,33 @@ function openHealthEditModal(reminderId) {
 
 }
 
+function closeHealthReminderEditor() {
+
+    const editor =
+        document.getElementById(
+            "healthReminderEditor"
+        );
+
+    if (editor) {
+        editor.style.display = "none";
+    }
+}
+
+function openHealthReminderEditor() {
+
+    const editor =
+        document.getElementById(
+            "healthReminderEditor"
+        );
+
+    if (!editor) {
+        return;
+    }
+
+    renderHealthReminderRadioButtons();
+
+    editor.style.display = "flex";
+}
 
 // =========================================================
 // CLOSE EDIT MODAL

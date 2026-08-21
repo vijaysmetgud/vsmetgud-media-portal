@@ -1,65 +1,49 @@
-const healthTipSchedule = [
-  {
-    id: "walk",
-    label: "Walk",
-    time: "09:15",
-    message:
-      "Walk for 10 minutes now to refresh your energy and improve focus."
-  },
+<!-- =========================================================
+     EDIT HEALTH REMINDER BUTTON
+     ========================================================= -->
 
-  {
-    id: "exercise",
-    label: "Exercise",
-    time: "12:30",
-    message:
-      "Do a light exercise or stretch break to keep your body active."
-  },
+<button
+    type="button"
+    class="healthEditMainBtn"
+    onclick="openHealthReminderEditor()">
+    ✏️ Edit Health Reminder
+</button>
 
-  {
-    id: "tea",
-    label: "Tea Break",
-    time: "15:00",
-    message:
-      "Tea break time: stand up, hydrate, and take a short reset."
-  },
 
-  {
-    id: "lunch",
-    label: "Lunch Break",
-    time: "13:00",
-    message:
-      "It is lunch break time. Eat mindfully and take a short rest."
-  },
+<!-- =========================================================
+     EDIT HEALTH REMINDER SELECTOR
+     ========================================================= -->
 
-  {
-    id: "sitting",
-    label: "Prolonged Sitting",
-    time: "11:00",
-    message:
-      "You have been sitting for long. Stand up, stretch your legs, and walk for 2 minutes."
-  },
+<div
+    id="healthReminderEditor"
+    style="display:none;">
 
-  {
-    id: "office",
-    label: "Office Leaving Time",
-    time: "18:00",
-    message:
-      "Office leaving time. Wrap up your work and finish your day calmly."
-  },
+    <div class="health-editor-box">
 
-  {
-    id: "compliment",
-    label: "Compliment",
-    time: "17:30",
-    message:
-      "Excellent work today. Keep up the good effort—you are doing great!"
-  },
+        <h2>✏️ Edit Health Reminder</h2>
 
-  {
-    id: "run",
-    label: "Run",
-    time: "18:30",
-    message:
-      "Evening run or brisk walk will help keep you energetic and healthy."
-  }
-];
+        <div id="healthReminderRadioList"></div>
+
+        <button
+            type="button"
+            class="healthEditSelectedBtn"
+            onclick="editSelectedHealthReminder()">
+            ✏️ Edit Selected Reminder
+        </button>
+
+        <button
+            type="button"
+            onclick="closeHealthReminderEditor()">
+            Close
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- HEALTH REMINDER JAVASCRIPT -->
+<script src="health-reminder.js"></script>
+
+</body>
+</html>
