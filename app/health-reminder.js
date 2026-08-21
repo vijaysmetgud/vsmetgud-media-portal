@@ -358,98 +358,62 @@ function updateNotificationStatus() {
 
 function openHealthEditModal(reminderId) {
 
-  const reminder =
-    healthTipSchedule.find(
-      tip => tip.id === reminderId
-    );
+    const reminder =
+        healthTipSchedule.find(
+            tip => tip.id === reminderId
+        );
 
+    if (!reminder) {
+        alert("Health reminder not found.");
+        return;
+    }
 
-  if (!reminder) {
+    const editModal =
+        document.getElementById("healthEditModal");
 
-    alert(
-      "Health reminder not found."
-    );
+    const editId =
+        document.getElementById("healthEditId");
 
-    return;
-  }
+    const editLabel =
+        document.getElementById("healthEditLabel");
 
+    const editTime =
+        document.getElementById("healthEditTime");
 
-  const editModal =
-    document.getElementById(
-      "healthEditModal"
-    );
+    const editMessage =
+        document.getElementById("healthEditMessage");
 
-  const editId =
-    document.getElementById(
-      "healthEditId"
-    );
+    if (
+        !editModal ||
+        !editId ||
+        !editLabel ||
+        !editTime ||
+        !editMessage
+    ) {
+        console.error(
+            "Health reminder edit modal elements are missing."
+        );
 
-  const editType =
-    document.getElementById(
-      "healthEditType"
-    );
+        alert(
+            "Edit form is not configured correctly."
+        );
 
-  const editLabel =
-    document.getElementById(
-      "healthEditLabel"
-    );
+        return;
+    }
 
-  const editTime =
-    document.getElementById(
-      "healthEditTime"
-    );
+    editId.value =
+        reminder.id;
 
-  const editMessage =
-    document.getElementById(
-      "healthEditMessage"
-    );
+    editLabel.value =
+        reminder.label;
 
+    editTime.value =
+        reminder.time;
 
-  if (
-    !editModal ||
-    !editId ||
-    !editType ||
-    !editLabel ||
-    !editTime ||
-    !editMessage
-  ) {
+    editMessage.value =
+        reminder.message;
 
-    console.error(
-      "Health reminder edit modal elements are missing."
-    );
-
-    alert(
-      "Edit form is not configured correctly."
-    );
-
-    return;
-  }
-
-
-  editId.value =
-    reminder.id;
-
-
-  editType.value =
-    reminder.id;
-
-
-  editLabel.value =
-    reminder.label;
-
-
-  editTime.value =
-    reminder.time;
-
-
-  editMessage.value =
-    reminder.message;
-
-
-  editModal.classList.add(
-    "active"
-  );
-
+    editModal.classList.add("active");
 }
 
 function closeHealthReminderEditor() {
@@ -509,156 +473,122 @@ function closeHealthEditModal() {
 
 function saveHealthReminder() {
 
-  const originalId =
-    document.getElementById(
-      "healthEditId"
-    ).value;
+    const originalId =
+        document.getElementById(
+            "healthEditId"
+        ).value;
+
+    const label =
+        document.getElementById(
+            "healthEditLabel"
+        ).value.trim();
+
+    const time =
+        document.getElementById(
+            "healthEditTime"
+        ).value;
+
+    const message =
+        document.getElementById(
+            "healthEditMessage"
+        ).value.trim();
 
 
-  const newId =
-    document.getElementById(
-      "healthEditType"
-    ).value;
+    // -------------------------------------------------------
+    // VALIDATION
+    // -------------------------------------------------------
+
+    if (!label) {
+
+        alert(
+            "Please enter a reminder name."
+        );
+
+        return;
+    }
 
 
-  const label =
-    document.getElementById(
-      "healthEditLabel"
-    ).value.trim();
+    if (!time) {
+
+        alert(
+            "Please select a reminder time."
+        );
+
+        return;
+    }
 
 
-  const time =
-    document.getElementById(
-      "healthEditTime"
-    ).value;
+    if (!message) {
+
+        alert(
+            "Please enter a reminder message."
+        );
+
+        return;
+    }
 
 
-  const message =
-    document.getElementById(
-      "healthEditMessage"
-    ).value.trim();
+    // -------------------------------------------------------
+    // FIND ORIGINAL REMINDER
+    // -------------------------------------------------------
+
+    const reminder =
+        healthTipSchedule.find(
+            tip => tip.id === originalId
+        );
 
 
-  // -------------------------------------------------------
-  // VALIDATION
-  // -------------------------------------------------------
+    if (!reminder) {
 
-  if (!label) {
+        alert(
+            "Unable to find the selected reminder."
+        );
+
+        return;
+    }
+
+
+    // -------------------------------------------------------
+    // UPDATE ONLY EDITABLE FIELDS
+    // -------------------------------------------------------
+
+    reminder.label =
+        label;
+
+    reminder.time =
+        time;
+
+    reminder.message =
+        message;
+
+
+    // -------------------------------------------------------
+    // SAVE TO LOCAL STORAGE
+    // -------------------------------------------------------
+
+    saveHealthReminders();
+
+
+    // -------------------------------------------------------
+    // REFRESH DISPLAY
+    // -------------------------------------------------------
+
+    renderHealthTips();
+
+    renderHealthReminderRadioButtons();
+
+
+    // -------------------------------------------------------
+    // CLOSE MODAL
+    // -------------------------------------------------------
+
+    closeHealthEditModal();
+
 
     alert(
-      "Please enter a reminder name."
+        "Health reminder updated successfully."
     );
-
-    return;
-  }
-
-
-  if (!time) {
-
-    alert(
-      "Please select a reminder time."
-    );
-
-    return;
-  }
-
-
-  if (!message) {
-
-    alert(
-      "Please enter a reminder message."
-    );
-
-    return;
-  }
-
-
-  const reminder =
-    healthTipSchedule.find(
-      tip => tip.id === originalId
-    );
-
-
-  if (!reminder) {
-
-    alert(
-      "Unable to find the selected reminder."
-    );
-
-    return;
-  }
-
-
-  // -------------------------------------------------------
-  // PREVENT DUPLICATE REMINDER TYPES
-  // -------------------------------------------------------
-
-  if (
-    newId !== originalId &&
-    healthTipSchedule.some(
-      tip =>
-        tip !== reminder &&
-        tip.id === newId
-    )
-  ) {
-
-    alert(
-      "A reminder with this type already exists. Please choose another type."
-    );
-
-    return;
-  }
-
-
-  // -------------------------------------------------------
-  // UPDATE REMINDER
-  // -------------------------------------------------------
-
-  reminder.id =
-    newId;
-
-  reminder.label =
-    label;
-
-  reminder.time =
-    time;
-
-  reminder.message =
-    message;
-
-
-  // -------------------------------------------------------
-  // SAVE TO LOCAL STORAGE
-  // -------------------------------------------------------
-
-  saveHealthReminders();
-
-
-  // -------------------------------------------------------
-  // REFRESH DISPLAY
-  // -------------------------------------------------------
-
-  renderHealthTips();
-  
-  // -------------------------------------------------------
-  // HEALTH REMINDER RADIO BUTTONS
-  // -------------------------------------------------------  
-
-  renderHealthReminderRadioButtons();
-
-  // -------------------------------------------------------
-  // CLOSE MODAL
-  // -------------------------------------------------------
-
-  closeHealthEditModal();
-
-
-  alert(
-    "Health reminder updated successfully."
-  );
-
 }
-
 
 // =========================================================
 // SAVE HEALTH REMINDERS

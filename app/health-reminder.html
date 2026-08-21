@@ -41,6 +41,80 @@
 
 </div>
 
+<!-- =========================================================
+     HEALTH REMINDER EDIT MODAL
+     ========================================================= -->
+
+<div
+    id="healthEditModal"
+    class="health-edit-modal">
+
+    <div class="health-edit-modal-content">
+
+        <h2>✏️ Edit Health Reminder</h2>
+
+        <!-- Original reminder ID -->
+        <input
+            type="hidden"
+            id="healthEditId"
+        >
+
+        <!-- Reminder Name -->
+        <label for="healthEditLabel">
+            Reminder Name
+        </label>
+
+        <input
+            type="text"
+            id="healthEditLabel"
+            placeholder="Reminder name"
+        >
+
+
+        <!-- Reminder Time -->
+        <label for="healthEditTime">
+            Reminder Time
+        </label>
+
+        <input
+            type="time"
+            id="healthEditTime"
+        >
+
+
+        <!-- Reminder Message -->
+        <label for="healthEditMessage">
+            Reminder Message
+        </label>
+
+        <textarea
+            id="healthEditMessage"
+            rows="4"
+            placeholder="Reminder message">
+        </textarea>
+
+
+        <!-- Buttons -->
+        <div class="health-edit-modal-buttons">
+
+            <button
+                type="button"
+                onclick="saveHealthReminder()">
+                💾 Save Changes
+            </button>
+
+            <button
+                type="button"
+                onclick="closeHealthEditModal()">
+                Cancel
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
 
 <!-- HEALTH REMINDER JAVASCRIPT -->
 <script src="health-reminder.js"></script>
