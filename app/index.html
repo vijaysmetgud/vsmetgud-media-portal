@@ -4216,18 +4216,32 @@ async function openMediaWindow(file,type){
 
 /* ================= OPEN FILE ================= */
 
-async function openFile(file){
+async function openFile(file) {
 
-    if(!file){
-
+    if (!file) {
         speak("File not found");
-
         return;
     }
 
-    // if (!(await canAccessMedia(file, 'view'))) {
-    //     return;
-    // }
+    // Check media access before opening anything
+    const paywallEnabled =
+        await getMediaPaywallEnabled();
+
+    if (paywallEnabled && !isAdminUser()) {
+
+        const access =
+            await isMediaAccessValid();
+
+        if (!access) {
+
+            showMediaPaywallModal(
+                file,
+                "view"
+            );
+
+            return;
+        }
+    }
 
     const lower =
         file.toLowerCase();
