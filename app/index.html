@@ -1814,7 +1814,7 @@ function updateUserProfile(user) {
 const localUsers = [
     {
         username: 'Vijay',
-        password: 'vijay@1234',
+        password: 'victory#123',
         name: 'Admin User',
         email: 'admin@example.com',
         picture: 'https://www.gravatar.com/avatar/?d=identicon'       
@@ -1961,7 +1961,7 @@ async function loginUser(user) {
     loadFiles();
 }
 
-function loginWithPassword(event) {
+async function loginWithPassword(event) {
     event.preventDefault();
 
     const username =
@@ -1973,48 +1973,48 @@ function loginWithPassword(event) {
     const error =
         document.getElementById('loginError');
 
-    if (!username) {
-        error.innerText = 'Please enter your name.';
+    if (!username || !password) {
+        error.innerText = 'Username and password are required.';
         return;
     }
 
-    if (!password) {
-        error.innerText = 'Please enter a password.';
-        return;
-    }
+    try {
 
-    // ADMIN LOGIN
-    // Username must be exactly Vijay
-    // Password must be exactly vijay@1234
-    if (username === 'Vijay') {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                username,
+                password
+            })
+        });
 
-        if (password !== 'vijay@1234') {
-            error.innerText = 'Invalid Admin password.';
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            error.innerText =
+                result.error || 'Invalid username or password.';
             return;
         }
 
-        const user = {
-            username: 'Vijay',
-            name: 'Vijay',
-            email: 'admin@portal.local',
-            authMethod: 'local',
-            role: 'admin'
-        };
+        /*
+         * IMPORTANT:
+         * The server is now the source of truth.
+         * Do not validate the Admin password here.
+         */
 
-        loginUser(user);
-        return;
+        await loginUser(result.user);
+
+    } catch (err) {
+
+        console.error('Login error:', err);
+
+        error.innerText =
+            'Unable to connect to the server.';
     }
-
-    // ALL OTHER USERS
-    const user = {
-        username: username,
-        name: username,
-        email: `${username}@portal.local`,
-        authMethod: 'local',
-        role: 'visitor'
-    };
-
-    loginUser(user);
 }
 
 function isAdminUser() {
@@ -2023,15 +2023,38 @@ function isAdminUser() {
            currentUser.role === 'admin';
 }
 
-function getMediaPaywallEnabled() {
-    const value = localStorage.getItem('portalMediaPaywallEnabled');
+async function getMediaPaywallEnabled() {
+    try {
+        const response = await fetch('/api/media-paywall', {
+            method: 'GET',
+            credentials: 'include',
+            cache: 'no-store'
+        });
 
-    // On a new device, QR/payment protection is ON by default.
-    if (value === null) {
+        if (!response.ok) {
+            console.error(
+                'Unable to read media paywall setting:',
+                response.status
+            );
+
+            // Safe default: keep protection enabled
+            return true;
+        }
+
+        const result = await response.json();
+
+        return result.enabled === true;
+
+    } catch (error) {
+
+        console.error(
+            'Media paywall setting check failed:',
+            error
+        );
+
+        // Safe default
         return true;
     }
-
-    return value === 'true';
 }
 
 // function getMediaPaymentRecord() {
@@ -2043,74 +2066,279 @@ function getMediaPaywallEnabled() {
 //     }
 // }
 
-function isMediaAccessValid() {
+async function isMediaAccessValid() {
 
-    // Admin always has access.
-    if (isAdminUser()) {
-        return true;
-    }
+    try {
 
-    // QR/payment protection is OFF.
-    // Everyone can access media.
-    if (!getMediaPaywallEnabled()) {
-        return true;
-    }
+        const response = await fetch(
+            '/api/media-access',
+            {
+                method: 'GET',
+                credentials: 'include',
+                cache: 'no-store'
+            }
+        );
 
-    // Non-admin requires approved payment/access.
-    return false;
-}
+        if (response.ok) {
 
-function setMediaPaywallEnabled(enabled) {
-    localStorage.setItem(
-        'portalMediaPaywallEnabled',
-        String(enabled)
-    );
+            const result =
+                await response.json();
 
-    const toggle =
-        document.getElementById('mediaPaywallToggle');
+            return result.success === true &&
+                   result.allowed === true;
+        }
 
-    if (toggle) {
-        toggle.checked = enabled;
-    }
+        if (response.status === 403) {
+            return false;
+        }
 
-    const status =
-        document.getElementById('mediaPaywallStatus');
+        return false;
 
-    if (status) {
-        status.innerText = enabled
-            ? 'Media payment option is enabled. External visitors must scan and pay ₹10 before media access.'
-            : 'Media payment option is disabled. Media access is currently open to all visitors.';
-    }
+    } catch (error) {
 
-    const badge =
-        document.getElementById('mediaPaymentStatusBadge');
+        console.error(
+            'Media access check failed:',
+            error
+        );
 
-    if (badge) {
-        badge.style.display =
-            isAdminUser() ? 'inline-flex' : 'none';
-
-        badge.innerText =
-            enabled ? 'Payment ON' : 'Payment OFF';
+        return false;
     }
 }
 
-function syncMediaPaywallUi() {
-    const toggle = document.getElementById('mediaPaywallToggle');
-    if (toggle) toggle.checked = getMediaPaywallEnabled();
-    setMediaPaywallEnabled(getMediaPaywallEnabled());
+async function setMediaPaywallEnabled(enabled) {
+
+    try {
+
+        const response =
+            await fetch(
+                '/api/media-paywall',
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    credentials: 'include',
+
+                    body: JSON.stringify({
+                        enabled: !!enabled
+                    })
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok ||
+            !result.success) {
+
+            throw new Error(
+                result.error ||
+                'Unable to save media paywall setting'
+            );
+        }
+
+
+        // Update UI only after server accepts it
+
+        const toggle =
+            document.getElementById(
+                'mediaPaywallToggle'
+            );
+
+        if (toggle) {
+            toggle.checked =
+                result.enabled === true;
+        }
+
+
+        const status =
+            document.getElementById(
+                'mediaPaywallStatus'
+            );
+
+        if (status) {
+
+            status.innerText =
+                result.enabled === true
+                    ? 'Media payment option is enabled. External visitors must scan and pay ₹10 before media access.'
+                    : 'Media payment option is disabled. Media access is currently open to all visitors.';
+        }
+
+
+        const badge =
+            document.getElementById(
+                'mediaPaymentStatusBadge'
+            );
+
+        if (badge) {
+
+            badge.style.display =
+                isAdminUser()
+                    ? 'inline-flex'
+                    : 'none';
+
+            badge.innerText =
+                result.enabled === true
+                    ? 'Payment ON'
+                    : 'Payment OFF';
+        }
+
+
+        return result.enabled === true;
+
+    } catch (error) {
+
+        console.error(
+            'Unable to save media paywall:',
+            error
+        );
+
+        const status =
+            document.getElementById(
+                'mediaPaywallStatus'
+            );
+
+        if (status) {
+            status.innerText =
+                error.message ||
+                'Unable to save media payment setting.';
+        }
+
+        return false;
+    }
 }
 
-function saveMediaPaywallSetting() {
+async function syncMediaPaywallUi() {
+
     if (!isAdminUser()) {
-        const status = document.getElementById('mediaPaywallStatus');
-        if (status) status.innerText = 'Admin access required to enable or disable media payment.';
         return;
     }
 
-    const toggle = document.getElementById('mediaPaywallToggle');
-    const enabled = !!(toggle && toggle.checked);
-    setMediaPaywallEnabled(enabled);
-    speak(enabled ? 'Media payment option enabled' : 'Media payment option disabled');
+    try {
+
+        const response = await fetch(
+            '/api/media-paywall',
+            {
+                method: 'GET',
+                credentials: 'include',
+                cache: 'no-store'
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
+
+        const result =
+            await response.json();
+
+        const enabled =
+            result.enabled === true;
+
+
+        // Update admin checkbox
+        const toggle =
+            document.getElementById(
+                'mediaPaywallToggle'
+            );
+
+        if (toggle) {
+            toggle.checked = enabled;
+        }
+
+
+        // Update status
+        const status =
+            document.getElementById(
+                'mediaPaywallStatus'
+            );
+
+        if (status) {
+
+            status.innerText =
+                enabled
+                    ? 'Media payment option is enabled. External visitors must scan and pay ₹10 before media access.'
+                    : 'Media payment option is disabled. Media access is currently open to all visitors.';
+        }
+
+
+        // Update badge
+        const badge =
+            document.getElementById(
+                'mediaPaymentStatusBadge'
+            );
+
+        if (badge) {
+
+            badge.style.display =
+                'inline-flex';
+
+            badge.innerText =
+                enabled
+                    ? 'Payment ON'
+                    : 'Payment OFF';
+        }
+
+    } catch (error) {
+
+        console.error(
+            'Unable to synchronize media paywall:',
+            error
+        );
+    }
+}
+
+async function saveMediaPaywallSetting() {
+
+    if (!isAdminUser()) {
+
+        const status =
+            document.getElementById(
+                'mediaPaywallStatus'
+            );
+
+        if (status) {
+            status.innerText =
+                'Admin access required to enable or disable media payment.';
+        }
+
+        return;
+    }
+
+
+    const toggle =
+        document.getElementById(
+            'mediaPaywallToggle'
+        );
+
+    const enabled =
+        !!(
+            toggle &&
+            toggle.checked
+        );
+
+
+    const saved =
+        await setMediaPaywallEnabled(
+            enabled
+        );
+
+
+    if (saved) {
+
+        speak(
+            enabled
+                ? 'Media payment option enabled'
+                : 'Media payment option disabled'
+        );
+    }
 }
 
 async function loadMediaPaymentTransactions() {
@@ -2385,26 +2613,52 @@ async function confirmMediaPayment(fileName, actionName) {
     }
 }
 
-function canAccessMedia(fileName, action = 'view') {
 
-    // Admin always gets direct access.
+async function canAccessMedia(fileName, action = 'view') {
+
+    // =========================================
+    // ADMIN ALWAYS ALLOWED
+    // =========================================
+
     if (isAdminUser()) {
         return true;
     }
 
-    // QR/payment protection is OFF.
-    if (!getMediaPaywallEnabled()) {
+
+    // =========================================
+    // GET GLOBAL SERVER PAYWALL SETTING
+    // =========================================
+
+    const paywallEnabled =
+        await getMediaPaywallEnabled();
+
+
+    // =========================================
+    // QR / PAYMENT PROTECTION OFF
+    // =========================================
+
+    if (!paywallEnabled) {
         return true;
     }
 
-    // Non-admin has valid payment/access.
-    if (isMediaAccessValid()) {
+
+    // =========================================
+    // QR ON → CHECK SERVER PAYMENT ACCESS
+    // =========================================
+
+    if (await isMediaAccessValid()) {
         return true;
     }
 
-    // QR/payment protection is ON and
-    // visitor has no approved access.
-    showMediaPaywallModal(fileName, action);
+
+    // =========================================
+    // NOT APPROVED → SHOW QR
+    // =========================================
+
+    showMediaPaywallModal(
+        fileName,
+        action
+    );
 
     return false;
 }
@@ -2420,45 +2674,58 @@ async function publishAdminMedia() {
     const status = document.getElementById('adminUploadStatus');
 
     if (!isAdminUser()) {
-        if (status) status.innerText = 'Admin access required.';
+        if (status) {
+            status.innerText = 'Admin access required.';
+        }
         return;
     }
 
     if (!input || !input.files || input.files.length === 0) {
-        if (status) status.innerText = 'Please choose at least one file.';
+        if (status) {
+            status.innerText = 'Please choose at least one file.';
+        }
         return;
     }
 
     const formData = new FormData();
-    Array.from(input.files).forEach(file => formData.append('files', file));
 
-    const token = btoa('Vijay:Yajiv');
+    Array.from(input.files).forEach(file => {
+        formData.append('files', file);
+    });
 
     try {
         status.innerText = 'Publishing files...';
 
         const response = await fetch('/api/upload-media', {
             method: 'POST',
-            headers: {
-                'x-admin-user': 'Vijay',
-                'x-admin-token': token
-            },
+            credentials: 'include',
             body: formData
         });
 
         const result = await response.json();
 
         if (!response.ok || !result.success) {
-            throw new Error(result.error || 'Upload failed');
+            throw new Error(
+                result.error || 'Upload failed'
+            );
         }
 
-        status.innerText = `Published ${result.count} file(s) successfully.`;
+        status.innerText =
+            `Published ${result.count} file(s) successfully.`;
+
         input.value = '';
+
         await loadFiles();
+
         speak('Media published successfully');
+
     } catch (error) {
+
         console.error(error);
-        status.innerText = error.message || 'Unable to publish file(s).';
+
+        status.innerText =
+            error.message ||
+            'Unable to publish file(s).';
     }
 }
 
@@ -2489,7 +2756,9 @@ function showMainContent() {
     }
 
     if (isAdminUser()) {
+
         syncMediaPaywallUi();
+
         loadPortalActivityReport();
     }
 }
@@ -2831,11 +3100,15 @@ function renderFiles(files){
             <button
                 onclick="
                     event.stopPropagation();
-                    if (!canAccessMedia('${file.replace(/'/g, "\\'")}', 'open/download')) return;
-                    window.open(
-                        '/media/${encodeURIComponent(file)}',
-                        '_blank'
-                    );
+                    // if (!canAccessMedia('${file.replace(/'/g, "\\'")}', 'open/download')) return;
+                    canAccessMedia('${file.replace(/'/g, "\\'")}', 'open/download').then(allowed => {
+                        if (!allowed) return;
+
+                        window.open(
+                            '/media/${encodeURIComponent(file)}',
+                            '_blank'
+                        );
+                    });                    
                 "
                 style="
                     padding:6px 12px;
@@ -2849,15 +3122,17 @@ function renderFiles(files){
                 Open In New Tab
             </button>
         `;
-        card.onclick = () => {
-            if (!canAccessMedia(file, 'view')) return;
+
+        card.onclick = async () => {
+            if (!(await canAccessMedia(file, 'view'))) return;
             openFile(file);
         };
 
         /* DOUBLE CLICK = NEW TAB */
 
-        card.ondblclick = () => {
-            if (!canAccessMedia(file, 'open/download')) return;
+        card.ondblclick = async () => {
+            if (!(await canAccessMedia(file, 'open/download'))) return;
+
             window.open(
                 "/media/" +
                 encodeURIComponent(file),
@@ -3096,14 +3371,14 @@ function renderCategoryFiles(files) {
         const button =
             card.querySelector("button");
 
-        button.onclick = function(event) {
+        button.onclick = async function(event) {    
 
             event.stopPropagation();
 
-            if (!canAccessMedia(
+            if (!(await canAccessMedia(
                 file,
                 "open/download"
-            )) {
+            ))) { 
                 return;
             }
 
@@ -3114,21 +3389,21 @@ function renderCategoryFiles(files) {
             );
         };
 
-        card.onclick = function() {
-
-            if (!canAccessMedia(file, "view")) {
+        card.onclick = async function() {   
+            
+            if (!(await canAccessMedia(file, "view"))) {
                 return;
             }
 
             openFile(file);
         };
 
-        card.ondblclick = function() {
+        card.ondblclick = async function() {    
 
-            if (!canAccessMedia(
+            if (!(await canAccessMedia(
                 file,
                 "open/download"
-            )) {
+            ))) { 
                 return;
             }
 
@@ -3694,9 +3969,14 @@ function handleChatQuery(query){
 
 /* ================= MEDIA WINDOW ================= */
 
-function openMediaWindow(file,type){
+async function openMediaWindow(file,type){    
 
-    if (!canAccessMedia(file, type === 'video' ? 'watch video' : 'listen audio')) {
+    if (!(await canAccessMedia(
+        file,
+        type === 'video'
+            ? 'watch video'
+            : 'listen audio'
+    ))) {
         return;
     }
 
@@ -3849,7 +4129,7 @@ function openMediaWindow(file,type){
 
 /* ================= OPEN FILE ================= */
 
-function openFile(file){
+async function openFile(file){
 
     if(!file){
 
@@ -3858,7 +4138,7 @@ function openFile(file){
         return;
     }
 
-    if (!canAccessMedia(file, 'view')) {
+    if (!(await canAccessMedia(file, 'view'))) {
         return;
     }
 

@@ -70,35 +70,60 @@ const healthTipSchedule = [
 
 ];
 
-const savedHealthTipSchedule =
-    localStorage.getItem("healthTipSchedule");
+// =========================================================
+// LOAD HEALTH REMINDERS FROM SERVER
+// =========================================================
 
-if (savedHealthTipSchedule) {
+async function loadHealthReminders() {
 
     try {
 
-        const savedSchedule =
-            JSON.parse(savedHealthTipSchedule);
+        const response =
+            await fetch(
+                '/api/health-reminders',
+                {
+                    method: 'GET',
+                    credentials: 'include',
+                    cache: 'no-store'
+                }
+            );
 
-        if (Array.isArray(savedSchedule)) {
-
-            healthTipSchedule.length = 0;
-
-            healthTipSchedule.push(
-                ...savedSchedule
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`
             );
         }
+
+        const result =
+            await response.json();
+
+        if (!result.success) {
+            throw new Error(
+                result.error ||
+                'Unable to load health reminders'
+            );
+        }
+
+        healthTipSchedule.length = 0;
+
+        if (Array.isArray(result.schedule)) {
+
+            healthTipSchedule.push(
+                ...result.schedule
+            );
+        }
+
+        window.healthReminderEnabled =
+            result.enabled === true;
 
     } catch (error) {
 
         console.error(
-            "Unable to load saved health reminders:",
+            'Unable to load health reminders:',
             error
         );
-
     }
 }
-
 // =========================================================
 // RADIO FILTER
 // =========================================================
@@ -303,13 +328,7 @@ async function enableHealthNotifications() {
     updateNotificationStatus();
 
 
-    if (permission === "granted") {
-
-      localStorage.setItem(
-        "healthNotificationsEnabled",
-        "true"
-      );
-
+    if (permission === "granted") {     
 
       new Notification(
         "💚 Health Reminders Enabled",
@@ -499,7 +518,7 @@ function closeHealthEditModal() {
 // SAVE HEALTH REMINDER
 // =========================================================
 
-function saveHealthReminder() {
+async function saveHealthReminder() {
 
     const originalId =
         document.getElementById(
@@ -591,11 +610,10 @@ function saveHealthReminder() {
 
 
     // -------------------------------------------------------
-    // SAVE TO LOCAL STORAGE
+    // SAVE TO SERVER
     // -------------------------------------------------------
 
-    saveHealthReminders();
-
+    await saveHealthReminders();
 
     // -------------------------------------------------------
     // REFRESH DISPLAY
@@ -621,112 +639,66 @@ function saveHealthReminder() {
 // =========================================================
 // SAVE HEALTH REMINDERS
 // =========================================================
+async function saveHealthReminders() {
 
-function saveHealthReminders() {
+    try {
 
-  try {
+        const response =
+            await fetch(
+                '/api/health-reminders',
+                {
+                    method: 'POST',
 
-    localStorage.setItem(
-      "healthTipSchedule",
-      JSON.stringify(
-        healthTipSchedule
-      )
-    );
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
 
-  } catch (error) {
+                    credentials: 'include',
 
-    console.error(
-      "Unable to save health reminders:",
-      error
-    );
+                    body: JSON.stringify({
 
-  }
+                        enabled:
+                            window.healthReminderEnabled !== false,
 
+                        schedule:
+                            healthTipSchedule
+
+                    })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !result.success
+        ) {
+
+            throw new Error(
+                result.error ||
+                'Unable to save health reminders'
+            );
+        }
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            'Unable to save health reminders:',
+            error
+        );
+
+        alert(
+            error.message ||
+            'Unable to save health reminders.'
+        );
+
+        return false;
+    }
 }
-
-
-// =========================================================
-// LOAD HEALTH REMINDERS
-// =========================================================
-
-function loadHealthReminders() {
-
-  try {
-
-    const saved =
-      localStorage.getItem(
-        "healthTipSchedule"
-      );
-
-
-    if (!saved) {
-      return;
-    }
-
-
-    const parsed =
-      JSON.parse(saved);
-
-
-    if (!Array.isArray(parsed)) {
-      return;
-    }
-
-
-    const validReminders =
-      parsed.filter(
-        tip =>
-          tip &&
-          typeof tip.id === "string" &&
-          typeof tip.label === "string" &&
-          typeof tip.time === "string" &&
-          typeof tip.message === "string"
-      );
-
-
-    if (!validReminders.length) {
-      return;
-    }
-
-
-    healthTipSchedule.length =
-      0;
-
-
-    validReminders.forEach(
-      tip => {
-
-        healthTipSchedule.push({
-
-          id:
-            tip.id,
-
-          label:
-            tip.label,
-
-          time:
-            tip.time,
-
-          message:
-            tip.message
-
-        });
-
-      }
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Unable to load health reminders:",
-      error
-    );
-
-  }
-
-}
-
 
 // =========================================================
 // ALARM SOUND
@@ -1079,12 +1051,16 @@ function startHealthReminderChecker() {
 // Then start notification/alarm checking.
 // =========================================================
 
-loadHealthReminders();
+(async function initializeHealthReminders() {
 
-renderHealthTips();
+    await loadHealthReminders();
 
-renderHealthReminderRadioButtons();
+    renderHealthTips();
 
-updateNotificationStatus();
+    renderHealthReminderRadioButtons();
 
-startHealthReminderChecker();
+    updateNotificationStatus();
+
+    startHealthReminderChecker();
+
+})();

@@ -1,4 +1,5 @@
 const express = require('express');
+const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
@@ -8,7 +9,7 @@ const Database = require('better-sqlite3');
 const app = express();
 const PORT = process.env.PORT || 8080;
 const ADMIN_USERNAME = 'Vijay';
-const ADMIN_PASSWORD = 'Yajiv';
+const ADMIN_PASSWORD = 'victory#123';
 
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'visitors.db');
@@ -114,7 +115,120 @@ db.prepare(`
   )
 `).run();
 
+// ============================================================
+// GLOBAL PORTAL SETTINGS
+// ============================================================
+
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS portal_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  )
+`).run();
+
+db.prepare(`
+  INSERT OR IGNORE INTO portal_settings
+  (key, value)
+  VALUES
+  ('media_paywall_enabled', 'true')
+`).run();
+
 app.use(express.json());
+app.use(
+    session({
+        secret:
+            process.env.SESSION_SECRET ||
+            'change-this-session-secret',
+
+        resave: false,
+
+        saveUninitialized: false,
+
+        cookie: {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            maxAge:
+                24 * 60 * 60 * 1000
+        }
+    })
+);
+
+db.prepare(`
+  INSERT OR IGNORE INTO portal_settings
+  (key, value)
+  VALUES (?, ?)
+`).run(
+  'health_reminder_enabled',
+  'true'
+);
+
+db.prepare(`
+  INSERT OR IGNORE INTO portal_settings
+  (key, value)
+  VALUES (?, ?)
+`).run(
+  'health_reminder_schedule',
+  JSON.stringify([
+    {
+      id: "walk",
+      label: "Walk",
+      time: "09:15",
+      message:
+        "Walk for 10 minutes now to refresh your energy and improve focus."
+    },
+    {
+      id: "sitting",
+      label: "Prolonged Sitting",
+      time: "11:00",
+      message:
+        "You have been sitting for long. Stand up, stretch your legs, and walk for 2 minutes."
+    },
+    {
+      id: "exercise",
+      label: "Exercise",
+      time: "12:30",
+      message:
+        "Do a light exercise or stretch break to keep your body active."
+    },
+    {
+      id: "lunch",
+      label: "Lunch Break",
+      time: "13:00",
+      message:
+        "It is lunch break time. Eat mindfully and take a short rest."
+    },
+    {
+      id: "tea",
+      label: "Tea Break",
+      time: "15:00",
+      message:
+        "Tea break time: stand up, hydrate, and take a short reset."
+    },
+    {
+      id: "compliment",
+      label: "Compliment",
+      time: "17:30",
+      message:
+        "Excellent work today. Keep up the good effort—you are doing great!"
+    },
+    {
+      id: "office",
+      label: "Office Leaving Time",
+      time: "18:00",
+      message:
+        "Office leaving time. Wrap up your work and finish your day calmly."
+    },
+    {
+      id: "run",
+      label: "Run",
+      time: "18:30",
+      message:
+        "Evening run or brisk walk will help keep you energetic and healthy."
+    }
+  ])
+);
+
 app.set('trust proxy', true);
 app.use('/bank-qr', express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'app')));
@@ -135,14 +249,761 @@ const upload = multer({
   })
 });
 
-app.use('/media', express.static(MEDIA_DIR));
+// app.use('/media', express.static(MEDIA_DIR));
 
-function isValidAdminRequest(req) {
-  const username = String(req.headers['x-admin-user'] || '');
-  const token = String(req.headers['x-admin-token'] || '');
-  const expectedToken = Buffer.from(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}`).toString('base64');
-  return username === ADMIN_USERNAME && token === expectedToken;
+// ============================================================
+// PROTECTED MEDIA
+// ============================================================
+
+app.use(
+  '/media',
+  (req, res) => {
+
+    const access =
+      authorizeMediaAccess(req);
+
+
+    if (!access.allowed) {
+
+      return res.status(403).json({
+
+        success: false,
+
+        error:
+          access.reason ||
+          'Media access denied'
+      });
+    }
+
+
+    try {
+
+      const relativePath =
+        decodeURIComponent(
+          req.path.replace(
+            /^\/+/,
+            ''
+          )
+        );
+
+
+      const filePath =
+        path.normalize(
+          path.join(
+            MEDIA_DIR,
+            relativePath
+          )
+        );
+
+
+      // Prevent ../ path traversal
+      if (
+        !filePath.startsWith(
+          MEDIA_DIR + path.sep
+        )
+      ) {
+
+        return res.status(403).send(
+          'Access denied'
+        );
+      }
+
+
+      if (
+        !fs.existsSync(filePath)
+      ) {
+
+        return res.status(404).send(
+          'File not found'
+        );
+      }
+
+
+      if (
+        !fs.statSync(filePath).isFile()
+      ) {
+
+        return res.status(404).send(
+          'File not found'
+        );
+      }
+
+
+      return res.sendFile(
+        filePath
+      );
+
+
+    } catch (err) {
+
+      console.error(
+        'Protected media error:',
+        err
+      );
+
+
+      return res.status(500).send(
+        'Unable to serve media'
+      );
+    }
+  }
+);
+
+// function isValidAdminRequest(req) {
+//   const username = String(req.headers['x-admin-user'] || '');
+//   const token = String(req.headers['x-admin-token'] || '');
+//   const expectedToken = Buffer.from(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}`).toString('base64');
+//   return username === ADMIN_USERNAME && token === expectedToken;
+// }
+
+// ============================================================
+// GLOBAL MEDIA PAYWALL HELPERS
+// ============================================================
+
+function getMediaPaywallEnabledServer() {
+
+  const row = db.prepare(`
+    SELECT value
+    FROM portal_settings
+    WHERE key = 'media_paywall_enabled'
+  `).get();
+
+  return row
+    ? row.value === 'true'
+    : true;
 }
+
+
+function setMediaPaywallEnabledServer(enabled) {
+
+  db.prepare(`
+    INSERT INTO portal_settings
+    (key, value)
+    VALUES
+    ('media_paywall_enabled', ?)
+
+    ON CONFLICT(key)
+    DO UPDATE SET
+      value = excluded.value
+  `).run(
+    enabled ? 'true' : 'false'
+  );
+
+  return enabled;
+}
+
+
+function hasApprovedMediaAccess(username) {
+
+  if (!username) {
+    return false;
+  }
+
+  const payment = db.prepare(`
+    SELECT id
+    FROM media_payment_transactions
+
+    WHERE username = ?
+      AND status = 'approved'
+      AND accessGranted = 1
+      AND validUntil IS NOT NULL
+      AND validUntil > ?
+
+    ORDER BY validUntil DESC
+
+    LIMIT 1
+  `).get(
+    username,
+    new Date().toISOString()
+  );
+
+  return !!payment;
+}
+
+function authorizeMediaAccess(req) {
+
+    // --------------------------------------------------------
+    // 1. ADMIN
+    // --------------------------------------------------------
+
+    if (
+        req.session &&
+        req.session.user &&
+        req.session.user.role === 'admin'
+    ) {
+
+        return {
+            allowed: true,
+            role: 'admin'
+        };
+    }
+
+
+    // --------------------------------------------------------
+    // 2. QR OFF
+    // --------------------------------------------------------
+
+    if (
+        !getMediaPaywallEnabledServer()
+    ) {
+
+        return {
+            allowed: true,
+            role: 'visitor'
+        };
+    }
+
+
+    // --------------------------------------------------------
+    // 3. QR ON
+    // --------------------------------------------------------
+
+    const user =
+        getAuthenticatedUser(req);
+
+
+    if (!user) {
+
+        return {
+            allowed: false,
+            status: 403,
+            reason:
+                'Login required'
+        };
+    }
+
+
+    // --------------------------------------------------------
+    // 4. APPROVED PAYMENT
+    // --------------------------------------------------------
+
+    if (
+        hasApprovedMediaAccess(
+            user.username
+        )
+    ) {
+
+        return {
+            allowed: true,
+            role: 'visitor'
+        };
+    }
+
+
+    // --------------------------------------------------------
+    // 5. NO APPROVED PAYMENT
+    // --------------------------------------------------------
+
+    return {
+        allowed: false,
+        status: 403,
+        reason:
+            'Media payment approval required'
+    };
+}
+// ============================================================
+// SERVER-SIDE LOGIN
+// ============================================================
+
+app.post('/api/login', (req, res) => {
+
+    try {
+
+        const username =
+            String(
+                req.body?.username || ''
+            ).trim();
+
+        const password =
+            String(
+                req.body?.password || ''
+            );
+
+
+        if (!username || !password) {
+
+            return res.status(400).json({
+                success: false,
+                error:
+                    'Username and password are required'
+            });
+        }
+
+
+        // ----------------------------------------------------
+        // ADMIN LOGIN
+        // ----------------------------------------------------
+
+        if (
+            username === ADMIN_USERNAME &&
+            password === ADMIN_PASSWORD
+        ) {
+
+            req.session.user = {
+                username: ADMIN_USERNAME,
+                name: 'Admin User',
+                email: 'admin@example.com',
+                role: 'admin'
+            };
+
+
+            return res.json({
+
+                success: true,
+
+                user: {
+                    username: ADMIN_USERNAME,
+                    name: 'Admin User',
+                    email: 'admin@example.com',
+                    role: 'admin'
+                }
+            });
+        }
+
+
+        // ----------------------------------------------------
+        // NORMAL USER / VISITOR
+        //
+        // Your existing portal allows other names to login.
+        // Keep that behavior for now.
+        // ----------------------------------------------------
+
+        req.session.user = {
+
+            username: username,
+
+            name: username,
+
+            email:
+                `${username}@visitor.local`,
+
+            role: 'visitor'
+        };
+
+
+        return res.json({
+
+            success: true,
+
+            user: {
+                username: username,
+                name: username,
+                email:
+                    `${username}@visitor.local`,
+                role: 'visitor'
+            }
+        });
+
+
+    } catch (err) {
+
+        console.error(
+            'Login error:',
+            err
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            error:
+                'Unable to process login'
+        });
+    }
+});
+
+// ============================================================
+// LOGOUT
+// ============================================================
+
+app.post('/api/logout', (req, res) => {
+
+    req.session.destroy(err => {
+
+        if (err) {
+
+            console.error(
+                'Logout error:',
+                err
+            );
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    'Unable to logout'
+            });
+        }
+
+
+        res.clearCookie(
+            'connect.sid'
+        );
+
+
+        res.json({
+            success: true
+        });
+    });
+});
+
+// ============================================================
+// GET AUTHENTICATED SESSION USER
+// ============================================================
+
+function getAuthenticatedUser(req) {
+
+    if (
+        !req.session ||
+        !req.session.user
+    ) {
+        return null;
+    }
+
+    return req.session.user;
+}
+
+// ============================================================
+// GLOBAL MEDIA PAYWALL - GET
+// ============================================================
+
+app.get(
+  '/api/media-paywall',
+  (req, res) => {
+
+    try {
+
+      res.json({
+        success: true,
+        enabled:
+          getMediaPaywallEnabledServer()
+      });
+
+    } catch (err) {
+
+      console.error(
+        'Media paywall GET error:',
+        err
+      );
+
+      res.status(500).json({
+        success: false,
+        error:
+          'Unable to read media payment setting'
+      });
+    }
+  }
+);
+
+
+// ============================================================
+// HEALTH REMINDER SETTINGS - GET
+// ============================================================
+
+app.get(
+  '/api/health-reminders',
+  (req, res) => {
+
+    try {
+
+      const enabledRow =
+        db.prepare(`
+          SELECT value
+          FROM portal_settings
+          WHERE key = ?
+        `).get(
+          'health_reminder_enabled'
+        );
+
+
+      const scheduleRow =
+        db.prepare(`
+          SELECT value
+          FROM portal_settings
+          WHERE key = ?
+        `).get(
+          'health_reminder_schedule'
+        );
+
+
+      let schedule = [];
+
+      if (
+        scheduleRow &&
+        scheduleRow.value
+      ) {
+
+        try {
+
+          schedule =
+            JSON.parse(
+              scheduleRow.value
+            );
+
+        } catch (error) {
+
+          console.error(
+            'Invalid health reminder schedule:',
+            error
+          );
+
+        }
+      }
+
+
+      return res.json({
+
+        success: true,
+
+        enabled:
+          enabledRow
+            ? enabledRow.value === 'true'
+            : true,
+
+        schedule
+
+      });
+
+
+    } catch (error) {
+
+      console.error(
+        'Health reminder GET error:',
+        error
+      );
+
+
+      return res.status(500).json({
+
+        success: false,
+
+        error:
+          'Unable to load health reminder settings'
+
+      });
+
+    }
+
+  }
+);
+
+// ============================================================
+// HEALTH REMINDER SETTINGS - ADMIN UPDATE
+// ============================================================
+
+app.post(
+  '/api/health-reminders',
+  (req, res) => {
+
+    try {
+
+      if (
+        !req.session ||
+        !req.session.user ||
+        req.session.user.role !== 'admin'
+      ) {
+
+        return res.status(403).json({
+
+          success: false,
+
+          error:
+            'Admin access required'
+
+        });
+
+      }
+
+
+      const enabled =
+        req.body &&
+        req.body.enabled === true;
+
+
+      const schedule =
+        req.body &&
+        req.body.schedule;
+
+
+      if (!Array.isArray(schedule)) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          error:
+            'Invalid health reminder schedule'
+
+        });
+
+      }
+
+
+      db.prepare(`
+        UPDATE portal_settings
+        SET value = ?
+        WHERE key = ?
+      `).run(
+        enabled
+          ? 'true'
+          : 'false',
+
+        'health_reminder_enabled'
+      );
+
+
+      db.prepare(`
+        UPDATE portal_settings
+        SET value = ?
+        WHERE key = ?
+      `).run(
+        JSON.stringify(schedule),
+
+        'health_reminder_schedule'
+      );
+
+
+      return res.json({
+
+        success: true,
+
+        enabled,
+
+        schedule
+
+      });
+
+
+    } catch (error) {
+
+      console.error(
+        'Health reminder update error:',
+        error
+      );
+
+
+      return res.status(500).json({
+
+        success: false,
+
+        error:
+          'Unable to save health reminder settings'
+
+      });
+
+    }
+
+  }
+);
+
+// ============================================================
+// CHECK CURRENT USER MEDIA ACCESS
+// ============================================================
+
+app.get(
+  '/api/media-access',
+  (req, res) => {
+
+    try {
+
+      const access =
+        authorizeMediaAccess(req);
+
+      if (!access.allowed) {
+
+        return res.status(403).json({
+
+          success: false,
+
+          allowed: false,
+
+          error:
+            access.reason ||
+            'Media access denied'
+        });
+      }
+
+      return res.json({
+
+        success: true,
+
+        allowed: true,
+
+        role:
+          access.role ||
+          'visitor'
+      });
+
+    } catch (err) {
+
+      console.error(
+        'Media access check error:',
+        err
+      );
+
+      return res.status(500).json({
+
+        success: false,
+
+        allowed: false,
+
+        error:
+          'Unable to verify media access'
+      });
+    }
+  }
+);
+
+// ============================================================
+// GLOBAL MEDIA PAYWALL - ADMIN UPDATE
+// ============================================================
+
+app.post(
+  '/api/media-paywall',
+  (req, res) => {
+
+    try {
+      
+      if (
+          !req.session ||
+          !req.session.user ||
+          req.session.user.role !== 'admin'
+      ) {
+          return res.status(403).json({
+              success: false,
+              error: 'Admin access required'
+          });
+      }
+
+      const enabled =
+        req.body &&
+        req.body.enabled === true;
+
+
+      setMediaPaywallEnabledServer(
+        enabled
+      );
+
+
+      res.json({
+        success: true,
+        enabled: enabled
+      });
+
+    } catch (err) {
+
+      console.error(
+        'Media paywall update error:',
+        err
+      );
+
+      res.status(500).json({
+        success: false,
+        error:
+          'Unable to update media payment setting'
+      });
+    }
+  }
+);
 
 function getAllMediaFiles(dir, basePath = '') {
   let results = [];
@@ -160,29 +1021,79 @@ function getAllMediaFiles(dir, basePath = '') {
 }
 
 app.get('/media-index.json', (req, res) => {
+
   try {
+
+    const access =
+      authorizeMediaAccess(req);
+
+
+    if (!access.allowed) {
+
+      return res.status(403).json({
+        success: false,
+        error:
+          access.reason ||
+          'Media access denied'
+      });
+    }
+
+
     if (!fs.existsSync(MEDIA_DIR)) {
+
       return res.json([]);
     }
 
-    const files = getAllMediaFiles(MEDIA_DIR);
 
-    // 🔥 FIX: disable caching
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    const files =
+      getAllMediaFiles(MEDIA_DIR);
 
-    res.json(files);
+
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
+
+    res.setHeader(
+      'Pragma',
+      'no-cache'
+    );
+
+    res.setHeader(
+      'Expires',
+      '0'
+    );
+
+
+    return res.json(files);
+
 
   } catch (err) {
-    res.status(500).json({ error: 'Unable to build media index' });
+
+    console.error(
+      'Media index error:',
+      err
+    );
+
+    return res.status(500).json({
+      success: false,
+      error:
+        'Unable to build media index'
+    });
   }
 });
 
 app.post('/api/upload-media', upload.array('files', 50), (req, res) => {
   try {
-    if (!isValidAdminRequest(req)) {
-      return res.status(403).json({ success: false, error: 'Admin access required' });
+    if (
+      !req.session ||
+      !req.session.user ||
+      req.session.user.role !== 'admin'
+    ) {
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required'
+      });
     }
 
     if (!req.files || req.files.length === 0) {
@@ -778,20 +1689,51 @@ app.post('/api/media-payment', (req, res) => {
 });
 
 app.get('/api/media-payment-transactions', (req, res) => {
+
   try {
+
+    if (
+      !req.session ||
+      !req.session.user ||
+      req.session.user.role !== 'admin'
+    ) {
+
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required'
+      });
+    }
+
     const rows = db.prepare(`
-      SELECT id, visitorName, username, email, phone, amount, currency, paymentMethod, paymentReference,
-             transactionId, visitorType, status, sourcePage, ip, userAgent, platform, language,
-             timezone, paidAt, validUntil, accessGranted, whatsappSent, details, createdAt
+      SELECT id, visitorName, username, email, phone, amount,
+             currency, paymentMethod, paymentReference,
+             transactionId, visitorType, status, sourcePage,
+             ip, userAgent, platform, language,
+             timezone, paidAt, validUntil,
+             accessGranted, whatsappSent,
+             details, createdAt
       FROM media_payment_transactions
       ORDER BY createdAt DESC
       LIMIT 100
     `).all();
 
-    res.json({ success: true, rows });
+    res.json({
+      success: true,
+      rows
+    });
+
   } catch (err) {
-    console.error('Media payment fetch error:', err);
-    res.status(500).json({ success: false, error: 'Failed to fetch payment records' });
+
+    console.error(
+      'Media payment fetch error:',
+      err
+    );
+
+    res.status(500).json({
+      success: false,
+      error:
+        'Failed to fetch payment records'
+    });
   }
 });
 
@@ -808,6 +1750,18 @@ app.post('/api/media-payment/:id/approve', (req, res) => {
         }
 
         // TODO: Keep/add your existing admin authentication check here.
+        if (
+          !req.session ||
+          !req.session.user ||
+          req.session.user.role !== 'admin'
+        ) {
+
+          return res.status(403).json({
+            success: false,
+            error:
+              'Admin access required'
+          });
+        }
 
         const payment = db.prepare(`
             SELECT *
@@ -879,11 +1833,133 @@ app.post('/api/media-payment/:id/approve', (req, res) => {
     }
 });
 
+
+// ============================================================
+// ADMIN REJECT PAYMENT
+// ============================================================
+
+app.post(
+  '/api/media-payment/:id/reject',
+  (req, res) => {
+
+    try {
+
+      if (
+        !req.session ||
+        !req.session.user ||
+        req.session.user.role !== 'admin'
+      ) {
+
+        return res.status(403).json({
+          success: false,
+          error:
+            'Admin access required'
+        });
+      }
+
+
+      const paymentId =
+        Number(req.params.id);
+
+
+      if (
+        !Number.isInteger(paymentId)
+      ) {
+
+        return res.status(400).json({
+          success: false,
+          error:
+            'Invalid payment ID'
+        });
+      }
+
+
+      const payment =
+        db.prepare(`
+          SELECT *
+          FROM media_payment_transactions
+          WHERE id = ?
+        `)
+        .get(paymentId);
+
+
+      if (!payment) {
+
+        return res.status(404).json({
+          success: false,
+          error:
+            'Payment transaction not found'
+        });
+      }
+
+
+      db.prepare(`
+        UPDATE media_payment_transactions
+
+        SET
+          status = 'rejected',
+          accessGranted = 0,
+          validUntil = NULL
+
+        WHERE id = ?
+      `)
+      .run(paymentId);
+
+
+      res.json({
+
+        success: true,
+
+        message:
+          'Payment rejected',
+
+        transactionId:
+          payment.transactionId,
+
+        accessGranted: 0
+      });
+
+
+    } catch (err) {
+
+      console.error(
+        'Payment rejection error:',
+        err
+      );
+
+      res.status(500).json({
+
+        success: false,
+
+        error:
+          'Failed to reject payment'
+      });
+    }
+  }
+);
+
+
 const os = require("os");
 // const { exec } = require("child_process");
 const { exec, execSync } = require("child_process");
 
 app.get("/stream/*", (req, res)=>{
+
+    const access =
+      authorizeMediaAccess(req);
+
+
+    if (!access.allowed) {
+
+      return res.status(403).json({
+
+        success: false,
+
+        error:
+          access.reason ||
+          'Media access denied'
+      });
+    }
 
     try{
 
@@ -897,13 +1973,15 @@ app.get("/stream/*", (req, res)=>{
                 path.join(MEDIA_DIR, file)
             );
 
-        if (!filePath.startsWith(MEDIA_DIR)) {
-
+        if (
+            !filePath.startsWith(
+                MEDIA_DIR + path.sep
+            )
+        ) {
             return res
                 .status(403)
                 .send("Access denied");
-
-        }    
+        }
 
         console.log("STREAM FILE:", filePath);
 
