@@ -1328,7 +1328,6 @@ function triggerReminder(reminder){
     speak(reminder.text);
 
     reminder.active = false;
-    getMediaPaywallEnabled() {Storage.setItem("portalReminder", JSON.stringify(reminder));
 }
 
 function startReminderChecker(){
@@ -1958,7 +1957,7 @@ async function loginUser(user) {
 
     showMainContent();
 
-    loadFiles();
+    await loadFiles();
 }
 
 async function loginWithPassword(event) {
