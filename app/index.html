@@ -2516,7 +2516,16 @@ function showMediaPaywallModal(fileName = '', actionName = 'view/download') {
             <button onclick="confirmMediaPayment('${escapeHtml(fileName || 'media file').replace(/'/g, "\\'")}', '${actionName.replace(/'/g, "\\'")}' )" style="padding:12px 18px; border:none; border-radius:10px; background:linear-gradient(135deg,#22c55e,#16a34a); color:white; cursor:pointer; font-weight:700;">
                 I Have Paid
             </button>
-            <button onclick="document.getElementById('mediaAccessPaywallModal').remove();" style="padding:12px 18px; border:none; border-radius:10px; background:#475569; color:white; cursor:pointer; font-weight:700;">
+            <button onclick="
+                if (mediaAccessPollTimer) {
+                    clearInterval(mediaAccessPollTimer);
+                    mediaAccessPollTimer = null;
+                }
+
+                document.getElementById(
+                    'mediaAccessPaywallModal'
+                )?.remove();
+            " style="padding:12px 18px; border:none; border-radius:10px; background:#475569; color:white; cursor:pointer; font-weight:700;">
                 Cancel
             </button>
         </div>
@@ -2524,6 +2533,64 @@ function showMediaPaywallModal(fileName = '', actionName = 'view/download') {
 
     modal.appendChild(box);
     document.body.appendChild(modal);
+
+    startMediaAccessPolling(
+        fileName,
+        actionName
+    );
+}
+
+let mediaAccessPollTimer = null;
+
+async function startMediaAccessPolling(fileName, actionName) {
+
+    if (mediaAccessPollTimer) {
+        clearInterval(mediaAccessPollTimer);
+    }
+
+    mediaAccessPollTimer = setInterval(async () => {
+
+        try {
+
+            const allowed =
+                await isMediaAccessValid();
+
+            if (!allowed) {
+                return;
+            }
+
+            clearInterval(mediaAccessPollTimer);
+            mediaAccessPollTimer = null;
+
+            const modal =
+                document.getElementById(
+                    'mediaAccessPaywallModal'
+                );
+
+            if (modal) {
+                modal.remove();
+            }
+
+            alert(
+                'Payment approved successfully. Media access is now enabled.'
+            );
+
+            speak(
+                'Payment approved. Media access is now enabled.'
+            );
+
+            await openFile(fileName);
+
+        } catch (error) {
+
+            console.error(
+                'Media access polling error:',
+                error
+            );
+
+        }
+
+    }, 3000);
 }
 
 async function confirmMediaPayment(fileName, actionName) {
@@ -3531,10 +3598,18 @@ function renderSearchResults(files, query){
 
         const listItems = files.map(file =>
             `<div style='margin:6px 0;'>
-                <a href='/media/${encodeURIComponent(file)}'
-                   target='_blank'
-                   style='color:#38bdf8;text-decoration:none;'>
-                   ${escapeHtml(file)}
+                <a href="#"
+                onclick="
+                    event.preventDefault();
+                    canAccessMedia('${file.replace(/'/g, "\\'")}', 'view')
+                        .then(allowed => {
+                            if (allowed) {
+                                openFile('${file.replace(/'/g, "\\'")}');
+                            }
+                        });
+                "
+                style='color:#38bdf8;text-decoration:none;'>
+                ${escapeHtml(file)}
                 </a>
             </div>`
         ).join('');
