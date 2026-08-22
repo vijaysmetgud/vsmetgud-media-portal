@@ -1024,23 +1024,13 @@ app.get('/media-index.json', (req, res) => {
 
   try {
 
-    const access =
-      authorizeMediaAccess(req);
-
-
-    if (!access.allowed) {
-
-      return res.status(403).json({
-        success: false,
-        error:
-          access.reason ||
-          'Media access denied'
-      });
-    }
-
+    // IMPORTANT:
+    // Media index must remain visible even when
+    // QR/payment protection is enabled.
+    //
+    // The actual /media/<file> endpoint is protected.
 
     if (!fs.existsSync(MEDIA_DIR)) {
-
       return res.json([]);
     }
 
@@ -1048,6 +1038,9 @@ app.get('/media-index.json', (req, res) => {
     const files =
       getAllMediaFiles(MEDIA_DIR);
 
+
+    // Disable caching so newly uploaded files
+    // appear immediately.
 
     res.setHeader(
       'Cache-Control',
@@ -1075,12 +1068,15 @@ app.get('/media-index.json', (req, res) => {
       err
     );
 
+
     return res.status(500).json({
       success: false,
       error:
         'Unable to build media index'
     });
+
   }
+
 });
 
 app.post('/api/upload-media', upload.array('files', 50), (req, res) => {

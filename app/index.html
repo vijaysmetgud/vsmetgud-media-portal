@@ -1328,7 +1328,7 @@ function triggerReminder(reminder){
     speak(reminder.text);
 
     reminder.active = false;
-    localStorage.setItem("portalReminder", JSON.stringify(reminder));
+    getMediaPaywallEnabled() {Storage.setItem("portalReminder", JSON.stringify(reminder));
 }
 
 function startReminderChecker(){
@@ -2024,35 +2024,48 @@ function isAdminUser() {
 }
 
 async function getMediaPaywallEnabled() {
+
     try {
-        const response = await fetch('/api/media-paywall', {
-            method: 'GET',
-            credentials: 'include',
-            cache: 'no-store'
-        });
+
+        const response =
+            await fetch(
+                '/api/media-paywall',
+                {
+                    method: 'GET',
+                    credentials: 'include',
+                    cache: 'no-store'
+                }
+            );
+
 
         if (!response.ok) {
             console.error(
-                'Unable to read media paywall setting:',
+                'Unable to get media paywall:',
                 response.status
             );
 
-            // Safe default: keep protection enabled
+            // Safe default
             return true;
         }
 
-        const result = await response.json();
+
+        const result =
+            await response.json();
+
 
         return result.enabled === true;
+
 
     } catch (error) {
 
         console.error(
-            'Media paywall setting check failed:',
+            'Media paywall check failed:',
             error
         );
 
-        // Safe default
+        // Safe default:
+        // protect media if server cannot
+        // confirm the setting.
         return true;
     }
 }
