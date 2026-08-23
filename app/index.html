@@ -6225,61 +6225,209 @@ function closeAutomaticHealthReminder() {
 }
 
 
-function checkAutomaticHealthReminders() {
+/* =========================================================
+   AUTOMATIC HEALTH REMINDER - FIXED
+   ========================================================= */
 
-    const schedule =
-        getAutomaticHealthTipSchedule();
+let automaticReminderSchedule = [
+    ...automaticHealthTipSchedule
+];
 
-    if (!schedule) {
-        return;
+
+/* =========================================================
+   LOAD SAVED SCHEDULE
+   ========================================================= */
+
+async function loadAutomaticHealthReminderSchedule() {
+
+    try {
+
+        const response = await fetch(
+            "/api/health-reminders",
+            {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store"
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                "Health reminder API HTTP " +
+                response.status
+            );
+        }
+
+        const result = await response.json();
+
+        console.log(
+            "HEALTH REMINDER API RESULT:",
+            result
+        );
+
+        if (
+            result.success === true &&
+            Array.isArray(result.schedule) &&
+            result.schedule.length > 0
+        ) {
+
+            automaticReminderSchedule =
+                result.schedule;
+
+            console.log(
+                "USING SAVED HEALTH SCHEDULE:",
+                automaticReminderSchedule
+            );
+
+        } else {
+
+            automaticReminderSchedule =
+                automaticHealthTipSchedule;
+
+            console.log(
+                "USING DEFAULT HEALTH SCHEDULE:",
+                automaticReminderSchedule
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "HEALTH REMINDER LOAD ERROR:",
+            error
+        );
+
+        /*
+         * IMPORTANT:
+         * Even if API fails, automatic reminders
+         * must continue using the default schedule.
+         */
+
+        automaticReminderSchedule =
+            automaticHealthTipSchedule;
     }
+}
+
+
+/* =========================================================
+   DAILY REMINDER KEY
+   ========================================================= */
+
+function getAutomaticHealthReminderKey(tip) {
+
+    const now = new Date();
+
+    const today =
+        `${now.getFullYear()}-` +
+        `${String(now.getMonth() + 1).padStart(2, "0")}-` +
+        `${String(now.getDate()).padStart(2, "0")}`;
+
+    return (
+        "automaticHealthReminder_" +
+        today +
+        "_" +
+        tip.id
+    );
+}
+
+
+/* =========================================================
+   CHECK AUTOMATIC REMINDERS
+   ========================================================= */
+
+function checkAutomaticHealthReminders() {
 
     const now = new Date();
 
     const currentHour =
-        String(now.getHours()).padStart(2, "0");
+        String(now.getHours())
+            .padStart(2, "0");
 
     const currentMinute =
-        String(now.getMinutes()).padStart(2, "0");
+        String(now.getMinutes())
+            .padStart(2, "0");
 
     const currentTime =
         `${currentHour}:${currentMinute}`;
 
+    console.log(
+        "HEALTH CHECK:",
+        currentTime,
+        automaticReminderSchedule
+    );
 
-    schedule.forEach(tip => {
 
-        if (tip.time !== currentTime) {
-            return;
+    automaticReminderSchedule.forEach(
+        tip => {
+
+            if (!tip || !tip.time) {
+                return;
+            }
+
+            if (tip.time !== currentTime) {
+                return;
+            }
+
+            const reminderKey =
+                getAutomaticHealthReminderKey(
+                    tip
+                );
+
+            /*
+             * Prevent duplicate popup
+             * during the same day.
+             */
+
+            if (
+                localStorage.getItem(
+                    reminderKey
+                )
+            ) {
+                return;
+            }
+
+
+            localStorage.setItem(
+                reminderKey,
+                "true"
+            );
+
+
+            console.log(
+                "🚨 SHOWING HEALTH REMINDER:",
+                tip
+            );
+
+
+            showAutomaticHealthReminder(
+                tip
+            );
+
         }
-
-
-        const reminderKey =
-            getAutomaticHealthReminderKey(tip);
-
-
-        if (
-            localStorage.getItem(
-                reminderKey
-            )
-        ) {
-            return;
-        }
-
-
-        localStorage.setItem(
-            reminderKey,
-            "true"
-        );
-
-
-        showAutomaticHealthReminder(tip);
-
-    });
+    );
 }
+
+
+/* =========================================================
+   START CHECKER
+   ========================================================= */
 
 function startAutomaticHealthReminderChecker() {
 
+    console.log(
+        "✅ HEALTH REMINDER CHECKER STARTED"
+    );
+
+    /*
+     * Check immediately.
+     */
+
     checkAutomaticHealthReminders();
+
+
+    /*
+     * Check every second.
+     */
 
     setInterval(
         checkAutomaticHealthReminders,
@@ -6288,248 +6436,32 @@ function startAutomaticHealthReminderChecker() {
 }
 
 
+/* =========================================================
+   MAIN PORTAL START
+   ========================================================= */
+
 window.addEventListener(
     "DOMContentLoaded",
     async () => {
 
-        await loadAutomaticHealthTipSchedule();
+        console.log(
+            "🌱 MAIN PORTAL HEALTH REMINDER START"
+        );
+
+        /*
+         * Load saved schedule first.
+         */
+
+        await loadAutomaticHealthReminderSchedule();
+
+        /*
+         * Then start checker.
+         */
 
         startAutomaticHealthReminderChecker();
 
     }
 );
-
-let activeAutomaticHealthTipSchedule =
-    automaticHealthTipSchedule;
-
-async function loadAutomaticHealthTipSchedule() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/health-reminders",
-                {
-                    method: "GET",
-                    credentials: "include",
-                    cache: "no-store"
-                }
-            );
-
-        if (!response.ok) {
-            throw new Error(
-                `HTTP ${response.status}`
-            );
-        }
-
-        const result =
-            await response.json();
-
-        if (
-            result.success &&
-            Array.isArray(result.schedule)
-        ) {
-
-            activeAutomaticHealthTipSchedule =
-                result.schedule;
-
-            // Keep localStorage synchronized
-            localStorage.setItem(
-                "healthTipSchedule",
-                JSON.stringify(result.schedule)
-            );
-
-            console.log(
-                "Health reminder schedule loaded:",
-                activeAutomaticHealthTipSchedule
-            );
-        }
-
-    } catch (error) {
-
-        console.warn(
-            "Unable to load server health reminders. Using default schedule.",
-            error
-        );
-
-        activeAutomaticHealthTipSchedule =
-            automaticHealthTipSchedule;
-    }
-}
-
-
-function getAutomaticHealthTipSchedule() {
-
-    return activeAutomaticHealthTipSchedule;
-}
-// /* =========================================================
-//    GET DAILY REMINDER KEY
-//    ========================================================= */
-
-// function getAutomaticHealthReminderKey(tip) {
-
-//     const now = new Date();
-
-//     const today =
-//         `${now.getFullYear()}-` +
-//         `${String(now.getMonth() + 1).padStart(2, "0")}-` +
-//         `${String(now.getDate()).padStart(2, "0")}`;
-
-//     return `automaticHealthReminder_${today}_${tip.id}`;
-// }
-
-
-// /* =========================================================
-//    SHOW AUTOMATIC HEALTH REMINDER
-//    ========================================================= */
-
-// function showAutomaticHealthReminder(tip) {
-
-//     const popup =
-//         document.getElementById(
-//             "automaticHealthReminder"
-//         );
-
-//     const timeElement =
-//         document.getElementById(
-//             "automaticHealthReminderTime"
-//         );
-
-//     const labelElement =
-//         document.getElementById(
-//             "automaticHealthReminderLabel"
-//         );
-
-//     const messageElement =
-//         document.getElementById(
-//             "automaticHealthReminderMessage"
-//         );
-
-//     if (!popup) {
-//         return;
-//     }
-
-//     if (timeElement) {
-//         timeElement.textContent =
-//             `⏰ ${tip.time}`;
-//     }
-
-//     if (labelElement) {
-//         labelElement.textContent =
-//             `💚 ${tip.label}`;
-//     }
-
-//     if (messageElement) {
-//         messageElement.textContent =
-//             tip.message;
-//     }
-
-//     popup.classList.add("show");
-
-
-//     /* =====================================================
-//        HIGHLIGHT EXISTING HEALTH REMINDER BUTTON
-//        ===================================================== */
-
-//     const healthButtons =
-//         document.querySelectorAll(
-//             ".welcome-side-btn"
-//         );
-
-//     healthButtons.forEach(button => {
-
-//         if (
-//             button.textContent
-//                 .toLowerCase()
-//                 .includes("health reminder")
-//         ) {
-//             button.classList.add(
-//                 "health-reminder-active"
-//             );
-//         }
-
-//     });
-
-
-//     /* =====================================================
-//        BROWSER NOTIFICATION
-//        ===================================================== */
-
-//     if (
-//         "Notification" in window &&
-//         Notification.permission === "granted"
-//     ) {
-
-//         try {
-
-//             new Notification(
-//                 `💚 ${tip.label}`,
-//                 {
-//                     body: tip.message,
-//                     requireInteraction: true
-//                 }
-//             );
-
-//         } catch (error) {
-
-//             console.log(
-//                 "Health notification failed:",
-//                 error
-//             );
-
-//         }
-
-//     }
-
-
-//     /* =====================================================
-//        ALARM SOUND
-//        ===================================================== */
-
-//     try {
-
-//         if (
-//             typeof reminderSound !==
-//             "undefined"
-//         ) {
-//             reminderSound
-//                 .play()
-//                 .catch(() => {});
-//         }
-
-//     } catch (error) {
-
-//         console.log(
-//             "Health reminder sound unavailable."
-//         );
-
-//     }
-
-
-//     /* =====================================================
-//        SPEECH
-//        ===================================================== */
-
-//     try {
-
-//         if (
-//             typeof speak ===
-//             "function"
-//         ) {
-//             speak(
-//                 `${tip.label}. ${tip.message}`
-//             );
-//         }
-
-//     } catch (error) {
-
-//         console.log(
-//             "Health reminder speech unavailable."
-//         );
-
-//     }
-// }
-
 
 /* =========================================================
    CLOSE AUTOMATIC HEALTH REMINDER
