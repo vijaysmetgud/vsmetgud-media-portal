@@ -1182,7 +1182,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     window.metricsInterval =
-        setInterval(fetchMetrics, 3000);
+        setInterval(fetchMetrics, 1000);
 
 
 
@@ -2920,7 +2920,7 @@ async function startMediaAccessPolling(
                 }
 
             },
-            2000
+            500
         );
 }
 
@@ -5850,7 +5850,7 @@ if(SpeechRecognition){
 
             isVoiceProcessing = false;
 
-        },2000);
+        },1000);
 
     };
 
