@@ -2487,63 +2487,285 @@ async function approveMediaPayment(paymentId) {
     }
 }
 
-function showMediaPaywallModal(fileName = '', actionName = 'view/download') {
-    const existing = document.getElementById('mediaAccessPaywallModal');
-    if (existing) existing.remove();
+function closeMediaPaywallModal() {
 
-    const modal = document.createElement('div');
-    modal.id = 'mediaAccessPaywallModal';
-    modal.style.position = 'fixed';
-    modal.style.inset = '0';
-    modal.style.background = 'rgba(2,6,23,0.78)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = '999999';
-    modal.style.padding = '20px';
+    if (mediaAccessPollTimer) {
 
-    const box = document.createElement('div');
-    box.style.width = 'min(560px, 90vw)';
-    box.style.background = '#0f172a';
-    box.style.border = '1px solid rgba(148,163,184,0.3)';
-    box.style.borderRadius = '18px';
-    box.style.padding = '22px';
-    box.style.boxShadow = '0 25px 60px rgba(0,0,0,0.45)';
-    box.style.color = '#e2e8f0';
+        clearInterval(
+            mediaAccessPollTimer
+        );
+
+        mediaAccessPollTimer = null;
+    }
+
+
+    const modal =
+        document.getElementById(
+            'mediaAccessPaywallModal'
+        );
+
+
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function showMediaPaywallModal(
+    fileName = '',
+    actionName = 'view/download'
+) {
+
+    console.log(
+        '💰 SHOWING MEDIA PAYWALL:',
+        {
+            fileName,
+            actionName
+        }
+    );
+
+
+    // =====================================================
+    // IMPORTANT:
+    // Do not create multiple QR modals.
+    // =====================================================
+
+    const existing =
+        document.getElementById(
+            'mediaAccessPaywallModal'
+        );
+
+
+    if (existing) {
+
+        console.log(
+            '💰 PAYWALL MODAL ALREADY OPEN'
+        );
+
+        return;
+    }
+
+
+    const modal =
+        document.createElement('div');
+
+
+    modal.id =
+        'mediaAccessPaywallModal';
+
+
+    modal.style.position =
+        'fixed';
+
+    modal.style.inset =
+        '0';
+
+    modal.style.background =
+        'rgba(2,6,23,0.78)';
+
+    modal.style.display =
+        'flex';
+
+    modal.style.alignItems =
+        'center';
+
+    modal.style.justifyContent =
+        'center';
+
+    modal.style.zIndex =
+        '999999';
+
+    modal.style.padding =
+        '20px';
+
+
+    const box =
+        document.createElement('div');
+
+
+    box.style.width =
+        'min(560px, 90vw)';
+
+    box.style.background =
+        '#0f172a';
+
+    box.style.border =
+        '1px solid rgba(148,163,184,0.3)';
+
+    box.style.borderRadius =
+        '18px';
+
+    box.style.padding =
+        '22px';
+
+    box.style.boxShadow =
+        '0 25px 60px rgba(0,0,0,0.45)';
+
+    box.style.color =
+        '#e2e8f0';
+
+
+    const safeFileName =
+        escapeHtml(
+            fileName ||
+            'media file'
+        );
+
+
+    const safeAction =
+        escapeHtml(
+            actionName
+        );
+
 
     box.innerHTML = `
-        <h2 style="margin-top:0; margin-bottom:12px; color:#f8fafc;">Media Access Locked</h2>
-        <p style="margin:0 0 12px; line-height:1.6;">
-            Scan the QR code and pay a minimum of <strong>₹10 INR</strong> before you can ${actionName} this media file.
+
+        <h2 style="
+            margin-top:0;
+            margin-bottom:12px;
+            color:#f8fafc;
+        ">
+            Media Access Locked
+        </h2>
+
+
+        <p style="
+            margin:0 0 12px;
+            line-height:1.6;
+        ">
+            Scan the QR code and pay a minimum of
+            <strong>₹10 INR</strong>
+            before you can
+            ${safeAction}
+            this media file.
         </p>
-        <p style="margin:0 0 16px; color:#cbd5e1; word-break:break-word;">
-            <strong>Requested:</strong> ${escapeHtml(fileName || 'media file')}<br>
-            <strong>Access validity:</strong> 2 days from payment time.
+
+
+        <p style="
+            margin:0 0 16px;
+            color:#cbd5e1;
+            word-break:break-word;
+        ">
+
+            <strong>Requested:</strong>
+            ${safeFileName}
+
+            <br>
+
+            <strong>Access validity:</strong>
+            2 days from admin approval.
         </p>
-        <div style="display:flex; justify-content:center; margin:10px 0 18px;">
-            <img src="/AccountQRCodeCanara%20Bank%20-%201114_DARK_THEME.png" alt="Bank QR code" style="width:220px; height:220px; border-radius:12px; background:#fff; padding:10px;">
+
+
+        <div style="
+            display:flex;
+            justify-content:center;
+            margin:10px 0 18px;
+        ">
+
+            <img
+                src="/AccountQRCodeCanara%20Bank%20-%201114_DARK_THEME.png"
+                alt="Bank QR code"
+                style="
+                    width:220px;
+                    height:220px;
+                    border-radius:12px;
+                    background:#fff;
+                    padding:10px;
+                "
+            >
+
         </div>
-        <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
-            <button onclick="confirmMediaPayment('${escapeHtml(fileName || 'media file').replace(/'/g, "\\'")}', '${actionName.replace(/'/g, "\\'")}' )" style="padding:12px 18px; border:none; border-radius:10px; background:linear-gradient(135deg,#22c55e,#16a34a); color:white; cursor:pointer; font-weight:700;">
+
+
+        <div style="
+            display:flex;
+            justify-content:center;
+            gap:12px;
+            flex-wrap:wrap;
+        ">
+
+            <button
+                id="mediaPaymentConfirmButton"
+                style="
+                    padding:12px 18px;
+                    border:none;
+                    border-radius:10px;
+                    background:linear-gradient(
+                        135deg,
+                        #22c55e,
+                        #16a34a
+                    );
+                    color:white;
+                    cursor:pointer;
+                    font-weight:700;
+                "
+            >
                 I Have Paid
             </button>
-            <button onclick="
-                if (mediaAccessPollTimer) {
-                    clearInterval(mediaAccessPollTimer);
-                    mediaAccessPollTimer = null;
-                }
 
-                document.getElementById(
-                    'mediaAccessPaywallModal'
-                )?.remove();
-            " style="padding:12px 18px; border:none; border-radius:10px; background:#475569; color:white; cursor:pointer; font-weight:700;">
+
+            <button
+                id="mediaPaymentCancelButton"
+                style="
+                    padding:12px 18px;
+                    border:none;
+                    border-radius:10px;
+                    background:#475569;
+                    color:white;
+                    cursor:pointer;
+                    font-weight:700;
+                "
+            >
                 Cancel
             </button>
+
         </div>
     `;
 
+
     modal.appendChild(box);
+
     document.body.appendChild(modal);
+
+
+    // =====================================================
+    // BUTTON EVENTS
+    // =====================================================
+
+    document
+        .getElementById(
+            'mediaPaymentConfirmButton'
+        )
+        ?.addEventListener(
+            'click',
+            () => {
+
+                confirmMediaPayment(
+                    fileName,
+                    actionName
+                );
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            'mediaPaymentCancelButton'
+        )
+        ?.addEventListener(
+            'click',
+            () => {
+
+                closeMediaPaywallModal();
+
+            }
+        );
+
+
+    // =====================================================
+    // START SERVER-SIDE APPROVAL POLLING
+    // =====================================================
 
     startMediaAccessPolling(
         fileName,
@@ -2553,55 +2775,153 @@ function showMediaPaywallModal(fileName = '', actionName = 'view/download') {
 
 let mediaAccessPollTimer = null;
 
-async function startMediaAccessPolling(fileName, actionName) {
+async function startMediaAccessPolling(
+    fileName,
+    actionName
+) {
 
     if (mediaAccessPollTimer) {
-        clearInterval(mediaAccessPollTimer);
+
+        clearInterval(
+            mediaAccessPollTimer
+        );
+
+        mediaAccessPollTimer = null;
     }
 
-    mediaAccessPollTimer = setInterval(async () => {
 
-        try {
+    console.log(
+        '💰 STARTING MEDIA ACCESS POLLING:',
+        fileName
+    );
 
-            const allowed =
-                await isMediaAccessValid();
 
-            if (!allowed) {
-                return;
-            }
+    mediaAccessPollTimer =
+        setInterval(
+            async () => {
 
-            clearInterval(mediaAccessPollTimer);
-            mediaAccessPollTimer = null;
+                try {
 
-            const modal =
-                document.getElementById(
-                    'mediaAccessPaywallModal'
-                );
+                    // =================================================
+                    // Ask server again.
+                    // NEVER check localStorage.
+                    // =================================================
 
-            if (modal) {
-                modal.remove();
-            }
+                    const response =
+                        await fetch(
+                            '/api/media-access',
+                            {
+                                method: 'GET',
 
-            alert(
-                'Payment approved successfully. Media access is now enabled.'
-            );
+                                credentials: 'include',
 
-            speak(
-                'Payment approved. Media access is now enabled.'
-            );
+                                cache: 'no-store',
 
-            await openFile(fileName);
+                                headers: {
+                                    'Cache-Control':
+                                        'no-cache'
+                                }
+                            }
+                        );
 
-        } catch (error) {
 
-            console.error(
-                'Media access polling error:',
-                error
-            );
+                    const text =
+                        await response.text();
 
-        }
 
-    }, 3000);
+                    let result = {};
+
+                    try {
+
+                        result =
+                            JSON.parse(text);
+
+                    } catch {
+
+                        console.warn(
+                            'Polling returned non-JSON:',
+                            text
+                        );
+
+                        return;
+                    }
+
+
+                    console.log(
+                        '💰 PAYMENT POLL:',
+                        result
+                    );
+
+
+                    // =================================================
+                    // APPROVED
+                    // =================================================
+
+                    if (
+                        response.ok &&
+                        result.success === true &&
+                        result.allowed === true
+                    ) {
+
+                        clearInterval(
+                            mediaAccessPollTimer
+                        );
+
+                        mediaAccessPollTimer =
+                            null;
+
+
+                        const modal =
+                            document.getElementById(
+                                'mediaAccessPaywallModal'
+                            );
+
+
+                        if (modal) {
+                            modal.remove();
+                        }
+
+
+                        alert(
+                            'Payment approved successfully. Media access is now enabled.'
+                        );
+
+
+                        speak(
+                            'Payment approved. Media access is now enabled.'
+                        );
+
+
+                        // Re-check access before opening.
+                        const allowed =
+                            await canAccessMedia(
+                                fileName,
+                                actionName
+                            );
+
+
+                        if (allowed) {
+
+                            await openFile(
+                                fileName
+                            );
+
+                        }
+
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        'Media access polling error:',
+                        error
+                    );
+
+                }
+
+            },
+            3000
+        );
 }
 
 async function confirmMediaPayment(fileName, actionName) {
@@ -2704,68 +3024,152 @@ async function confirmMediaPayment(fileName, actionName) {
 }
 
 
-async function canAccessMedia(fileName, actionName = 'view') {
+async function canAccessMedia(
+    fileName,
+    actionName = 'view'
+) {
 
     try {
 
-        // Admin never needs payment
+        console.log(
+            '🔐 MEDIA ACCESS CHECK:',
+            {
+                fileName,
+                actionName,
+                currentUser: currentUser
+                    ? {
+                        username: currentUser.username,
+                        role: currentUser.role
+                    }
+                    : null
+            }
+        );
+
+        // =====================================================
+        // ADMIN
+        // =====================================================
+
         if (isAdminUser()) {
+
+            console.log(
+                '🔐 ADMIN ACCESS GRANTED'
+            );
+
             return true;
         }
+
+
+        // =====================================================
+        // SERVER PAYWALL STATUS
+        // =====================================================
 
         const paywallEnabled =
             await getMediaPaywallEnabled();
 
-        // Payment option disabled
+        console.log(
+            '🔐 PAYWALL ENABLED:',
+            paywallEnabled
+        );
+
+
+        // =====================================================
+        // PAYWALL OFF
+        // =====================================================
+
         if (!paywallEnabled) {
+
+            console.log(
+                '🔓 PAYWALL DISABLED - ACCESS GRANTED'
+            );
+
             return true;
         }
 
+
+        // =====================================================
+        // SERVER-SIDE ACCESS CHECK
+        //
+        // IMPORTANT:
+        // Never use localStorage/sessionStorage here.
+        // The server session is the source of truth.
+        // =====================================================
+
         const response =
-            await fetch('/api/media-access', {
-                method: 'GET',
-                credentials: 'include',
-                cache: 'no-store'
-            });
+            await fetch(
+                '/api/media-access',
+                {
+                    method: 'GET',
+
+                    credentials: 'include',
+
+                    cache: 'no-store',
+
+                    headers: {
+                        'Cache-Control':
+                            'no-cache'
+                    }
+                }
+            );
+
 
         const text =
             await response.text();
 
+
         let result = {};
 
         try {
-            result = JSON.parse(text);
+
+            result =
+                JSON.parse(text);
+
         } catch (parseError) {
 
             console.error(
-                'Media access returned non-JSON:',
+                '❌ MEDIA ACCESS NON-JSON:',
+                response.status,
                 text
             );
 
             return false;
         }
 
+
         console.log(
-            'MEDIA ACCESS RESPONSE:',
-            response.status,
-            result
+            '🔐 MEDIA ACCESS RESPONSE:',
+            {
+                status: response.status,
+                result
+            }
         );
 
-        // ==========================================
-        // ACCESS ALLOWED
-        // ==========================================
+
+        // =====================================================
+        // ACCESS GRANTED
+        // =====================================================
 
         if (
             response.ok &&
             result.success === true &&
             result.allowed === true
         ) {
+
+            console.log(
+                '✅ MEDIA ACCESS GRANTED BY SERVER'
+            );
+
+            // If an old QR modal somehow exists,
+            // remove it because access is now valid.
+
+            closeMediaPaywallModal();
+
             return true;
         }
 
-        // ==========================================
+
+        // =====================================================
         // PAYMENT REQUIRED
-        // ==========================================
+        // =====================================================
 
         if (
             result.error ===
@@ -2773,48 +3177,64 @@ async function canAccessMedia(fileName, actionName = 'view') {
         ) {
 
             console.log(
-                '🔥 PAYMENT REQUIRED - SHOWING QR'
+                '💰 PAYMENT REQUIRED FOR:',
+                fileName
             );
+
 
             showMediaPaywallModal(
                 fileName,
                 actionName
             );
 
+
             return false;
         }
 
-        // ==========================================
+
+        // =====================================================
         // LOGIN REQUIRED
-        // ==========================================
+        // =====================================================
 
         if (
             result.error ===
             'Login required'
         ) {
 
-            console.log(
-                'LOGIN REQUIRED'
+            console.warn(
+                '🔑 LOGIN REQUIRED FOR MEDIA ACCESS'
             );
+
+
+            closeMediaPaywallModal();
+
+
+            // Do NOT grant access.
+            // Do NOT use old localStorage state.
 
             return false;
         }
 
-        // ==========================================
+
+        // =====================================================
         // OTHER DENIAL
-        // ==========================================
+        // =====================================================
 
         console.warn(
-            'MEDIA ACCESS DENIED:',
+            '🚫 MEDIA ACCESS DENIED:',
             result
         );
 
+
+        closeMediaPaywallModal();
+
         return false;
+
 
     } catch (error) {
 
         console.error(
-            'Media access check failed:',
+            '❌ Media access check failed:',
             error
         );
 
@@ -4336,10 +4756,20 @@ async function openFile(file) {
         file
     );
 
+
     if (!file) {
-        speak("File not found");
+
+        speak(
+            "File not found"
+        );
+
         return;
     }
+
+
+    // =====================================================
+    // SINGLE MEDIA ACCESS CHECK
+    // =====================================================
 
     const allowed =
         await canAccessMedia(
@@ -4347,22 +4777,26 @@ async function openFile(file) {
             "view"
         );
 
+
     console.log(
         "🔥 OPENFILE ACCESS RESULT:",
         allowed
     );
 
+
     if (!allowed) {
 
         console.log(
-            "🔥 OPENFILE BLOCKED - QR SHOULD BE VISIBLE"
+            "🔥 OPENFILE BLOCKED"
         );
 
         return;
     }
 
+
     const lower =
         file.toLowerCase();
+
 
     console.log(
         "Opening:",
