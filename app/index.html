@@ -1161,7 +1161,7 @@ body.light .metric h3 {
 updateClock();
 
 // run every second
-setInterval(updateClock, 1000);
+setInterval(updateClock, 2000);
 
 /* ================= CLOCK REMINDER ================= */
 
@@ -1182,7 +1182,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     window.metricsInterval =
-        setInterval(fetchMetrics, 1000);
+        setInterval(fetchMetrics, 2000);
 
 
 
@@ -2920,7 +2920,7 @@ async function startMediaAccessPolling(
                 }
 
             },
-            500
+            1000
         );
 }
 
@@ -5850,7 +5850,7 @@ if(SpeechRecognition){
 
             isVoiceProcessing = false;
 
-        },1000);
+        },2000);
 
     };
 
