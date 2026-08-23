@@ -2917,13 +2917,46 @@ function showLoginScreen() {
     document.getElementById('authBar').classList.add('hidden');
 }
 
-function signOutUser() {
-    if (currentUser) {
-        logPortalActivity('logout', 'portal', 'User signed out from the portal');
+async function signOutUser() {
+
+    try {
+
+        // Log activity before clearing local user
+        if (currentUser) {
+
+            await logPortalActivity(
+                'logout',
+                'portal',
+                'User signed out from the portal'
+            );
+        }
+
+        // IMPORTANT:
+        // Destroy the SERVER-SIDE session
+        await fetch('/api/logout', {
+            method: 'POST',
+            credentials: 'include',
+            cache: 'no-store'
+        });
+
+    } catch (error) {
+
+        console.error(
+            'Server logout failed:',
+            error
+        );
+
+    } finally {
+
+        // Clear browser-side user state
+        localStorage.removeItem('portalUser');
+
+        sessionStorage.clear();
+
+        currentUser = null;
+
+        showLoginScreen();
     }
-    localStorage.removeItem('portalUser');
-    currentUser = null;
-    showLoginScreen();
 }
 
 function formatVisitorTime(value) {
@@ -4311,7 +4344,7 @@ async function openFile(file) {
     if (!allowed) {
 
         console.log(
-            "🔥 OPENFILE BLOCKED"
+            "🔥 OPENFILE BLOCKED - QR SHOULD BE VISIBLE"
         );
 
         return;
