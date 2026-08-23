@@ -4218,35 +4218,43 @@ async function openMediaWindow(file,type){
 
 async function openFile(file) {
 
+    console.log("🔥 OPENFILE CALLED:", file);
+
     if (!file) {
         speak("File not found");
         return;
     }
 
-    // Check media access before opening anything
-    const paywallEnabled =
-        await getMediaPaywallEnabled();
+    // ============================================================
+    // MEDIA ACCESS CHECK
+    // ============================================================
 
-    if (paywallEnabled && !isAdminUser()) {
+    const allowed =
+        await canAccessMedia(file, "view");
 
-        const access =
-            await isMediaAccessValid();
+    console.log(
+        "🔥 OPENFILE ACCESS RESULT:",
+        allowed
+    );
 
-        if (!access) {
-
-            showMediaPaywallModal(
-                file,
-                "view"
-            );
-
-            return;
-        }
+    if (!allowed) {
+        console.log(
+            "🔥 OPENFILE BLOCKED - QR SHOULD BE VISIBLE"
+        );
+        return;
     }
+
+    // ============================================================
+    // OPEN FILE
+    // ============================================================
 
     const lower =
         file.toLowerCase();
 
-    console.log("Opening:", file);
+    console.log(
+        "Opening:",
+        file
+    );
 
     /* ================= TEXT/PDF READER ================= */
 

@@ -133,7 +133,6 @@ db.prepare(`
   ('media_paywall_enabled', 'true')
 `).run();
 
-app.use(express.json());
 app.use(
     session({
         secret:
