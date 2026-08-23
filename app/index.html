@@ -1415,12 +1415,6 @@ function startReminderChecker(){
         </header>
 
         <button
-            class="welcome-side-btn"
-            onclick="window.open('/health-reminder.html', '_blank')">
-            💚 Health Reminder
-        </button>
-
-        <button
             type="button"
             class="welcome-side-btn"
             onclick="window.open('/health-reminder.html?edit=1', '_blank')">
@@ -1870,6 +1864,27 @@ async function logPortalActivity(action, page, details = '') {
     }
 }
 
+function formatIST(timestamp) {
+    if (!timestamp) return '';
+
+    const date = new Date(timestamp);
+
+    if (Number.isNaN(date.getTime())) {
+        return timestamp;
+    }
+
+    return date.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+}
+
 async function loadPortalActivityReport() {
     const from = document.getElementById('activityFromDate')?.value || '';
     const to = document.getElementById('activityToDate')?.value || '';
@@ -1891,7 +1906,8 @@ async function loadPortalActivityReport() {
 
         const rows = data.rows.slice(0, 100).map(row => `
             <tr>
-                <td>${escapeHtml(row.timestamp || '')}</td>
+                // <td>${escapeHtml(row.timestamp || '')}</td>
+                <td>${escapeHtml(formatIST(row.timestamp))}</td>
                 <td>${escapeHtml(row.username || '')}</td>
                 <td>${escapeHtml(row.name || '')}</td>
                 <td>${escapeHtml(row.action || '')}</td>
@@ -3391,7 +3407,16 @@ async function signOutUser() {
 }
 
 function formatVisitorTime(value) {
-    return new Date(value).toLocaleString();
+    return new Date(value).toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
 }
 
 function escapeHtml(text) {

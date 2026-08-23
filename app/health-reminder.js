@@ -1,76 +1,4 @@
 // =========================================================
-// HEALTH REMINDER SCHEDULE
-// =========================================================
-
-const healthTipSchedule = [
-
-  {
-    id: "walk",
-    label: "Walk",
-    time: "09:15",
-    message:
-      "Walk for 10 minutes now to refresh your energy and improve focus."
-  },
-
-  {
-    id: "sitting",
-    label: "Prolonged Sitting",
-    time: "11:00",
-    message:
-      "You have been sitting for long. Stand up, stretch your legs, and walk for 2 minutes."
-  },
-
-  {
-    id: "exercise",
-    label: "Exercise",
-    time: "12:30",
-    message:
-      "Do a light exercise or stretch break to keep your body active."
-  },
-
-  {
-    id: "lunch",
-    label: "Lunch Break",
-    time: "13:00",
-    message:
-      "It is lunch break time. Eat mindfully and take a short rest."
-  },
-
-  {
-    id: "tea",
-    label: "Tea Break",
-    time: "15:00",
-    message:
-      "Tea break time: stand up, hydrate, and take a short reset."
-  },
-
-  {
-    id: "compliment",
-    label: "Compliment",
-    time: "17:30",
-    message:
-      "Excellent work today. Keep up the good effort—you are doing great!"
-  },
-
-  {
-    id: "office",
-    label: "Office Leaving Time",
-    time: "18:00",
-    message:
-      "Office leaving time. Wrap up your work and finish your day calmly."
-  },
-
-  {
-    id: "run",
-    label: "Run",
-    time: "18:30",
-    message:
-      "Evening run or brisk walk will help keep you energetic and healthy."
-  }
-
-];
-
-// =========================================================
 // LOAD HEALTH REMINDERS FROM SERVER
 // =========================================================
 
@@ -708,92 +636,28 @@ let healthAudioContext =
   null;
 
 
+// =========================================================
+// HEALTH REMINDER MP3 ALARM
+// =========================================================
+
 function playHealthAlarm() {
+    try {
+        const alarm = document.getElementById("healthReminderAlarm");
 
-  try {
+        if (!alarm) {
+            console.error("Health reminder alarm not found in index.html");
+            return;
+        }
 
-    healthAudioContext =
-      healthAudioContext ||
-      new (
-        window.AudioContext ||
-        window.webkitAudioContext
-      )();
+        alarm.currentTime = 0;
 
+        alarm.play().catch(error => {
+            console.warn("Health reminder alarm could not play:", error);
+        });
 
-    if (
-      healthAudioContext.state ===
-      "suspended"
-    ) {
-
-      healthAudioContext.resume();
-
+    } catch (error) {
+        console.error("Health reminder alarm error:", error);
     }
-
-
-    const oscillator =
-      healthAudioContext.createOscillator();
-
-
-    const gain =
-      healthAudioContext.createGain();
-
-
-    oscillator.type =
-      "sine";
-
-
-    oscillator.frequency.setValueAtTime(
-      880,
-      healthAudioContext.currentTime
-    );
-
-
-    gain.gain.setValueAtTime(
-      0.001,
-      healthAudioContext.currentTime
-    );
-
-
-    gain.gain.exponentialRampToValueAtTime(
-      0.35,
-      healthAudioContext.currentTime + 0.05
-    );
-
-
-    gain.gain.exponentialRampToValueAtTime(
-      0.001,
-      healthAudioContext.currentTime + 0.8
-    );
-
-
-    oscillator.connect(
-      gain
-    );
-
-
-    gain.connect(
-      healthAudioContext.destination
-    );
-
-
-    oscillator.start();
-
-
-    oscillator.stop(
-      healthAudioContext.currentTime +
-      0.8
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Health alarm error:",
-      error
-    );
-
-  }
-
 }
 
 
