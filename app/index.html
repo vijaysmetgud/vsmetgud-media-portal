@@ -2394,7 +2394,8 @@ async function loadMediaPaymentTransactions() {
 
         const rows = data.rows.map(row => `
             <tr>
-                <td>${escapeHtml(row.paidAt || '')}</td>
+                // <td>${escapeHtml(row.paidAt || '')}</td>
+                <td>${escapeHtml(formatVisitorTime(row.paidAt))}</td>
 
                 <td>${escapeHtml(row.visitorName || '')}</td>
 
@@ -2402,7 +2403,8 @@ async function loadMediaPaymentTransactions() {
 
                 <td>${escapeHtml(row.transactionId || '')}</td>
 
-                <td>${escapeHtml(row.validUntil || '')}</td>
+                // <td>${escapeHtml(row.validUntil || '')}</td>
+                <td>${escapeHtml(formatVisitorTime(row.validUntil))}</td>
 
                 <td>
                     ${
@@ -6288,45 +6290,78 @@ function startAutomaticHealthReminderChecker() {
 
 window.addEventListener(
     "DOMContentLoaded",
-    () => {
+    async () => {
+
+        await loadAutomaticHealthTipSchedule();
 
         startAutomaticHealthReminderChecker();
 
     }
 );
 
+let activeAutomaticHealthTipSchedule =
+    automaticHealthTipSchedule;
 
-function getAutomaticHealthTipSchedule() {
-
-    const saved =
-        localStorage.getItem(
-            "healthTipSchedule"
-        );
-
-    if (!saved) {
-        return null;
-    }
+async function loadAutomaticHealthTipSchedule() {
 
     try {
 
-        const schedule =
-            JSON.parse(saved);
+        const response =
+            await fetch(
+                "/api/health-reminders",
+                {
+                    method: "GET",
+                    credentials: "include",
+                    cache: "no-store"
+                }
+            );
 
-        if (Array.isArray(schedule)) {
-            return schedule;
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
+
+        const result =
+            await response.json();
+
+        if (
+            result.success &&
+            Array.isArray(result.schedule)
+        ) {
+
+            activeAutomaticHealthTipSchedule =
+                result.schedule;
+
+            // Keep localStorage synchronized
+            localStorage.setItem(
+                "healthTipSchedule",
+                JSON.stringify(result.schedule)
+            );
+
+            console.log(
+                "Health reminder schedule loaded:",
+                activeAutomaticHealthTipSchedule
+            );
         }
 
     } catch (error) {
 
-        console.error(
-            "Unable to load health reminder schedule:",
+        console.warn(
+            "Unable to load server health reminders. Using default schedule.",
             error
         );
-    }
 
-    return null;
+        activeAutomaticHealthTipSchedule =
+            automaticHealthTipSchedule;
+    }
 }
 
+
+function getAutomaticHealthTipSchedule() {
+
+    return activeAutomaticHealthTipSchedule;
+}
 // /* =========================================================
 //    GET DAILY REMINDER KEY
 //    ========================================================= */

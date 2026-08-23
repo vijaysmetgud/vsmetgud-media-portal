@@ -599,16 +599,20 @@ async function saveHealthReminders() {
         const result =
             await response.json();
 
-        if (
-            !response.ok ||
-            !result.success
-        ) {
+        if (!response.ok || !result.success) {
 
             throw new Error(
                 result.error ||
                 'Unable to save health reminders'
             );
         }
+
+        localStorage.setItem(
+            "healthTipSchedule",
+            JSON.stringify(healthTipSchedule)
+        );
+
+        return true;
 
         return true;
 
