@@ -6233,6 +6233,47 @@ let automaticReminderSchedule = [
     ...automaticHealthTipSchedule
 ];
 
+/* =========================================================
+   UPDATE AUTOMATIC SCHEDULE WHEN EDITED
+   ========================================================= */
+
+window.addEventListener("storage", function (event) {
+
+    if (event.key !== "healthTipSchedule") {
+        return;
+    }
+
+    if (!event.newValue) {
+        return;
+    }
+
+    try {
+
+        const updatedSchedule =
+            JSON.parse(event.newValue);
+
+        if (
+            Array.isArray(updatedSchedule) &&
+            updatedSchedule.length > 0
+        ) {
+
+            automaticReminderSchedule =
+                updatedSchedule;
+
+            console.log(
+                "✅ AUTOMATIC HEALTH SCHEDULE UPDATED:",
+                automaticReminderSchedule
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Unable to update automatic health schedule:",
+            error
+        );
+    }
+});
 
 /* =========================================================
    LOAD SAVED SCHEDULE
@@ -6326,7 +6367,9 @@ function getAutomaticHealthReminderKey(tip) {
         "automaticHealthReminder_" +
         today +
         "_" +
-        tip.id
+        tip.id +
+        "_" +
+        tip.time
     );
 }
 
