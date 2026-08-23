@@ -2693,53 +2693,122 @@ async function confirmMediaPayment(fileName, actionName) {
 }
 
 
-async function canAccessMedia(fileName, action = 'view') {
+async function canAccessMedia(fileName, actionName = 'view') {
 
-    // =========================================
-    // ADMIN ALWAYS ALLOWED
-    // =========================================
+    try {
 
-    if (isAdminUser()) {
-        return true;
+        // Admin never needs payment
+        if (isAdminUser()) {
+            return true;
+        }
+
+        const paywallEnabled =
+            await getMediaPaywallEnabled();
+
+        // Payment option disabled
+        if (!paywallEnabled) {
+            return true;
+        }
+
+        const response =
+            await fetch('/api/media-access', {
+                method: 'GET',
+                credentials: 'include',
+                cache: 'no-store'
+            });
+
+        const text =
+            await response.text();
+
+        let result = {};
+
+        try {
+            result = JSON.parse(text);
+        } catch (parseError) {
+
+            console.error(
+                'Media access returned non-JSON:',
+                text
+            );
+
+            return false;
+        }
+
+        console.log(
+            'MEDIA ACCESS RESPONSE:',
+            response.status,
+            result
+        );
+
+        // ==========================================
+        // ACCESS ALLOWED
+        // ==========================================
+
+        if (
+            response.ok &&
+            result.success === true &&
+            result.allowed === true
+        ) {
+            return true;
+        }
+
+        // ==========================================
+        // PAYMENT REQUIRED
+        // ==========================================
+
+        if (
+            result.error ===
+            'Media payment approval required'
+        ) {
+
+            console.log(
+                '🔥 PAYMENT REQUIRED - SHOWING QR'
+            );
+
+            showMediaPaywallModal(
+                fileName,
+                actionName
+            );
+
+            return false;
+        }
+
+        // ==========================================
+        // LOGIN REQUIRED
+        // ==========================================
+
+        if (
+            result.error ===
+            'Login required'
+        ) {
+
+            console.log(
+                'LOGIN REQUIRED'
+            );
+
+            return false;
+        }
+
+        // ==========================================
+        // OTHER DENIAL
+        // ==========================================
+
+        console.warn(
+            'MEDIA ACCESS DENIED:',
+            result
+        );
+
+        return false;
+
+    } catch (error) {
+
+        console.error(
+            'Media access check failed:',
+            error
+        );
+
+        return false;
     }
-
-
-    // =========================================
-    // GET GLOBAL SERVER PAYWALL SETTING
-    // =========================================
-
-    const paywallEnabled =
-        await getMediaPaywallEnabled();
-
-
-    // =========================================
-    // QR / PAYMENT PROTECTION OFF
-    // =========================================
-
-    if (!paywallEnabled) {
-        return true;
-    }
-
-
-    // =========================================
-    // QR ON → CHECK SERVER PAYMENT ACCESS
-    // =========================================
-
-    if (await isMediaAccessValid()) {
-        return true;
-    }
-
-
-    // =========================================
-    // NOT APPROVED → SHOW QR
-    // =========================================
-
-    showMediaPaywallModal(
-        fileName,
-        action
-    );
-
-    return false;
 }
 
 function toggleAdminUploadPanel() {
@@ -4218,19 +4287,21 @@ async function openMediaWindow(file,type){
 
 async function openFile(file) {
 
-    console.log("🔥 OPENFILE CALLED:", file);
+    console.log(
+        "🔥 OPENFILE CALLED:",
+        file
+    );
 
     if (!file) {
         speak("File not found");
         return;
     }
 
-    // ============================================================
-    // MEDIA ACCESS CHECK
-    // ============================================================
-
     const allowed =
-        await canAccessMedia(file, "view");
+        await canAccessMedia(
+            file,
+            "view"
+        );
 
     console.log(
         "🔥 OPENFILE ACCESS RESULT:",
@@ -4238,15 +4309,13 @@ async function openFile(file) {
     );
 
     if (!allowed) {
+
         console.log(
-            "🔥 OPENFILE BLOCKED - QR SHOULD BE VISIBLE"
+            "🔥 OPENFILE BLOCKED"
         );
+
         return;
     }
-
-    // ============================================================
-    // OPEN FILE
-    // ============================================================
 
     const lower =
         file.toLowerCase();
