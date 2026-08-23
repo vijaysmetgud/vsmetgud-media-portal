@@ -2355,7 +2355,11 @@ async function saveMediaPaywallSetting() {
 
 async function loadMediaPaymentTransactions() {
     try {
-        const response = await fetch('/api/media-payment-transactions');
+        const response = await fetch('/api/media-payment-transactions', {
+            method: 'GET',
+            credentials: 'include',
+            cache: 'no-store'
+        });
         const data = await response.json();
         const container = document.getElementById('mediaPaymentTransactions');
         if (!container) return;
