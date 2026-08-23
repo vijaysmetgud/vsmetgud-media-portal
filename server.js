@@ -144,7 +144,7 @@ app.use(
         saveUninitialized: false,
 
         cookie: {
-            httpOnly: true,
+            httpOnly: false,
             secure: true,
             sameSite: 'lax',
             maxAge:
@@ -229,7 +229,11 @@ db.prepare(`
 );
 
 app.set('trust proxy', true);
-app.use('/bank-qr', express.static(__dirname));
+// app.use('/AccountQRCodeCanara%20Bank%20-%201114_DARK_THEME.png', express.static(__dirname));
+app.use(
+  '/AccountQRCodeCanara Bank - 1114_DARK_THEME.png',
+  express.static(__dirname)
+);
 app.use(express.static(path.join(__dirname, 'app')));
 
 const MEDIA_DIR = path.join(__dirname, "media");
