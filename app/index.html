@@ -2360,6 +2360,13 @@ async function loadMediaPaymentTransactions() {
             credentials: 'include',
             cache: 'no-store'
         });
+        if (!response.ok) {
+            const errorText = await response.text();
+
+            throw new Error(
+                `Payment transaction API failed: ${response.status} ${errorText}`
+            );
+        }
         const data = await response.json();
         const container = document.getElementById('mediaPaymentTransactions');
         if (!container) return;
