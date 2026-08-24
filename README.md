@@ -320,5 +320,7 @@ ffmpeg -version
 pm2 restart all
 
 Added new features
+----------------------
+If ffprobe isn't installed:
 
-hello vijay
+sudo apt install ffmpeg ----->To play videos Smoothly without buffering and stuck issues

@@ -1905,8 +1905,7 @@ async function loadPortalActivityReport() {
         }
 
         const rows = data.rows.slice(0, 100).map(row => `
-            <tr>
-                // <td>${escapeHtml(row.timestamp || '')}</td>
+            <tr>      
                 <td>${escapeHtml(formatIST(row.timestamp))}</td>
                 <td>${escapeHtml(row.username || '')}</td>
                 <td>${escapeHtml(row.name || '')}</td>
@@ -2393,8 +2392,7 @@ async function loadMediaPaymentTransactions() {
         }
 
         const rows = data.rows.map(row => `
-            <tr>
-                // <td>${escapeHtml(row.paidAt || '')}</td>
+            <tr>                
                 <td>${escapeHtml(formatVisitorTime(row.paidAt))}</td>
 
                 <td>${escapeHtml(row.visitorName || '')}</td>
@@ -2402,8 +2400,7 @@ async function loadMediaPaymentTransactions() {
                 <td>₹${escapeHtml(row.amount || '')}</td>
 
                 <td>${escapeHtml(row.transactionId || '')}</td>
-
-                // <td>${escapeHtml(row.validUntil || '')}</td>
+                
                 <td>${escapeHtml(formatVisitorTime(row.validUntil))}</td>
 
                 <td>
