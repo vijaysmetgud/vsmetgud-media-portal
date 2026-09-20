@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Surround Engine Test</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 20px; font-family: Segoe UI, Arial, sans-serif; background: #0b1220; color: #e2e8f0; }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 1.5rem; }
+  p.sub { margin: 0 0 16px; color: #94a3b8; font-size: .92rem; }
+  video { width: 100%; max-height: 56vh; background: #000; border-radius: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+  .card { background: #111a2e; border: 1px solid #23324f; border-radius: 12px; padding: 14px; margin-top: 14px; }
+  .card h3 { margin: 0 0 10px; font-size: .95rem; color: #93c5fd; }
+  button, select, input[type=text] { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #e2e8f0; }
+  button { cursor: pointer; }
+  button.on { background: #2563eb; border-color: #3b82f6; }
+  button.big { background: #16a34a; border-color: #22c55e; font-weight: 700; }
+  input[type=text] { flex: 1; min-width: 220px; }
+  .sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px 20px; }
+  .sliders label { display: block; font-size: .88rem; color: #cbd5e1; }
+  .sliders input { width: 100%; }
+  #status { font-family: Consolas, monospace; font-size: .82rem; color: #a5b4fc; line-height: 1.6; white-space: pre-wrap; }
+  small { color: #94a3b8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎬 Surround Engine Test</h1>
+  <p class="sub">Load any video, press <b>Enable</b>, then compare presets and output modes. Use headphones or your tower speakers.</p>
+
+  <div class="row">
+    <input type="file" id="file" accept="video/*,audio/*">
+    <input type="text" id="url" placeholder="...or a same-site URL, e.g. /stream/Movies/film.mkv">
+    <button id="load">Load URL</button>
+  </div>
+
+  <video id="video" controls playsinline></video>
+
+  <div class="card">
+    <div class="row">
+      <button id="enable" class="big">🔊 Enable Surround</button>
+      <button id="off">Off (original)</button>
+      <span id="presets"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Output</h3>
+    <div class="row">
+      <label>Speakers connected as&nbsp;
+        <select id="mode">
+          <option value="speakers">Stereo tower speakers / TV</option>
+          <option value="headphones">Headphones (binaural)</option>
+          <option value="multichannel">5.1 speakers / receiver (HDMI)</option>
+          <option value="auto">Auto</option>
+        </select>
+      </label>
+      <label>Source is&nbsp;
+        <select id="layout">
+          <option value="auto">Auto-detect</option>
+          <option value="stereo">Stereo (up-mix)</option>
+          <option value="5.1">Real 5.1</option>
+        </select>
+      </label>
+    </div>
+    <small>5.1 output only works if Windows Sound settings for the device are set to 5.1 / 7.1.</small>
+  </div>
+
+  <div class="card">
+    <h3>Tuning</h3>
+    <div class="sliders">
+      <label>Bass <input type="range" id="bass" min="0" max="1" step="0.01"></label>
+      <label>Room / surround <input type="range" id="space" min="0" max="1" step="0.01"></label>
+      <label>Height (Atmos-style) <input type="range" id="height" min="0" max="1" step="0.01"></label>
+      <label>Dialogue clarity <input type="range" id="dialogue" min="0" max="1" step="0.01"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Status</h3>
+    <div id="status">Not started</div>
+  </div>
+</div>
+
+<script type="module">
+  import { SurroundEngine } from './surround-engine.js';
+
+  const $ = (id) => document.getElementById(id);
+  const video = $('video');
+  const engine = SurroundEngine.attach(video);
+
+  // ---- loading media
+  $('file').onchange = (e) => {
+    const f = e.target.files[0];
+    if (f) { video.src = URL.createObjectURL(f); video.play().catch(() => {}); }
+  };
+  $('load').onclick = () => {
+    const u = $('url').value.trim();
+    if (u) { video.src = u; video.play().catch(() => {}); }
+  };
+
+  // ---- presets
+  const presetBox = $('presets');
+  ['cinema', 'music', 'dialogue', 'night'].forEach((name) => {
+    const b = document.createElement('button');
+    b.textContent = name[0].toUpperCase() + name.slice(1);
+    b.dataset.preset = name;
+    b.onclick = () => engine.enable(name);
+    presetBox.appendChild(b);
+  });
+  $('enable').onclick = () => engine.enable('cinema');
+  $('off').onclick = () => engine.disable();
+
+  // ---- controls
+  $('mode').onchange = (e) => engine.setOutputMode(e.target.value);
+  $('layout').onchange = (e) => engine.setSourceLayout(e.target.value);
+  ['bass', 'space', 'height', 'dialogue'].forEach((k) => {
+    $(k).oninput = (e) => engine.setParam(k, e.target.value);
+  });
+
+  // ---- UI sync
+  function render(s) {
+    presetBox.querySelectorAll('button').forEach((b) => b.classList.toggle('on', s.active && b.dataset.preset === s.preset));
+    ['bass', 'space', 'height', 'dialogue'].forEach((k) => {
+      if (document.activeElement !== $(k)) $(k).value = s.params[k];
+    });
+    const fell = s.requestedMode !== s.outputMode && s.requestedMode !== 'auto';
+    $('status').textContent =
+      'Effect:        ' + (s.active ? 'ON (' + s.preset + ')' : 'off') + '\n' +
+      'Output mode:   ' + s.outputMode + (fell ? '  (requested ' + s.requestedMode + ' but this device has only ' + s.maxChannels + ' channels)' : '') + '\n' +
+      'Device max ch: ' + (s.maxChannels ?? '-') + '\n' +
+      'Source layout: ' + s.layout + (s.layoutForced ? ' (forced)' : ' (detected)') + '\n' +
+      'Audio context: ' + s.contextState;
+  }
+  engine.onChange(render);
+  render(engine.getState());
+</script>
+</body>
+</html>
