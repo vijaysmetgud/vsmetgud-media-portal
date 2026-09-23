@@ -1431,7 +1431,7 @@ app.post('/api/log-activity', (req, res) => {
       payload.language || '',
       payload.screen || '',
       payload.timezone || '',
-      timestamp
+      getISTTimestamp()
     );
 
     res.json({ success: true });
@@ -2005,176 +2005,419 @@ function probeMedia(filePath, mtimeMs) {
   });
 }
 
+// ============================================================
+// THEATRE STREAMING - ROBUST VERSION
+// ============================================================
+
 app.get("/stream/*", async (req, res) => {
+    const access = authorizeMediaAccess(req);
 
-  const access = authorizeMediaAccess(req);
-
-  if (!access.allowed) {
-
-    return res.status(403).json({
-      success: false,
-      error: access.reason || 'Media access denied'
-    });
-  }
-
-  try {
-
-    const file =
-      decodeURIComponent(
-        req.path.replace("/stream/", "")
-      );
-
-    const filePath =
-      path.normalize(
-        path.join(MEDIA_DIR, file)
-      );
-
-    if (!filePath.startsWith(MEDIA_DIR + path.sep)) {
-      return res.status(403).send("Access denied");
+    if (!access.allowed) {
+        return res.status(403).json({
+            success: false,
+            error: access.reason || "Media access denied"
+        });
     }
-
-    let stat;
 
     try {
-      stat = fs.statSync(filePath);
-    } catch (e) {
-      return res.status(404).send("File not found");
+        /*
+         * Express gives us the URL path.
+         *
+         * Example:
+         * /stream/VIDEO%20SONGS/My%20Video%20%281080p%29.mp4
+         *
+         * We remove /stream/ first and decode exactly once.
+         */
+        let relativePath = req.path.replace(/^\/stream\/?/, "");
+
+        try {
+            relativePath = decodeURIComponent(relativePath);
+        } catch (decodeError) {
+            console.error("Invalid media URL encoding:", req.path);
+
+            return res.status(400).send("Invalid media URL");
+        }
+
+        /*
+         * Convert URL separators to filesystem separators.
+         */
+        relativePath = relativePath.replace(/\//g, path.sep);
+
+        /*
+         * Resolve the file safely.
+         */
+        const mediaRoot = path.resolve(MEDIA_DIR);
+
+        const filePath = path.resolve(
+            mediaRoot,
+            relativePath
+        );
+
+        /*
+         * Prevent directory traversal.
+         */
+        if (
+            filePath !== mediaRoot &&
+            !filePath.startsWith(mediaRoot + path.sep)
+        ) {
+            console.error("Blocked path traversal:", {
+                relativePath,
+                filePath
+            });
+
+            return res.status(403).send("Access denied");
+        }
+
+        /*
+         * Check file.
+         */
+        let stat;
+
+        try {
+            stat = fs.statSync(filePath);
+        } catch (err) {
+            console.error("STREAM FILE NOT FOUND:", {
+                requested: req.path,
+                relativePath,
+                filePath
+            });
+
+            return res.status(404).send("File not found");
+        }
+
+        if (!stat.isFile()) {
+            return res.status(404).send("File not found");
+        }
+
+        console.log("STREAM REQUEST:", {
+            url: req.originalUrl,
+            file: filePath,
+            size: stat.size,
+            range: req.headers.range || "none"
+        });
+
+        /*
+         * Probe media.
+         */
+        const info = await probeMedia(
+            filePath,
+            stat.mtimeMs
+        );
+
+        const v = info && info.video;
+        const a = info && info.audio;
+
+        /*
+         * Audio-only file.
+         */
+        if (info && !v) {
+            return res.sendFile(filePath);
+        }
+
+        /*
+         * Browser-compatible codecs.
+         */
+        const videoOk =
+            !!v &&
+            v.codec_name === "h264" &&
+            v.pix_fmt === "yuv420p";
+
+        const audioOk =
+            !a ||
+            a.codec_name === "aac";
+
+        /*
+         * --------------------------------------------------------
+         * DIRECT PLAY
+         *
+         * Express sendFile handles Range requests.
+         * This is the preferred path.
+         * --------------------------------------------------------
+         */
+        if (
+            videoOk &&
+            audioOk &&
+            /\.(mp4|m4v)$/i.test(filePath)
+        ) {
+            console.log(
+                "STREAM DIRECT:",
+                filePath
+            );
+
+            res.setHeader(
+                "Cache-Control",
+                "no-store"
+            );
+
+            return res.sendFile(filePath);
+        }
+
+        /*
+         * --------------------------------------------------------
+         * TRANSCODING
+         * --------------------------------------------------------
+         */
+
+        if (activeTranscodes >= MAX_TRANSCODES) {
+            res.setHeader(
+                "Retry-After",
+                "10"
+            );
+
+            return res
+                .status(503)
+                .send(
+                    "Server is busy transcoding other videos. Try again shortly."
+                );
+        }
+
+        const start = Math.max(
+            0,
+            parseFloat(req.query.start) || 0
+        );
+
+        const args = [
+            "-hide_banner",
+            "-loglevel",
+            "error"
+        ];
+
+        if (start > 0) {
+            args.push(
+                "-ss",
+                String(start)
+            );
+        }
+
+        args.push(
+            "-i",
+            filePath,
+
+            "-map",
+            "0:v:0",
+
+            "-map",
+            "0:a:0?"
+        );
+
+        if (videoOk) {
+            args.push(
+                "-c:v",
+                "copy"
+            );
+        } else {
+            args.push(
+                "-c:v",
+                "libx264",
+
+                "-preset",
+                "veryfast",
+
+                "-crf",
+                "28",
+
+                "-pix_fmt",
+                "yuv420p",
+
+                "-threads",
+                "2"
+            );
+        }
+
+        /*
+         * Normalize audio for browser playback.
+         */
+        args.push(
+            "-c:a",
+            "aac",
+
+            "-b:a",
+            "192k"
+        );
+
+        if (
+            a &&
+            a.channels > 6
+        ) {
+            args.push(
+                "-ac",
+                "6"
+            );
+        }
+
+        /*
+         * Fragmented MP4.
+         */
+        args.push(
+            "-f",
+            "mp4",
+
+            "-movflags",
+            "frag_keyframe+empty_moov+default_base_moof",
+
+            "pipe:1"
+        );
+
+        console.log(
+            "STREAM TRANSCODE:",
+            filePath
+        );
+
+        activeTranscodes++;
+
+        let released = false;
+
+        const release = () => {
+            if (!released) {
+                released = true;
+                activeTranscodes--;
+            }
+        };
+
+        /*
+         * Important:
+         *
+         * We intentionally don't advertise Content-Length
+         * because FFmpeg is producing a live stream.
+         */
+        res.statusCode = 200;
+
+        res.setHeader(
+            "Content-Type",
+            "video/mp4"
+        );
+
+        res.setHeader(
+            "Cache-Control",
+            "no-store, no-cache"
+        );
+
+        res.setHeader(
+            "Accept-Ranges",
+            "none"
+        );
+
+        res.setHeader(
+            "X-Accel-Buffering",
+            "no"
+        );
+
+        const ffmpeg = spawn(
+            "ffmpeg",
+            args,
+            {
+                stdio: [
+                    "ignore",
+                    "pipe",
+                    "pipe"
+                ]
+            }
+        );
+
+        /*
+         * Log FFmpeg errors instead of throwing them away.
+         */
+        let ffmpegError = "";
+
+        ffmpeg.stderr.on(
+            "data",
+            chunk => {
+                ffmpegError += chunk.toString();
+
+                if (ffmpegError.length > 4000) {
+                    ffmpegError =
+                        ffmpegError.slice(-4000);
+                }
+            }
+        );
+
+        ffmpeg.stdout.pipe(res);
+
+        /*
+         * Viewer closed the connection.
+         */
+        res.on(
+            "close",
+            () => {
+                if (
+                    ffmpeg.exitCode === null
+                ) {
+                    ffmpeg.kill("SIGKILL");
+                }
+
+                release();
+            }
+        );
+
+        ffmpeg.on(
+            "error",
+            err => {
+                console.error(
+                    "FFMPEG ERROR:",
+                    err
+                );
+
+                release();
+
+                if (
+                    !res.headersSent
+                ) {
+                    res.status(500).send(
+                        "Streaming error"
+                    );
+                } else if (
+                    !res.writableEnded
+                ) {
+                    res.end();
+                }
+            }
+        );
+
+        ffmpeg.on(
+            "close",
+            (code, signal) => {
+                if (
+                    code !== 0 &&
+                    code !== null
+                ) {
+                    console.error(
+                        "FFMPEG EXIT:",
+                        {
+                            code,
+                            signal,
+                            filePath,
+                            error:
+                                ffmpegError
+                        }
+                    );
+                }
+
+                release();
+
+                if (
+                    !res.writableEnded
+                ) {
+                    res.end();
+                }
+            }
+        );
+
+    } catch (err) {
+        console.error(
+            "Streaming error:",
+            err
+        );
+
+        if (!res.headersSent) {
+            return res
+                .status(500)
+                .send("Streaming error");
+        }
+
+        if (!res.writableEnded) {
+            res.end();
+        }
     }
-
-    if (!stat.isFile()) {
-      return res.status(404).send("File not found");
-    }
-
-    const info = await probeMedia(filePath, stat.mtimeMs);
-
-    const v = info && info.video;
-    const a = info && info.audio;
-
-    // audio-only file: nothing to transcode
-    if (info && !v) {
-      return res.sendFile(filePath);
-    }
-
-    const videoOk =
-      !!v &&
-      v.codec_name === "h264" &&
-      v.pix_fmt === "yuv420p";
-
-    const audioOk = !a || a.codec_name === "aac";
-
-    // DIRECT PLAY (Range requests / seeking handled by Express)
-    if (
-      videoOk &&
-      audioOk &&
-      /\.(mp4|m4v)$/i.test(filePath)
-    ) {
-      console.log("STREAM direct:", filePath);
-      return res.sendFile(filePath);
-    }
-
-    // TRANSCODE
-    if (activeTranscodes >= MAX_TRANSCODES) {
-
-      res.set("Retry-After", "10");
-
-      return res
-        .status(503)
-        .send("Server is busy transcoding other videos. Try again shortly.");
-    }
-
-    const start =
-      Math.max(0, parseFloat(req.query.start) || 0);
-
-    const args = ["-loglevel", "error"];
-
-    if (start > 0) args.push("-ss", String(start));
-
-    args.push(
-      "-i", filePath,
-      "-map", "0:v:0",
-      "-map", "0:a:0?"
-    );
-
-    if (videoOk) {
-      args.push("-c:v", "copy");
-    } else {
-      args.push(
-        "-c:v", "libx264",
-        "-preset", "veryfast",
-        "-crf", "28",
-        "-pix_fmt", "yuv420p",
-        "-threads", "2"
-      );
-    }
-
-    // keep up to 5.1 so the player's surround processing has real channels
-    args.push("-c:a", "aac", "-b:a", "192k");
-
-    if (a && a.channels > 6) args.push("-ac", "6");
-
-    args.push(
-      "-f", "mp4",
-      "-movflags", "frag_keyframe+empty_moov+default_base_moof",
-      "pipe:1"
-    );
-
-    console.log(
-      "STREAM transcode (" + (videoOk ? "video copy" : "video x264") + "):",
-      filePath
-    );
-
-    activeTranscodes++;
-
-    let released = false;
-
-    const release = () => {
-      if (!released) {
-        released = true;
-        activeTranscodes--;
-      }
-    };
-
-    res.writeHead(200, {
-      "Content-Type": "video/mp4",
-      "Cache-Control": "no-store",
-      "X-Accel-Buffering": "no"
-    });
-
-    const ffmpeg =
-      spawn("ffmpeg", args, {
-        stdio: ["ignore", "pipe", "ignore"]
-      });
-
-    ffmpeg.stdout.pipe(res);
-
-    // stop ffmpeg as soon as the viewer closes / seeks away
-    res.on("close", () => {
-      if (ffmpeg.exitCode === null) {
-        ffmpeg.kill("SIGKILL");
-      }
-    });
-
-    ffmpeg.on("error", (err) => {
-      console.error("ffmpeg error:", err);
-      release();
-      if (!res.writableEnded) res.end();
-    });
-
-    ffmpeg.on("close", () => {
-      release();
-      if (!res.writableEnded) res.end();
-    });
-
-  } catch (err) {
-
-    console.error("Streaming error:", err);
-
-    if (!res.headersSent) {
-      res.status(500).send("Streaming error");
-    } else {
-      res.end();
-    }
-  }
 });
 
 app.get("/api/metrics", (req, res) => {
@@ -2192,7 +2435,7 @@ app.get("/api/metrics", (req, res) => {
 
         let runningPods = 0;
         try {
-            const kubectlAvailable = execSync("kubectl version --client --short", { encoding: "utf8", stdio: ['ignore', 'pipe', 'pipe'] });
+            const kubectlAvailable = execSync("kubectl version --client", { encoding: "utf8", stdio: ['ignore', 'pipe', 'pipe'] });
             if (kubectlAvailable) {
                 runningPods = parseInt(
                     execSync(
@@ -2276,5 +2519,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+console.log(`Server is running on port ${PORT}`);
 });
