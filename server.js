@@ -2435,17 +2435,22 @@ app.get("/api/metrics", (req, res) => {
 
         let runningPods = 0;
         try {
-            const kubectlAvailable = execSync("kubectl version --client", { encoding: "utf8", stdio: ['ignore', 'pipe', 'pipe'] });
-            if (kubectlAvailable) {
-                runningPods = parseInt(
-                    execSync(
-                        "kubectl get pods -A --field-selector=status.phase=Running --no-headers | wc -l",
-                        { encoding: "utf8", stdio: ['ignore', 'pipe', 'pipe'] }
-                    ).trim(),
-                    10
-                ) || 0;
+            const podOutput = execSync(
+                "kubectl get pods -A --field-selector=status.phase=Running --no-headers",
+                {
+                    encoding: "utf8",
+                    stdio: ['ignore', 'pipe', 'pipe']
+                }
+            ).trim();
+
+            if (podOutput) {
+                runningPods = podOutput
+                    .split("\n")
+                    .filter(line => line.trim().length > 0)
+                    .length;
             }
         } catch (kubectlError) {
+            console.error("KUBECTL POD COUNT ERROR:", kubectlError.message);
             runningPods = 0;
         }
 
