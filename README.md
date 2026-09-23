@@ -324,3 +324,19 @@ Added new features
 If ffprobe isn't installed:
 
 sudo apt install ffmpeg ----->To play videos Smoothly without buffering and stuck issues
+--------------------------------------------------------------------------
+
+
+helm upgrade --install media-portal . \
+  --set image.repository=vsmetgud/media-portal \
+  --set image.tag=61eb9e43f6b8b8852e09d562d76b8e8b16808cad
+
+  helm get values media-portal --all | grep -A4 "^image:"
+
+  kubectl get deployment media-portal \
+  -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+
+  kubectl rollout status deployment/media-portal
+
+  kubectl get pods -l app=media-portal \
+  -o custom-columns='POD:.metadata.name,IMAGE:.spec.containers[0].image,READY:.status.containerStatuses[0].ready,STATUS:.status.phase'
