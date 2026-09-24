@@ -4613,6 +4613,86 @@ function handleChatQuery(query){
 
 /* ================= MEDIA WINDOW ================= */
 
+/* ================= POPUP VIDEO BOOTSTRAP =================
+ * Runs INSIDE the popup (injected via toString), so it must be
+ * self-contained. It:
+ *  - loads the stream with a fresh URL each time,
+ *  - shows the real HTTP status if loading fails,
+ *  - retries the "transcoder busy" 503,
+ *  - falls back from /stream (ffmpeg) to /media (plain file) when
+ *    the streaming route fails for any non-login reason,
+ *  - aborts the stream when the popup closes so the server can
+ *    release its ffmpeg slot immediately.
+ */
+function popupVideoBootstrap(base, fallback) {
+    var v = document.getElementById("pv");
+    var msg = document.getElementById("pvMsg");
+    var tries = 0;
+    var current = base;
+    var usedFallback = false;
+
+    function say(t) {
+        msg.textContent = t || "";
+        msg.style.display = t ? "block" : "none";
+    }
+
+    function load() {
+        tries++;
+        v.src = current + "?_=" + Date.now();
+        v.load();
+        var p = v.play();
+        if (p && p.catch) p.catch(function () {});
+    }
+
+    function tryFallback(reason) {
+        if (usedFallback || !fallback) return false;
+        usedFallback = true;
+        current = fallback;
+        say(reason + " Trying the direct file...");
+        load();
+        return true;
+    }
+
+    v.addEventListener("playing", function () { say(""); });
+
+    v.addEventListener("error", function () {
+        var code = v.error ? v.error.code : "?";
+        fetch(current, {
+            headers: { Range: "bytes=0-0" },
+            credentials: "include",
+            cache: "no-store"
+        }).then(function (r) {
+            var wait = parseInt(r.headers.get("Retry-After") || "10", 10);
+            if (r.body && r.body.cancel) r.body.cancel();
+            if (r.status === 503 && !usedFallback && tries < 4) {
+                say("Server busy (HTTP 503). Retrying in " + wait + "s...");
+                setTimeout(load, wait * 1000);
+                return;
+            }
+            // 401/403 = not logged in: the direct file would be refused too.
+            if (r.status !== 401 && r.status !== 403 &&
+                tryFallback("Streaming failed (HTTP " + r.status + ").")) {
+                return;
+            }
+            say("Video failed: HTTP " + r.status + " " + r.statusText +
+                " (media error " + code + ", attempt " + tries + ")");
+        }).catch(function (e) {
+            if (tryFallback("Streaming failed (network error).")) return;
+            say("Video failed: network error (" + e.message + ")");
+        });
+    });
+
+    window.addEventListener("pagehide", function () {
+        try {
+            v.pause();
+            v.removeAttribute("src");
+            v.load();
+        } catch (e) {}
+    });
+
+    load();
+}
+
 async function openMediaWindow(file,type){    
 
     if (!(await canAccessMedia(
@@ -4626,20 +4706,44 @@ async function openMediaWindow(file,type){
 
     let mediaHtml = "";
 
+    let popupScript = "";
+
+    if(type === "video"){
+        const streamUrl =
+            window.location.origin +
+            "/stream/" +
+            encodeURIComponent(file);
+
+        const mediaUrl =
+            window.location.origin +
+            "/media/" +
+            encodeURIComponent(file);
+
+        popupScript =
+            "<script>(" +
+            popupVideoBootstrap.toString() +
+            ")(" +
+            JSON.stringify(streamUrl).replace(/</g, "\\u003c") +
+            "," +
+            JSON.stringify(mediaUrl).replace(/</g, "\\u003c") +
+            ");<\/script>";
+    }
+
     if(type === "video"){
 
         mediaHtml = `
             <video
+                id="pv"
                 controls
                 autoplay
+                playsinline
                 style="
                     width:100%;
                     height:calc(100vh - 70px);
                     background:black;
                 "
-            >
-                <source src="/stream/${encodeURIComponent(file)}">
-            </video>
+            ></video>
+            <div id="pvMsg" style="display:none;position:fixed;left:0;right:0;top:80px;text-align:center;color:#fff;background:rgba(0,0,0,.75);padding:12px;font-size:15px;"></div>
         `;
     }
 
@@ -4740,10 +4844,7 @@ async function openMediaWindow(file,type){
 
                 <button
                     class="closeBtn"
-                    onclick="
-                        window.open('','_self');
-                        window.close();
-                    "
+                    onclick="try{document.getElementById('pv').pause()}catch(e){} window.close();"
                 >
                     ✖ CLOSE
                 </button>
@@ -4751,6 +4852,8 @@ async function openMediaWindow(file,type){
             </div>
 
             ${mediaHtml}
+
+            ${popupScript}
 
             <div class="quickApps">
 
