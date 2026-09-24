@@ -2420,7 +2420,116 @@ app.get("/stream/*", async (req, res) => {
     }
 });
 
-app.get("/api/metrics", (req, res) => {
+// ============================================================
+// SYSTEM STATS (kubectl / df) - NON-BLOCKING + CACHED
+//
+// The dashboard polls /api/metrics every 2 seconds. Running
+// kubectl/df with execSync blocked the whole Node event loop
+// (video streaming included). These helpers run the commands
+// asynchronously with a timeout and reuse the result for a while.
+// ============================================================
+
+const STATS_TTL_MS = 10000;
+const STATS_CMD_TIMEOUT_MS = 5000;
+
+const statsCache = { at: 0, data: null, inflight: null };
+
+function runCmd(cmd) {
+    return new Promise((resolve, reject) => {
+        exec(
+            cmd,
+            {
+                encoding: "utf8",
+                timeout: STATS_CMD_TIMEOUT_MS,
+                maxBuffer: 5 * 1024 * 1024
+            },
+            (err, stdout) => {
+                if (err) return reject(err);
+                resolve(String(stdout).trim());
+            }
+        );
+    });
+}
+
+async function collectSystemStats() {
+
+    const [podResult, diskResult] = await Promise.all([
+
+        runCmd(
+            "kubectl get pods -A --field-selector=status.phase=Running --no-headers"
+        ).then(
+            out => ({ ok: true, out }),
+            err => ({ ok: false, err })
+        ),
+
+        runCmd("df -h / | tail -1").then(
+            out => ({ ok: true, out }),
+            err => ({ ok: false, err })
+        )
+    ]);
+
+    let runningPods = 0;
+
+    if (podResult.ok) {
+        if (podResult.out) {
+            runningPods = podResult.out
+                .split("\n")
+                .filter(line => line.trim().length > 0)
+                .length;
+        }
+    } else {
+        console.error(
+            "KUBECTL POD COUNT ERROR:",
+            podResult.err && podResult.err.message
+        );
+    }
+
+    let diskTotal = "N/A";
+    let diskUsed = "N/A";
+    let diskFree = "N/A";
+    let diskUsage = "N/A";
+
+    if (diskResult.ok && diskResult.out) {
+        const diskParts = diskResult.out.split(/\s+/);
+        diskTotal = diskParts[1] || "N/A";
+        diskUsed = diskParts[2] || "N/A";
+        diskFree = diskParts[3] || "N/A";
+        diskUsage = diskParts[4] || "N/A";
+    }
+
+    return { runningPods, diskTotal, diskUsed, diskFree, diskUsage };
+}
+
+function getSystemStats() {
+
+    const fresh =
+        statsCache.data &&
+        (Date.now() - statsCache.at) < STATS_TTL_MS;
+
+    if (fresh) {
+        return Promise.resolve(statsCache.data);
+    }
+
+    if (!statsCache.inflight) {
+        statsCache.inflight = collectSystemStats()
+            .then(data => {
+                statsCache.data = data;
+                statsCache.at = Date.now();
+                return data;
+            })
+            .finally(() => {
+                statsCache.inflight = null;
+            });
+    }
+
+    // Stale data is returned instantly while a refresh runs;
+    // only the very first call has to wait.
+    return statsCache.data
+        ? Promise.resolve(statsCache.data)
+        : statsCache.inflight;
+}
+
+app.get("/api/metrics", async (req, res) => {
 
     try {
 
@@ -2433,47 +2542,13 @@ app.get("/api/metrics", (req, res) => {
         const cpuLoad =
             (os.loadavg()[0] / Math.max(1, os.cpus().length)) * 100;
 
-        let runningPods = 0;
-        try {
-            const podOutput = execSync(
-                "kubectl get pods -A --field-selector=status.phase=Running --no-headers",
-                {
-                    encoding: "utf8",
-                    stdio: ['ignore', 'pipe', 'pipe']
-                }
-            ).trim();
-
-            if (podOutput) {
-                runningPods = podOutput
-                    .split("\n")
-                    .filter(line => line.trim().length > 0)
-                    .length;
-            }
-        } catch (kubectlError) {
-            console.error("KUBECTL POD COUNT ERROR:", kubectlError.message);
-            runningPods = 0;
-        }
-
-        let diskTotal = "N/A";
-        let diskUsed = "N/A";
-        let diskFree = "N/A";
-        let diskUsage = "N/A";
-
-        try {
-            const diskLine =
-                execSync(
-                    "df -h / | tail -1",
-                    { encoding: "utf8", stdio: ['ignore', 'pipe', 'pipe'] }
-                ).trim();
-
-            const diskParts = diskLine.split(/\s+/);
-            diskTotal = diskParts[1] || "N/A";
-            diskUsed = diskParts[2] || "N/A";
-            diskFree = diskParts[3] || "N/A";
-            diskUsage = diskParts[4] || "N/A";
-        } catch (diskError) {
-            // ignore on systems without df or restricted shells
-        }
+        const {
+            runningPods,
+            diskTotal,
+            diskUsed,
+            diskFree,
+            diskUsage
+        } = await getSystemStats();
 
         res.json({
 

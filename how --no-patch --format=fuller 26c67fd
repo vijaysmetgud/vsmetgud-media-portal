@@ -1,0 +1,395 @@
+[33m29249f3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{Thu Sep 24 13:30:13 2026}: commit: RESET TO WORKING STATUS
+[33m5882933[m HEAD@{Thu Sep 24 13:29:11 2026}: reset: moving to 5882933
+[33m7e902ae[m HEAD@{Thu Sep 24 02:39:18 2026}: commit: Fix session persistence for media access
+[33m9d21fb4[m HEAD@{Thu Sep 24 02:38:21 2026}: reset: moving to origin/main
+[33m61f8982[m[33m ([m[1;32mbackup-before-rebase-61f8982[m[33m, [m[1;32mbackup-61f8982[m[33m)[m HEAD@{Thu Sep 24 02:36:42 2026}: rebase (abort): returning to refs/heads/main
+[33m9d21fb4[m HEAD@{Thu Sep 24 02:36:20 2026}: pull --rebase origin main (start): checkout 9d21fb42c3dc04884994c7bd82e2b6d3fb2c31f9
+[33m61f8982[m[33m ([m[1;32mbackup-before-rebase-61f8982[m[33m, [m[1;32mbackup-61f8982[m[33m)[m HEAD@{Thu Sep 24 02:34:38 2026}: rebase (abort): returning to refs/heads/main
+[33m9d21fb4[m HEAD@{Thu Sep 24 02:34:04 2026}: rebase (start): checkout origin/main
+[33m61f8982[m[33m ([m[1;32mbackup-before-rebase-61f8982[m[33m, [m[1;32mbackup-61f8982[m[33m)[m HEAD@{Thu Sep 24 02:31:32 2026}: commit: Fix session persistence for media access
+[33m59bb471[m HEAD@{Thu Sep 24 00:00:08 2026}: commit: Fix media streaming and authorization
+[33m5882933[m HEAD@{Wed Sep 23 23:55:32 2026}: reset: moving to 5882933
+[33m953585d[m HEAD@{Wed Sep 23 23:50:33 2026}: commit: WORKING VERY GOOD
+[33m9d21fb4[m HEAD@{Wed Sep 23 23:50:10 2026}: pull --rebase origin main: Fast-forward
+[33m5882933[m HEAD@{Wed Sep 23 23:50:07 2026}: reset: moving to HEAD
+[33m5882933[m HEAD@{Wed Sep 23 17:15:29 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m5882933[m HEAD@{Wed Sep 23 17:15:29 2026}: pull --rebase origin main (pick): WORKING VERY GOOD
+[33mc4a7a76[m HEAD@{Wed Sep 23 17:15:28 2026}: pull --rebase origin main (start): checkout c4a7a76774891e247b80d451e5f47767f8995e29
+[33mae867e2[m HEAD@{Wed Sep 23 17:13:55 2026}: commit: WORKING VERY GOOD
+[33m86cf235[m HEAD@{Wed Sep 23 17:05:59 2026}: commit: Restore 61eb9e4 and apply latest server.js changes
+[33m61eb9e4[m HEAD@{Wed Sep 23 17:04:27 2026}: reset: moving to 61eb9e4
+[33me02d3d2[m HEAD@{Wed Sep 23 16:58:27 2026}: commit: Update server.js after reset to working commit
+[33m61eb9e4[m HEAD@{Wed Sep 23 16:57:33 2026}: reset: moving to 61eb9e4
+[33m211849e[m[33m ([m[1;32mbackup-before-reset-211849e[m[33m)[m HEAD@{Wed Sep 23 16:57:26 2026}: checkout: moving from main to main
+[33m211849e[m[33m ([m[1;32mbackup-before-reset-211849e[m[33m)[m HEAD@{Wed Sep 23 16:49:33 2026}: commit (merge): Merge rollback-test: restore working server.js
+[33m3c9663d[m HEAD@{Wed Sep 23 16:44:46 2026}: checkout: moving from rollback-test to main
+[33mb2c7b62[m[33m ([m[1;31morigin/rollback-test[m[33m, [m[1;32mrollback-test[m[33m)[m HEAD@{Wed Sep 23 16:37:56 2026}: commit: Roll back to previous working commit ID - WORKING VERY GOOD
+[33m61eb9e4[m HEAD@{Wed Sep 23 16:30:54 2026}: checkout: moving from main to rollback-test
+[33m3c9663d[m HEAD@{Wed Sep 23 16:25:59 2026}: pull --rebase origin main: Fast-forward
+[33m61eb9e4[m HEAD@{Wed Sep 23 16:25:56 2026}: reset: moving to HEAD
+[33m61eb9e4[m HEAD@{Wed Sep 23 14:24:59 2026}: reset: moving to 61eb9e4
+[33m3c9663d[m HEAD@{Wed Sep 23 14:24:51 2026}: checkout: moving from main to main
+[33m3c9663d[m HEAD@{Wed Sep 23 14:19:14 2026}: pull --rebase origin main: Fast-forward
+[33m2403450[m HEAD@{Wed Sep 23 02:09:07 2026}: commit: fresh code from AMAZON Q
+[33m295c23a[m HEAD@{Wed Sep 23 02:08:22 2026}: reset: moving to HEAD
+[33m295c23a[m HEAD@{Tue Sep 22 03:53:32 2026}: pull --rebase origin main: Fast-forward
+[33mf085f12[m HEAD@{Tue Sep 22 03:53:28 2026}: reset: moving to HEAD
+[33mf085f12[m HEAD@{Tue Sep 22 03:15:39 2026}: commit: fix radio buttons fot theatre, expense, paywall demo
+[33m04f8c58[m HEAD@{Tue Sep 22 03:15:21 2026}: pull --rebase origin main: Fast-forward
+[33mc7d19d4[m HEAD@{Tue Sep 22 03:15:16 2026}: reset: moving to HEAD
+[33mc7d19d4[m HEAD@{Tue Sep 22 01:40:39 2026}: commit: fix radio buttons fot theatre, expense, paywall demo
+[33mf667ce2[m HEAD@{Tue Sep 22 01:40:28 2026}: pull --rebase origin main: Fast-forward
+[33m9d0b61b[m HEAD@{Tue Sep 22 01:40:23 2026}: reset: moving to HEAD
+[33m9d0b61b[m HEAD@{Tue Sep 22 01:13:31 2026}: commit: fix radio buttons fot theatre, expense, paywall demo
+[33m1702dc2[m HEAD@{Tue Sep 22 01:09:24 2026}: commit: fix radio buttons fot theatre, expense, paywall demo
+[33ma39c36a[m HEAD@{Tue Sep 22 01:08:18 2026}: reset: moving to HEAD
+[33ma39c36a[m HEAD@{Tue Sep 22 01:01:39 2026}: commit: fix video url issues
+[33mce726eb[m HEAD@{Tue Sep 22 00:59:04 2026}: pull --rebase origin main: Fast-forward
+[33m68a6759[m HEAD@{Tue Sep 22 00:59:00 2026}: reset: moving to HEAD
+[33m68a6759[m HEAD@{Mon Sep 21 23:52:49 2026}: commit: fix video url issues
+[33mb05ac74[m HEAD@{Mon Sep 21 23:51:58 2026}: pull --rebase origin main: Fast-forward
+[33m61eb9e4[m HEAD@{Mon Sep 21 23:51:41 2026}: reset: moving to HEAD
+[33m61eb9e4[m HEAD@{Mon Sep 21 00:41:32 2026}: commit: fix surround sound and expense tracker voice assist
+[33md99fc7e[m HEAD@{Mon Sep 21 00:41:11 2026}: pull --rebase origin main: Fast-forward
+[33m4386723[m HEAD@{Mon Sep 21 00:41:06 2026}: reset: moving to HEAD
+[33m4386723[m HEAD@{Sun Sep 20 21:48:43 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m4386723[m HEAD@{Sun Sep 20 21:48:43 2026}: pull --rebase origin main (pick): fix surround sound and expense tracker voice assist
+[33m86d4ad4[m HEAD@{Sun Sep 20 21:48:42 2026}: pull --rebase origin main (start): checkout 86d4ad432a370388f442505ef57dd3e6e8685031
+[33m3f9f119[m HEAD@{Sun Sep 20 21:48:34 2026}: commit: fix surround sound and expense tracker voice assist
+[33m2194d32[m HEAD@{Sun Sep 20 21:14:52 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m2194d32[m HEAD@{Sun Sep 20 21:14:52 2026}: pull --rebase origin main (pick): fix surround sound and expense tracker voice assist
+[33m6d9c9bd[m HEAD@{Sun Sep 20 21:14:51 2026}: pull --rebase origin main (start): checkout 6d9c9bd5c93d47135932efe6ae6cc1a8ef49ebe5
+[33mc4ef8cc[m HEAD@{Sun Sep 20 21:14:46 2026}: commit: fix surround sound and expense tracker voice assist
+[33mc36bd8c[m HEAD@{Tue Aug 25 01:35:01 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mc36bd8c[m HEAD@{Tue Aug 25 01:35:01 2026}: pull --rebase origin main (pick): Fix Time Zones to IST and install FFMPEG for videos buffer issues
+[33m51483df[m HEAD@{Tue Aug 25 01:35:01 2026}: pull --rebase origin main (start): checkout 51483df332c25e9ce4ffa401373eaa6174fcd8ba
+[33m9091a7c[m HEAD@{Tue Aug 25 01:34:56 2026}: commit: Fix Time Zones to IST and install FFMPEG for videos buffer issues
+[33mcebddc8[m HEAD@{Tue Aug 25 01:29:53 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mcebddc8[m HEAD@{Tue Aug 25 01:29:53 2026}: pull --rebase origin main (pick): Fix Time Zones to IST and install FFMPEG for videos buffer issues
+[33md2abddf[m HEAD@{Tue Aug 25 01:29:52 2026}: pull --rebase origin main (start): checkout d2abddf2da469f556be482a75eb51633d2981ee0
+[33mf9fd789[m HEAD@{Tue Aug 25 01:29:46 2026}: commit: Fix Time Zones to IST and install FFMPEG for videos buffer issues
+[33m0b99b76[m HEAD@{Mon Aug 24 03:31:29 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m0b99b76[m HEAD@{Mon Aug 24 03:31:29 2026}: pull --rebase origin main (pick): Fix Time Zones to IST and fix Automatic Health Reminder
+[33m2e332e1[m HEAD@{Mon Aug 24 03:31:29 2026}: pull --rebase origin main (start): checkout 2e332e1f9ce9e9801c9ffa8c03b818f12ac72548
+[33mc0949af[m HEAD@{Mon Aug 24 03:31:19 2026}: commit: Fix Time Zones to IST and fix Automatic Health Reminder
+[33m06a6c8c[m[33m ([m[1;32mrecovery-current[m[33m)[m HEAD@{Mon Aug 24 02:51:11 2026}: checkout: moving from 06a6c8c272ceb23dcf2b3ffcaeddc6da256757cb to main
+[33m06a6c8c[m[33m ([m[1;32mrecovery-current[m[33m)[m HEAD@{Mon Aug 24 02:43:17 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m06a6c8c[m[33m ([m[1;32mrecovery-current[m[33m)[m HEAD@{Mon Aug 24 02:43:17 2026}: pull --rebase origin main (pick): Fix Time Zones to IST and fix Automatic Health Reminder
+[33me4b0f0e[m HEAD@{Mon Aug 24 02:43:17 2026}: pull --rebase origin main (start): checkout e4b0f0ef9efa6d8d0bea74873431f00baf602905
+[33md57d778[m[33m ([m[1;32mbackup-health-fix[m[33m)[m HEAD@{Mon Aug 24 02:43:13 2026}: commit: Fix Time Zones to IST and fix Automatic Health Reminder
+[33mb681e0a[m HEAD@{Mon Aug 24 02:15:20 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mb681e0a[m HEAD@{Mon Aug 24 02:15:20 2026}: pull --rebase origin main (pick): Fix Time Zones to IST and fix Automatic Health Reminder
+[33me6211ea[m HEAD@{Mon Aug 24 02:15:19 2026}: pull --rebase origin main (start): checkout e6211eaaf2c2c0309120251d0d3bd2eb5f7c3c96
+[33mfafdfc2[m HEAD@{Mon Aug 24 02:15:16 2026}: commit: Fix Time Zones to IST and fix Automatic Health Reminder
+[33mf8cf517[m HEAD@{Mon Aug 24 01:30:30 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mf8cf517[m HEAD@{Mon Aug 24 01:30:30 2026}: pull --rebase origin main (pick): Fix Time Zones to IST and fix Automatic Health Reminder
+[33mca5ce4c[m HEAD@{Mon Aug 24 01:30:30 2026}: pull --rebase origin main (start): checkout ca5ce4c19cc9c973c6ebb0ce8583dd8b0a016940
+[33mbaf7650[m HEAD@{Mon Aug 24 01:30:26 2026}: commit: Fix Time Zones to IST and fix Automatic Health Reminder
+[33m4e3910a[m HEAD@{Mon Aug 24 01:23:39 2026}: commit: Fix Time Zones to IST and fix Automatic Health Reminder
+[33me427cd3[m HEAD@{Mon Aug 24 01:21:33 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33me427cd3[m HEAD@{Mon Aug 24 01:21:33 2026}: pull --rebase origin main (pick): Fix Time Zones to IST and fix Automatic Health Reminder
+[33ma816dc3[m HEAD@{Mon Aug 24 01:21:33 2026}: pull --rebase origin main (start): checkout a816dc3c6e9c973eb4ce2a0fa0b07088ddbd2770
+[33mf4e817b[m HEAD@{Mon Aug 24 01:21:30 2026}: commit: Fix Time Zones to IST and fix Automatic Health Reminder
+[33m6590478[m HEAD@{Mon Aug 24 00:55:54 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m6590478[m HEAD@{Mon Aug 24 00:55:54 2026}: pull --rebase origin main (pick): Fix Time Zones to IST and fix Automatic Health Reminder
+[33m32107b9[m HEAD@{Mon Aug 24 00:55:54 2026}: pull --rebase origin main (start): checkout 32107b90209143d8a9b0157489bc06d926ca41c6
+[33mf5d7bdb[m HEAD@{Mon Aug 24 00:55:48 2026}: commit: Fix Time Zones to IST and fix Automatic Health Reminder
+[33ma1bffd5[m HEAD@{Sun Aug 23 21:54:52 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33ma1bffd5[m HEAD@{Sun Aug 23 21:54:52 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY working properly
+[33mf223250[m HEAD@{Sun Aug 23 21:54:51 2026}: pull --rebase origin main (start): checkout f2232506a585dc27218747d4a1adb7bd8ffc3f35
+[33mcae2dd6[m HEAD@{Sun Aug 23 21:54:48 2026}: commit: QR CODE SCAN FUNCTIONALITY working properly
+[33m833526b[m HEAD@{Sun Aug 23 21:26:59 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m833526b[m HEAD@{Sun Aug 23 21:26:59 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY working properly
+[33m65c4680[m HEAD@{Sun Aug 23 21:26:58 2026}: pull --rebase origin main (start): checkout 65c46806932d524f4725ede00f5f379d5d6e8147
+[33md4f7e72[m[33m ([m[1;32mbackup-before-rebase-fix[m[33m)[m HEAD@{Sun Aug 23 21:23:05 2026}: commit: QR CODE SCAN FUNCTIONALITY working properly
+[33m22b11e0[m HEAD@{Sun Aug 23 21:18:11 2026}: commit: QR CODE SCAN FUNCTIONALITY working properly
+[33md4cff69[m HEAD@{Sun Aug 23 21:15:41 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33md4cff69[m HEAD@{Sun Aug 23 21:15:41 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY working properly
+[33me8bce15[m HEAD@{Sun Aug 23 21:15:41 2026}: pull --rebase origin main (start): checkout e8bce15deca45a28d86b77394d4370742987cbc8
+[33mcdc66fc[m HEAD@{Sun Aug 23 21:15:38 2026}: commit: QR CODE SCAN FUNCTIONALITY working properly
+[33m872b5dc[m HEAD@{Sun Aug 23 18:01:39 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m872b5dc[m HEAD@{Sun Aug 23 18:01:39 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY working properly
+[33mb28fe76[m HEAD@{Sun Aug 23 18:01:38 2026}: pull --rebase origin main (start): checkout b28fe76ea95115c1e0bf3364745cd70181a00b4d
+[33mc793a3d[m HEAD@{Sun Aug 23 18:01:30 2026}: commit: QR CODE SCAN FUNCTIONALITY working properly
+[33m185ad3e[m HEAD@{Sun Aug 23 17:39:59 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m185ad3e[m HEAD@{Sun Aug 23 17:39:59 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY working properly
+[33mbff9dfc[m HEAD@{Sun Aug 23 17:39:58 2026}: pull --rebase origin main (start): checkout bff9dfc8826e93587185dd0ad3cbb20e0a3ad267
+[33m1294881[m HEAD@{Sun Aug 23 17:39:54 2026}: commit: QR CODE SCAN FUNCTIONALITY working properly
+[33m8af2ee8[m HEAD@{Sun Aug 23 17:32:10 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m8af2ee8[m HEAD@{Sun Aug 23 17:32:10 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m98c986e[m HEAD@{Sun Aug 23 17:32:10 2026}: pull --rebase origin main (start): checkout 98c986e7bfb4cc3f17089846fb0f2fd71da86667
+[33mee6d646[m HEAD@{Sun Aug 23 17:31:28 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m909cd71[m HEAD@{Sun Aug 23 14:22:19 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m9883974[m HEAD@{Sun Aug 23 08:32:46 2026}: pull --rebase origin main: Fast-forward
+[33mb37dd8c[m HEAD@{Sun Aug 23 08:15:47 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mb37dd8c[m HEAD@{Sun Aug 23 08:15:47 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33mdce46ad[m HEAD@{Sun Aug 23 08:15:46 2026}: pull --rebase origin main (start): checkout dce46ade496835e092ce72f71d0b84a88918f17d
+[33m7d9ba6b[m HEAD@{Sun Aug 23 08:15:43 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m57c8f45[m HEAD@{Sun Aug 23 07:39:43 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33mc1a9b0b[m HEAD@{Sun Aug 23 06:56:45 2026}: pull --rebase origin main: Fast-forward
+[33mff54bd1[m HEAD@{Sun Aug 23 05:50:32 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mff54bd1[m HEAD@{Sun Aug 23 05:50:32 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m6d19eb0[m HEAD@{Sun Aug 23 05:50:32 2026}: pull --rebase origin main (start): checkout 6d19eb08926ab6af00c310d86a58e7c7224ad080
+[33m00e9299[m HEAD@{Sun Aug 23 05:50:28 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m7652b7c[m HEAD@{Sun Aug 23 05:01:15 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m7652b7c[m HEAD@{Sun Aug 23 05:01:15 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m3f93eca[m HEAD@{Sun Aug 23 05:01:15 2026}: pull --rebase origin main (start): checkout 3f93ecac5276f16cb909f9a92ec35dab03bdefec
+[33m8bf4e4b[m HEAD@{Sun Aug 23 05:01:11 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m7ffe02c[m HEAD@{Sun Aug 23 04:20:07 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m7ffe02c[m HEAD@{Sun Aug 23 04:20:07 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m57b18f9[m HEAD@{Sun Aug 23 04:20:06 2026}: pull --rebase origin main (start): checkout 57b18f9d39d9edd16bc1f3ba50725abad4da39a6
+[33md2f5d0c[m HEAD@{Sun Aug 23 04:20:02 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33md4f8e80[m HEAD@{Sun Aug 23 03:42:44 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33md4f8e80[m HEAD@{Sun Aug 23 03:42:44 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m2ce1d63[m HEAD@{Sun Aug 23 03:42:44 2026}: pull --rebase origin main (start): checkout 2ce1d63087cb96340a0cf78380466aacb0ddbd96
+[33m0c5b67a[m HEAD@{Sun Aug 23 03:42:40 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m6ba01d5[m HEAD@{Sun Aug 23 03:13:21 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m6ba01d5[m HEAD@{Sun Aug 23 03:13:21 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33mc1dc567[m HEAD@{Sun Aug 23 03:13:20 2026}: pull --rebase origin main (start): checkout c1dc56733a02cf30746bc5d5ea16487db92f9a5b
+[33m264bd9c[m HEAD@{Sun Aug 23 03:13:17 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33ma912d46[m HEAD@{Sun Aug 23 02:30:12 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33ma912d46[m HEAD@{Sun Aug 23 02:30:12 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33ma1613f8[m HEAD@{Sun Aug 23 02:30:12 2026}: pull --rebase origin main (start): checkout a1613f87337c3941e1924968e7a06b276ecd6747
+[33m97e2073[m HEAD@{Sun Aug 23 02:30:08 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m2f7d2a4[m HEAD@{Sun Aug 23 01:48:38 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m2f7d2a4[m HEAD@{Sun Aug 23 01:48:38 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m83d59f4[m HEAD@{Sun Aug 23 01:48:37 2026}: pull --rebase origin main (start): checkout 83d59f4d875c7315c885b8a1d3d8ed531dd7d969
+[33m75d0db2[m HEAD@{Sun Aug 23 01:48:33 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m5dd13f6[m HEAD@{Sun Aug 23 01:41:19 2026}: pull --rebase origin main: Fast-forward
+[33mb018eff[m HEAD@{Sun Aug 23 01:04:20 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mb018eff[m HEAD@{Sun Aug 23 01:04:20 2026}: pull --rebase origin main (pick): QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m82e8eab[m HEAD@{Sun Aug 23 01:04:19 2026}: pull --rebase origin main (start): checkout 82e8eab3910185a64ec0cd354f6f86592df5319c
+[33md058a2f[m HEAD@{Sun Aug 23 01:04:07 2026}: commit: QR CODE SCAN FUNCTIONALITY FIXES & PERSISTENCY FIX FOR HEALTH REMINDER NOTIFICATIONS
+[33m5f7bb49[m HEAD@{Sat Aug 22 04:23:34 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m5f7bb49[m HEAD@{Sat Aug 22 04:23:34 2026}: pull --rebase origin main (pick): ADDED HEALTH REMINDER EDIT FUNCTIONALITY & REVERTED THEATRE MEDIA PLAYER TO THE OLD VERSION
+[33m5dddfc6[m HEAD@{Sat Aug 22 04:23:33 2026}: pull --rebase origin main (start): checkout 5dddfc6833182d13777bd7e7ff3b52c14b5fe523
+[33mc75c72d[m HEAD@{Sat Aug 22 04:23:29 2026}: commit: ADDED HEALTH REMINDER EDIT FUNCTIONALITY & REVERTED THEATRE MEDIA PLAYER TO THE OLD VERSION
+[33m3df672c[m HEAD@{Sat Aug 22 02:09:25 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m3df672c[m HEAD@{Sat Aug 22 02:09:25 2026}: pull --rebase origin main (pick): ADDED HEALTH REMINDER EDIT FUNCTIONALITY & REVERTED THEATRE MEDIA PLAYER TO THE OLD VERSION
+[33m19da35e[m HEAD@{Sat Aug 22 02:09:24 2026}: pull --rebase origin main (start): checkout 19da35e73ded8231d84b48e831a917d3733de5ed
+[33mf18f4e0[m HEAD@{Sat Aug 22 02:09:18 2026}: commit: ADDED HEALTH REMINDER EDIT FUNCTIONALITY & REVERTED THEATRE MEDIA PLAYER TO THE OLD VERSION
+[33m2440cb0[m HEAD@{Sat Aug 22 01:26:46 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m2440cb0[m HEAD@{Sat Aug 22 01:26:46 2026}: pull --rebase origin main (pick): ADDED HEALTH REMINDER EDIT FUNCTIONALITY & REVERTED THEATRE MEDIA PLAYER TO THE OLD VERSION
+[33m8421a53[m HEAD@{Sat Aug 22 01:26:46 2026}: pull --rebase origin main (start): checkout 8421a53236e6632f01b1bb0a8e20a3d5089dcf45
+[33ma691a16[m HEAD@{Sat Aug 22 01:26:36 2026}: commit: ADDED HEALTH REMINDER EDIT FUNCTIONALITY & REVERTED THEATRE MEDIA PLAYER TO THE OLD VERSION
+[33ma7f45f9[m HEAD@{Sat Aug 22 00:08:15 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33ma7f45f9[m HEAD@{Sat Aug 22 00:08:15 2026}: pull --rebase origin main (pick): ADDED HEALTH REMINDER EDIT FUNCTIONALITY & REVERTED THEATRE MEDIA PLAYER TO THE OLD VERSION
+[33me90196f[m HEAD@{Sat Aug 22 00:08:14 2026}: pull --rebase origin main (start): checkout e90196f9a4d96e24e86f0d6476f731a00c161a88
+[33mfac2982[m HEAD@{Sat Aug 22 00:07:58 2026}: commit: ADDED HEALTH REMINDER EDIT FUNCTIONALITY & REVERTED THEATRE MEDIA PLAYER TO THE OLD VERSION
+[33m8e685b6[m HEAD@{Fri Aug 21 03:07:17 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m8e685b6[m HEAD@{Fri Aug 21 03:07:17 2026}: pull --rebase origin main (pick): FIX ADMIN & QR ISSUES & REMOTE DEVICE LOGIN ISSUES
+[33m1d87add[m HEAD@{Fri Aug 21 03:07:16 2026}: pull --rebase origin main (start): checkout 1d87add4172848e50aca2da065304024705b645b
+[33ma7f60cd[m HEAD@{Fri Aug 21 03:07:13 2026}: commit: FIX ADMIN & QR ISSUES & REMOTE DEVICE LOGIN ISSUES
+[33m6f34e48[m HEAD@{Fri Aug 21 02:47:09 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m6f34e48[m HEAD@{Fri Aug 21 02:47:09 2026}: pull --rebase origin main (pick): FIX ADMIN & QR ISSUES & REMOTE DEVICE LOGIN ISSUES
+[33mdedec14[m HEAD@{Fri Aug 21 02:47:08 2026}: pull --rebase origin main (start): checkout dedec14d2db3ed6ec54b004a99c9b19430b91283
+[33m2b91d95[m HEAD@{Fri Aug 21 02:47:04 2026}: commit: FIX ADMIN & QR ISSUES & REMOTE DEVICE LOGIN ISSUES
+[33mff96f42[m HEAD@{Fri Aug 21 02:10:12 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mff96f42[m HEAD@{Fri Aug 21 02:10:12 2026}: pull --rebase origin main (pick): FIX ADMIN & QR ISSUES & REMOTE DEVICE LOGIN ISSUES
+[33mfdaa801[m HEAD@{Fri Aug 21 02:10:11 2026}: pull --rebase origin main (start): checkout fdaa80188abca449b62f15291096d15311848c99
+[33m80f52f0[m HEAD@{Fri Aug 21 02:10:07 2026}: commit: FIX ADMIN & QR ISSUES & REMOTE DEVICE LOGIN ISSUES
+[33m6b4b03e[m HEAD@{Fri Aug 21 01:26:35 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m6b4b03e[m HEAD@{Fri Aug 21 01:26:35 2026}: pull --rebase origin main (pick): FIX TIME ZONE FOR LOG AUDIT
+[33m3bc94bb[m HEAD@{Fri Aug 21 01:26:35 2026}: pull --rebase origin main (start): checkout 3bc94bb602dc0fd63020a4fccd71388c3238ba71
+[33m0244e76[m HEAD@{Fri Aug 21 01:26:19 2026}: commit: FIX TIME ZONE FOR LOG AUDIT
+[33m68ff242[m HEAD@{Fri Aug 21 00:59:16 2026}: reset: moving to 68ff242
+[33m68ff242[m HEAD@{Fri Aug 21 00:56:59 2026}: reset: moving to 68ff242
+[33mf0a14e8[m[33m ([m[1;32mbackup-messed-after-rebase[m[33m)[m HEAD@{Fri Aug 21 00:33:44 2026}: commit: RESET HARD TO WORKING CODE WITH NEW HEALTH & WORLD TIME FUNCTIONS
+[33m73d7007[m HEAD@{Fri Aug 21 00:23:29 2026}: rebase (finish): returning to refs/heads/main
+[33m73d7007[m HEAD@{Fri Aug 21 00:20:00 2026}: pull --rebase origin main (start): checkout 73d70072fb7fa153bd11a803bcbf4a529e6d1167
+[33m68ff242[m HEAD@{Fri Aug 21 00:19:52 2026}: commit: RESET HARD TO WORKING CODE WITH NEW HEALTH & WORLD TIME FUNCTIONS
+[33m917b2b0[m HEAD@{Thu Aug 20 23:16:54 2026}: reset: moving to 917b2b0
+[33m8dfff66[m[33m ([m[1;32mbackup-before-reset[m[33m)[m HEAD@{Thu Aug 20 22:13:25 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m8dfff66[m[33m ([m[1;32mbackup-before-reset[m[33m)[m HEAD@{Thu Aug 20 22:13:25 2026}: pull --rebase origin main (pick): fix errors in html
+[33m998277a[m HEAD@{Thu Aug 20 22:13:25 2026}: pull --rebase origin main (start): checkout 998277a1c93157d5e20fc9db923295219eb1c5b5
+[33mbebb95a[m HEAD@{Thu Aug 20 22:13:16 2026}: commit: fix errors in html
+[33ma58b26e[m HEAD@{Thu Aug 20 04:00:26 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33ma58b26e[m HEAD@{Thu Aug 20 04:00:26 2026}: pull --rebase origin main (pick): added new functionality
+[33maa9d01a[m HEAD@{Thu Aug 20 04:00:25 2026}: pull --rebase origin main (start): checkout aa9d01ae02effd60e1c3a9c13009e825642bda43
+[33m9b63770[m HEAD@{Thu Aug 20 03:59:56 2026}: commit: added new functionality
+[33mba20352[m HEAD@{Thu Aug 20 03:10:46 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mba20352[m HEAD@{Thu Aug 20 03:10:46 2026}: pull --rebase origin main (pick): added new functionality
+[33m415c704[m HEAD@{Thu Aug 20 03:10:45 2026}: pull --rebase origin main (start): checkout 415c7041c4f766d5acb989c054d224f0f163f78c
+[33m9670a43[m HEAD@{Thu Aug 20 03:10:42 2026}: commit: added new functionality
+[33m763c7ba[m HEAD@{Thu Aug 20 02:07:11 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m763c7ba[m HEAD@{Thu Aug 20 02:07:11 2026}: pull --rebase origin main (pick): added new functionality
+[33m312a066[m HEAD@{Thu Aug 20 02:07:10 2026}: pull --rebase origin main (start): checkout 312a06610ab97b4f345fd4bfdb26a7b2efdc234d
+[33mb193620[m HEAD@{Thu Aug 20 02:06:59 2026}: commit: added new functionality
+[33m917b2b0[m HEAD@{Wed Aug 19 15:11:54 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m917b2b0[m HEAD@{Wed Aug 19 15:11:54 2026}: pull --rebase origin main (pick): fix approval func
+[33m89ddb02[m HEAD@{Wed Aug 19 15:11:53 2026}: pull --rebase origin main (start): checkout 89ddb0266a604375b24f231cf50f867b42af2b20
+[33m08607d0[m HEAD@{Wed Aug 19 15:11:36 2026}: commit: fix approval func
+[33m70205e1[m HEAD@{Wed Aug 19 05:14:34 2026}: rebase (finish): returning to refs/heads/main
+[33m70205e1[m HEAD@{Wed Aug 19 05:14:20 2026}: rebase (continue): FIX PAYMENT APPROVAL ISSUE
+[33m0e64fb1[m HEAD@{Wed Aug 19 05:13:01 2026}: rebase (continue): FIX PAYMENT APPROVAL ISSUE
+[33mf52a17b[m HEAD@{Wed Aug 19 05:11:41 2026}: commit (amend): FIX PAYMENT APPROVAL ISSUE
+[33m41f26fc[m HEAD@{Wed Aug 19 05:09:51 2026}: rebase: fast-forward
+[33m93bd5c6[m HEAD@{Wed Aug 19 05:09:51 2026}: rebase (start): checkout 41f26fc^
+[33m8a2d023[m[33m ([m[1;32mbackup-before-secret-cleanup[m[33m)[m HEAD@{Wed Aug 19 05:08:16 2026}: rebase (finish): returning to refs/heads/main
+[33m8a2d023[m[33m ([m[1;32mbackup-before-secret-cleanup[m[33m)[m HEAD@{Wed Aug 19 05:08:16 2026}: rebase: fast-forward
+[33mffcfc31[m HEAD@{Wed Aug 19 05:08:16 2026}: rebase: fast-forward
+[33m41f26fc[m HEAD@{Wed Aug 19 05:07:51 2026}: rebase: fast-forward
+[33m93bd5c6[m HEAD@{Wed Aug 19 05:07:51 2026}: rebase (start): checkout 41f26fc^
+[33m8a2d023[m[33m ([m[1;32mbackup-before-secret-cleanup[m[33m)[m HEAD@{Wed Aug 19 05:06:16 2026}: rebase (finish): returning to refs/heads/main
+[33m8a2d023[m[33m ([m[1;32mbackup-before-secret-cleanup[m[33m)[m HEAD@{Wed Aug 19 05:06:16 2026}: rebase (start): checkout 41f26fc^
+[33m8a2d023[m[33m ([m[1;32mbackup-before-secret-cleanup[m[33m)[m HEAD@{Wed Aug 19 05:01:45 2026}: commit: FIX PAYMENT APPROVAL ISSUE
+[33mffcfc31[m HEAD@{Wed Aug 19 04:58:33 2026}: commit: FIX PAYMENT APPROVAL ISSUE
+[33m41f26fc[m HEAD@{Wed Aug 19 04:57:30 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m41f26fc[m HEAD@{Wed Aug 19 04:57:30 2026}: pull --rebase origin main (pick): FIX PAYMENT APPROVAL ISSUE
+[33m93bd5c6[m HEAD@{Wed Aug 19 04:57:29 2026}: pull --rebase origin main (start): checkout 93bd5c662969f46575498a92cfaa362e7976617e
+[33m1a42570[m HEAD@{Wed Aug 19 04:57:11 2026}: commit: FIX PAYMENT APPROVAL ISSUE
+[33mafc2197[m HEAD@{Wed Aug 19 01:17:43 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mafc2197[m HEAD@{Wed Aug 19 01:17:43 2026}: pull --rebase origin main (pick): FIX QR SCANNER ISSUE
+[33mf3786cc[m HEAD@{Wed Aug 19 01:17:43 2026}: pull --rebase origin main (start): checkout f3786cc59bf470eb64a64ac853fefae164318278
+[33mc3e4dd3[m HEAD@{Wed Aug 19 01:17:38 2026}: commit: FIX QR SCANNER ISSUE
+[33m644fc56[m HEAD@{Sun Aug 16 18:08:29 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m644fc56[m HEAD@{Sun Aug 16 18:08:29 2026}: pull --rebase origin main (pick): Added Filter for Radio buttons and updated QR functionality for users
+[33m5fedd6d[m HEAD@{Sun Aug 16 18:08:28 2026}: pull --rebase origin main (start): checkout 5fedd6da2a49389d870ee98c3be9ec0a92d0cba2
+[33m2c76e1c[m HEAD@{Sun Aug 16 18:08:12 2026}: commit: Added Filter for Radio buttons and updated QR functionality for users
+[33m4ad2b23[m HEAD@{Sun Aug 16 05:41:39 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m4ad2b23[m HEAD@{Sun Aug 16 05:41:39 2026}: pull --rebase origin main (pick): commercial features working fine
+[33m887c868[m HEAD@{Sun Aug 16 05:41:39 2026}: pull --rebase origin main (start): checkout 887c8684f71d1e6ad8b3691e851d831e369481e3
+[33mc031749[m HEAD@{Sun Aug 16 05:41:07 2026}: commit: commercial features working fine
+[33maf9d091[m[33m ([m[1;32mrecovery-updated-files[m[33m)[m HEAD@{Sun Aug 16 03:05:20 2026}: merge recovery-updated-files: Fast-forward
+[33m2eb7c20[m HEAD@{Sun Aug 16 03:05:18 2026}: checkout: moving from main to main
+[33m2eb7c20[m HEAD@{Sun Aug 16 03:03:53 2026}: checkout: moving from recovery-updated-files to main
+[33maf9d091[m[33m ([m[1;32mrecovery-updated-files[m[33m)[m HEAD@{Sun Aug 16 03:02:40 2026}: commit (merge): commercial features added today
+[33m933187e[m HEAD@{Sun Aug 16 02:59:53 2026}: commit: commercial features added today
+[33m1d8be7c[m HEAD@{Sun Aug 16 02:57:26 2026}: commit: commercial features added today
+[33m3087c66[m HEAD@{Sun Aug 16 02:56:56 2026}: commit: commercial features added
+[33m6d14a4f[m HEAD@{Sun Aug 16 02:56:24 2026}: commit: commercial features added
+[33mb658f57[m HEAD@{Sun Aug 16 02:51:21 2026}: reset: moving to b658f57
+[33mb658f57[m HEAD@{Sun Aug 16 02:17:31 2026}: checkout: moving from main to recovery-updated-files
+[33m2eb7c20[m HEAD@{Sun Aug 16 01:58:06 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m2eb7c20[m HEAD@{Sun Aug 16 01:58:06 2026}: pull --rebase origin main (pick): updated appliction features for commercial
+[33m3d53d08[m HEAD@{Sun Aug 16 01:58:05 2026}: pull --rebase origin main (start): checkout 3d53d08f90f3146166763359847ef836c080421c
+[33m71ff290[m HEAD@{Sun Aug 16 01:57:55 2026}: commit: updated appliction features for commercial
+[33m10efc21[m HEAD@{Sun Aug 16 01:40:37 2026}: commit: updated appliction features for commercial
+[33m957ecd0[m HEAD@{Sun Aug 16 01:38:04 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m957ecd0[m HEAD@{Sun Aug 16 01:38:04 2026}: pull --rebase origin main (pick): UPDATED TH CODE WITH NEW FEATURES FOR COMMERCIAL
+[33m5835c65[m HEAD@{Sun Aug 16 01:38:03 2026}: pull --rebase origin main (start): checkout 5835c654a9b555cfc0ec349f0fbab02cc8e9642f
+[33mb658f57[m HEAD@{Sun Aug 16 01:37:58 2026}: reset: moving to HEAD
+[33mb658f57[m HEAD@{Sun Aug 16 01:35:16 2026}: reset: moving to HEAD
+[33mb658f57[m HEAD@{Sun Aug 16 01:33:38 2026}: reset: moving to HEAD
+[33mb658f57[m HEAD@{Sun Aug 16 01:31:30 2026}: rebase (abort): returning to refs/heads/main
+[33mb658f57[m HEAD@{Sun Aug 16 01:31:30 2026}: rebase (abort): returning to refs/heads/main
+[33mb658f57[m HEAD@{Sun Aug 16 01:30:51 2026}: reset: moving to HEAD
+[33mb658f57[m HEAD@{Sun Aug 16 01:25:27 2026}: commit: UPDATED TH CODE WITH NEW FEATURES FOR COMMERCIAL
+[33md14a5d5[m HEAD@{Sun Jul 26 02:20:16 2026}: pull --rebase origin main: Fast-forward
+[33m6944300[m HEAD@{Sat Jul 25 20:29:39 2026}: commit: updated values.yaml image tag to new
+[33m4fba5fa[m HEAD@{Sat Jul 25 20:26:10 2026}: commit: updated values.yaml image tag to new
+[33m28e32d9[m HEAD@{Sat Jul 25 15:30:47 2026}: commit: renamed radio button devops to youtube devops
+[33ma6b7410[m HEAD@{Sat Jul 25 15:16:26 2026}: commit: renamed radio button devops to youtube devops
+[33m5ac57c7[m HEAD@{Sat Jul 25 15:09:13 2026}: reset: moving to 5ac57c7
+[33ma830c56[m HEAD@{Sun Jul 19 22:45:57 2026}: commit: renamed radio button to youtube devops
+[33m0a878b9[m HEAD@{Sun Jul 19 22:44:56 2026}: pull --rebase origin main: Fast-forward
+[33m5ac57c7[m HEAD@{Sun Jul 19 22:44:52 2026}: reset: moving to HEAD
+[33m5ac57c7[m HEAD@{Thu Jun 25 23:12:07 2026}: rebase (finish): returning to refs/heads/main
+[33m5ac57c7[m HEAD@{Thu Jun 25 23:11:20 2026}: commit: added login feature
+[33mfe64c3e[m HEAD@{Thu Jun 25 23:06:52 2026}: pull --rebase origin main (start): checkout fe64c3e1f2b0cedb6a7888a9dde3aeaff2165ec0
+[33me4f523b[m HEAD@{Thu Jun 25 23:06:18 2026}: commit: added changes for login
+[33mbd2e580[m HEAD@{Sun Jun 21 23:36:46 2026}: pull origin main: Merge made by the 'ort' strategy.
+[33md432304[m HEAD@{Sun Jun 21 23:36:41 2026}: commit: Added neew Devops PDF GOOD
+[33m49a5e35[m HEAD@{Sat Jun 20 19:15:07 2026}: commit: uncommented online class recordings radio button for sharing
+[33m17c30ef[m HEAD@{Sun Jun 14 23:39:30 2026}: commit: fixed values.yaml
+[33m4e5aba7[m HEAD@{Sun Jun 14 23:38:23 2026}: commit (merge): Merge branch 'main' of https://github.com/vijaysmetgud/vsmetgud-media-portal
+[33mcfbc932[m HEAD@{Sun Jun 14 23:36:41 2026}: commit: fix values in helm
+[33m8fddbf8[m HEAD@{Sun Jun 14 23:27:01 2026}: pull origin main: Merge made by the 'ort' strategy.
+[33ma7c9d24[m HEAD@{Sun Jun 14 23:26:46 2026}: rebase (abort): returning to refs/heads/main
+[33m59d7c9a[m HEAD@{Sun Jun 14 23:25:02 2026}: pull --rebase origin main (start): checkout 59d7c9ae6de7a60a534b0eb0656372cd90a0c9c3
+[33ma7c9d24[m HEAD@{Sun Jun 14 23:24:10 2026}: commit: Fix pod metrics collection using kubectl
+[33m5394210[m HEAD@{Sat Jun 13 18:57:59 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m5394210[m HEAD@{Sat Jun 13 18:57:59 2026}: pull --rebase origin main (pick): fix GOLDEN GLOW color for now playing
+[33m3da5cfb[m HEAD@{Sat Jun 13 18:57:58 2026}: pull --rebase origin main (start): checkout 3da5cfb32037501da79c638e1132f6c0eaca5835
+[33m2c720fb[m HEAD@{Sat Jun 13 18:57:48 2026}: commit: fix GOLDEN GLOW color for now playing
+[33m782bec0[m HEAD@{Sat Jun 13 18:30:48 2026}: commit: fix color for now playing
+[33m453f74b[m HEAD@{Sat Jun 13 18:25:50 2026}: reset: moving to 453f74b
+[33m453f74b[m HEAD@{Sat Jun 13 18:25:03 2026}: reset: moving to 453f74b
+[33m7f5d255[m HEAD@{Sat Jun 13 18:24:41 2026}: pull --rebase origin main: Fast-forward
+[33m453f74b[m HEAD@{Sat Jun 13 18:24:25 2026}: reset: moving to 453f74b
+[33m7f5d255[m HEAD@{Sat Jun 13 18:22:34 2026}: pull --rebase origin main: Fast-forward
+[33m453f74b[m HEAD@{Sat Jun 13 18:22:23 2026}: reset: moving to 453f74b
+[33mf4f9eb9[m HEAD@{Sat Jun 13 18:13:22 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mf4f9eb9[m HEAD@{Sat Jun 13 18:13:22 2026}: pull --rebase origin main (pick): Gold ornament theme for player
+[33m20f6722[m HEAD@{Sat Jun 13 18:13:22 2026}: pull --rebase origin main (start): checkout 20f6722a7d603b936ca41ab392512d7ff846b20c
+[33m6a2bf38[m HEAD@{Sat Jun 13 18:13:18 2026}: commit: Gold ornament theme for player
+[33m6e15efc[m HEAD@{Sat Jun 13 17:40:05 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m6e15efc[m HEAD@{Sat Jun 13 17:40:05 2026}: pull --rebase origin main (pick): Gold ornament theme for player
+[33mb3357c6[m HEAD@{Sat Jun 13 17:40:04 2026}: pull --rebase origin main (start): checkout b3357c6f0a2cd4a930b9cfcc42a73543693f769b
+[33m484c12b[m HEAD@{Sat Jun 13 17:39:56 2026}: commit: Gold ornament theme for player
+[33m453f74b[m HEAD@{Sat Jun 13 16:59:17 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m453f74b[m HEAD@{Sat Jun 13 16:59:17 2026}: pull --rebase origin main (pick): fix expense tracker & playlist track color
+[33m9d1761d[m HEAD@{Sat Jun 13 16:59:17 2026}: pull --rebase origin main (start): checkout 9d1761d3a3e00c393c56e37e6788e1a8c2913e98
+[33m48df4cc[m HEAD@{Sat Jun 13 16:59:04 2026}: commit: fix expense tracker & playlist track color
+[33m6c2ea2e[m HEAD@{Sat Jun 13 13:51:23 2026}: commit: fix expense tracker & playlist track color
+[33m60fb109[m HEAD@{Sat Jun 13 05:00:16 2026}: pull --rebase origin main: Fast-forward
+[33m3dbd21b[m HEAD@{Sat Jun 13 04:59:39 2026}: reset: moving to 3dbd21b
+[33m80e4cfe[m HEAD@{Sat Jun 13 04:49:40 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m80e4cfe[m HEAD@{Sat Jun 13 04:49:40 2026}: pull --rebase origin main (pick): fix expense tracker & playlist track color
+[33m780cfc9[m HEAD@{Sat Jun 13 04:49:39 2026}: pull --rebase origin main (start): checkout 780cfc9b2330fc1904da77ddc672322cc6ad53b1
+[33m6dd6103[m HEAD@{Sat Jun 13 04:49:16 2026}: commit: fix expense tracker & playlist track color
+[33m11c2051[m HEAD@{Sat Jun 13 04:35:36 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m11c2051[m HEAD@{Sat Jun 13 04:35:36 2026}: pull --rebase origin main (pick): Restore expense tracker from 3dbd21b
+[33m7f7a694[m HEAD@{Sat Jun 13 04:35:36 2026}: pull --rebase origin main (start): checkout 7f7a69488900daa6036d8c808c3210950498e6c4
+[33m538826d[m HEAD@{Sat Jun 13 04:34:07 2026}: commit: Restore expense tracker from 3dbd21b
+[33m6d033db[m HEAD@{Sat Jun 13 01:58:46 2026}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m6d033db[m HEAD@{Sat Jun 13 01:58:46 2026}: pull --rebase origin main (pick): Restore expense tracker from 79f33c3
+[33m655f4f6[m HEAD@{Sat Jun 13 01:58:45 2026}: pull --rebase origin main (start): checkout 655f4f6471e895b788cbb505478ff5e0f2c7b190
+[33m7b44152[m HEAD@{Sat Jun 13 01:57:22 2026}: commit: Restore expense tracker from 79f33c3
+[33md7a2ab9[m HEAD@{Sat Jun 13 00:43:29 2026}: commit: Fix speak & splitVoice functions for date
+[33m8eec3c0[m HEAD@{Fri Jun 12 23:59:08 2026}: commit: Fixed Playlist song highlight in golden glow
+[33m7c2d093[m HEAD@{Fri Jun 12 23:26:10 2026}: commit: Fixing Expense tracker & Theatre Media Player button on to RIGHT WORKING fine
+[33m623d3c2[m HEAD@{Fri Jun 12 21:55:32 2026}: commit: Fixin Expense tracker & Theatre Media Player button on to RIGHT
+[33m3dbd21b[m HEAD@{Thu Jun 11 02:50:58 2026}: reset: moving to 3dbd21b
+[33m79f33c3[m HEAD@{Thu Jun 11 02:50:44 2026}: checkout: moving from 3dbd21b4f65f4e58ea4e5c6b7fe97f50ce0a6c5a to main
+[33m3dbd21b[m HEAD@{Thu Jun 11 02:50:32 2026}: checkout: moving from main to 3dbd21b
+[33m79f33c3[m HEAD@{Thu Jun 11 02:23:34 2026}: commit: Fix Expense tracker & Theatre Media Player button on to RIGHT
+[33m3dbd21b[m HEAD@{Thu Jun 11 01:58:43 2026}: commit: Fix EXPENSE TRACKER WINDOW BUTTONS & GRAOHS
+[33m6ed0646[m HEAD@{Thu Jun 11 00:06:45 2026}: commit: Fix EXPENSE TRACKER WINDOW BUTTONS & GRAOHS
+[33m7a822fb[m HEAD@{Wed Jun 10 23:39:32 2026}: commit: Fix Expense tracker & Theatre Media Player button on to RIGHT
+[33md1a491f[m HEAD@{Tue Jun 9 22:43:42 2026}: commit: Fix Volume and seek control below controls button
+[33me03a7df[m HEAD@{Tue Jun 9 03:27:01 2026}: commit: REINNOVATION TO MEDIA PLAYER LAYOUT STYLE
+[33mcb2d824[m HEAD@{Tue Jun 9 02:56:59 2026}: commit: REINNOVATION TO MEDIA PLAYER LAYOUT STYLE
+[33m73bca64[m HEAD@{Tue Jun 9 01:44:48 2026}: commit: REINNOVATION TO MEDIA PLAYER LAYOUT STYLE
+[33m0131373[m HEAD@{Mon Jun 8 03:06:23 2026}: commit: FIX surround & theatre presets
+[33m586ee0d[m HEAD@{Mon Jun 8 02:32:34 2026}: commit: FIX surround & theatre presets
+[33m710e918[m HEAD@{Mon Jun 8 02:19:08 2026}: commit: FIX VIDEO SCREEN IN LAPTOP FOR THEATRE PLAYERR
+[33m8ffcbf1[m HEAD@{Mon Jun 8 02:06:19 2026}: commit: FIX VIDEO SCREEN IN LAPTOP FOR THEATRE PLAYERR
+[33mf01241a[m HEAD@{Mon Jun 8 01:21:24 2026}: commit: FIX PLAY NEXT BUTTON & CHANGE TO NEW VISUALIZER
+[33m1eb13b8[m HEAD@{Sun Jun 7 00:28:45 2026}: commit: RESTORED EQUALIZER
+[33mfd172e1[m HEAD@{Sun Jun 7 00:05:55 2026}: commit: Equalizer presets & surround & controls buttons added WORKING GOOD
+[33m0fd286e[m HEAD@{Sat Jun 6 23:43:38 2026}: commit: Equalizer presets & surround & controls buttons added WORKING GOOD
+[33m51515a8[m HEAD@{Sat Jun 6 23:25:46 2026}: commit: Equalizer presets & surround & controls buttons added WORKING GOOD
+[33m5b3eb27[m HEAD@{Sat Jun 6 22:58:12 2026}: commit: Equalizer presets & surround & controls buttons added WORKING GOOD
+[33m8c62874[m HEAD@{Sat Jun 6 21:02:13 2026}: commit: Equalizer presets & surround & controls buttons added9
+[33m286053b[m HEAD@{Sat Jun 6 20:17:28 2026}: commit: Equalizer presets & surround & controls buttons added7
+[33m77a3bcc[m HEAD@{Sat Jun 6 19:57:13 2026}: commit: Equalizer presets & surround & controls buttons added5
+[33m101924e[m HEAD@{Sat Jun 6 19:40:26 2026}: commit: Equalizer presets & surround & controls buttons added5
+[33mc7f0248[m HEAD@{Sat Jun 6 19:26:34 2026}: commit: Equalizer presets & surround & controls buttons added6
+[33mf467a7d[m HEAD@{Sat Jun 6 18:42:52 2026}: commit: Equalizer presets & surround & controls buttons added5
+[33md39c16e[m HEAD@{Sat Jun 6 18:35:51 2026}: commit: Equalizer presets & surround & controls buttons added4
+[33m261b22a[m HEAD@{Sat Jun 6 18:25:09 2026}: commit: Equalizer presets & surround & controls buttons added3
+[33mf87a39d[m HEAD@{Sat Jun 6 17:30:48 2026}: commit: Equalizer presets & surround & controls buttons added2
+[33mc98799b[m HEAD@{Sat Jun 6 16:20:16 2026}: commit: Equalizer presets & surround & controls buttons added
+[33mc79c97b[m HEAD@{Sat Jun 6 15:38:57 2026}: pull --rebase origin main: Fast-forward
+[33m0e36b78[m HEAD@{Sat Jun 6 12:35:29 2026}: commit: Equalizer fix
+[33me8d708e[m HEAD@{Sat Jun 6 12:25:35 2026}: commit: Equalizer fix
+[33mb81ca11[m HEAD@{Sat Jun 6 03:38:03 2026}: commit: WORKING
+[33m65a1e75[m HEAD@{Sat Jun 6 03:35:49 2026}: commit: WORKING
+[33ma3ab75e[m HEAD@{Sat Jun 6 02:58:43 2026}: commit: WORKING
+[33m19d8248[m HEAD@{Sat Jun 6 02:52:57 2026}: commit: WORKING
+[33mf035f82[m HEAD@{Sat Jun 6 02:24:16 2026}: reset: moving to f035f82
+[33m967b007[m HEAD@{Sat Jun 6 02:21:50 2026}: commit: last known working
+[33mcb09046[m HEAD@{Sat Jun 6 02:17:16 2026}: pull origin main --rebase: Fast-forward
+[33md1e8ab7[m HEAD@{Sat Jun 6 02:17:10 2026}: reset: moving to HEAD
+[33md1e8ab7[m HEAD@{Sat Jun 6 01:40:38 2026}: reset: moving to d1e8ab7
+[33m4ab164a[m HEAD@{Sat Jun 6 00:35:50 2026}: reset: moving to 4ab164a
+[33m00dfb4d[m HEAD@{Fri Jun 5 23:17:13 2026}: pull origin main --rebase: Fast-forward
+[33m3bfc38e[m HEAD@{Fri Jun 5 23:08:35 2026}: reset: moving to 3bfc38e
+[33mb8b25b1[m HEAD@{Fri Jun 5 22:58:54 2026}: pull origin main --rebase (finish): returning to refs/heads/main
+[33mb8b25b1[m HEAD@{Fri Jun 5 22:58:54 2026}: pull origin main --rebase (pick): Adding Theatre Media player fix to work on internet
+[33m65c17af[m HEAD@{Fri Jun 5 22:58:51 2026}: pull origin main --rebase (start): checkout 65c17af573c7e1daf484f340f96d22412fc7b3ba
+[33md1e8ab7[m HEAD@{Fri Jun 5 22:58:43 2026}: commit: Adding Theatre Media player fix to work on internet
+[33mf035f82[m HEAD@{Fri Jun 5 21:58:04 2026}: pull origin main --rebase (finish): returning to refs/heads/main
+[33mf035f82[m HEAD@{Fri Jun 5 21:58:04 2026}: pull origin main --rebase (pick): Adding Theatre Media player fix to work on internet
+[33m4e714c4[m HEAD@{Fri Jun 5 21:58:04 2026}: pull origin main --rebase (start): checkout 4e714c4e00e853ba8aa32ab9bc81793f8e19c11d

@@ -326,6 +326,8 @@ If ffprobe isn't installed:
 sudo apt install ffmpeg ----->To play videos Smoothly without buffering and stuck issues
 --------------------------------------------------------------------------
 
+FIX HELM UPDATION ISSUES:
+--------------------------
 
 helm upgrade --install media-portal . \
   --set image.repository=vsmetgud/media-portal \
