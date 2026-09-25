@@ -57,7 +57,12 @@ function crossOriginProblem(el) {
   return null;
 }
 
-export default function SurroundPanel({ videoRef, selector = 'video', defaultOpen = false }) {
+export default function SurroundPanel({
+  videoRef,
+  selector = 'video',
+  defaultOpen = false,
+  engine: providedEngine = null
+}) {
   const [engine, setEngine] = useState(null);
   const [state, setState] = useState(null);
   const [open, setOpen] = useState(defaultOpen);
@@ -65,46 +70,75 @@ export default function SurroundPanel({ videoRef, selector = 'video', defaultOpe
   const [corsOrigin, setCorsOrigin] = useState(null);
   const wanted = useRef({ preset: 'off', mode: 'speakers', params: null });
 
-  // find the <video>, and re-find it if the player replaces it
+  // Reuse the TheatrePlayer-owned engine when supplied.
+  // This is critical: do not create a second MediaElementSourceNode.
   useEffect(() => {
     let current = null;
     let unsubscribe = null;
 
     const look = () => {
-      const el = (videoRef && videoRef.current) || document.querySelector(selector);
-      if (!el || el === current) return;
+      const el =
+        (videoRef && videoRef.current) ||
+        document.querySelector(selector);
 
-      if (current && !document.contains(current)) {
-        SurroundEngine.attach(current).dispose();
-      }
+      if (!el) return;
+
+      if (el === current && engine) return;
+
       current = el;
 
-      const eng = SurroundEngine.attach(el);
       if (unsubscribe) unsubscribe();
+
+      const eng =
+        providedEngine ||
+        el.__surroundEngine ||
+        SurroundEngine.attach(el);
+
       unsubscribe = eng.onChange((s) => {
-        wanted.current = { preset: s.preset, mode: s.requestedMode, params: s.params };
+        wanted.current = {
+          preset: s.preset,
+          mode: s.requestedMode,
+          params: s.params
+        };
+
         setState(s);
       });
 
       const w = wanted.current;
+
       if (w.preset !== 'off' && !eng.getState().active) {
-        // carry the user's choice over to the new video element
         eng.setOutputMode(w.mode);
-        eng.enable(w.preset).then(() => {
-          if (w.params) Object.entries(w.params).forEach(([k, v]) => eng.setParam(k, v));
-        }).catch((e) => setError(String(e.message || e)));
+
+        eng.enable(w.preset)
+          .then(() => {
+            if (w.params) {
+              Object.entries(w.params).forEach(([k, v]) => {
+                eng.setParam(k, v);
+              });
+            }
+          })
+          .catch((e) =>
+            setError(String(e.message || e))
+          );
       }
+
       setEngine(eng);
       setState(eng.getState());
     };
 
     look();
+
+    // Keep support for a media element being replaced by React.
     const id = setInterval(look, 700);
+
     return () => {
       clearInterval(id);
-      if (unsubscribe) unsubscribe();
+
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
-  }, [videoRef, selector]);
+  }, [videoRef, selector, providedEngine, engine]);
 
   const run = async (fn) => {
     setError('');

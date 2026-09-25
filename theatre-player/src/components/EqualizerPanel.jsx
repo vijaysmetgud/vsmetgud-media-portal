@@ -24,9 +24,9 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, leftDe
     switch (mode) {
 
       case "surround":
-        bass.gain.value = 3;
-        vocal.gain.value = 8;
-        treble.gain.value = 5;
+        bass.gain.value = 9; // 90% target
+        vocal.gain.value = 4; // 40% target
+        treble.gain.value = 8; // 80% target
 
         if (leftDelay)
           leftDelay.delayTime.value = 0.020;

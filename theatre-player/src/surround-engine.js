@@ -180,8 +180,7 @@ export class SurroundEngine {
    * createMediaElementSource() may only be called once for
    * a given media element.
    */
-  static attach(el) {
-
+  static attach(el, options = {}) {
     if (!SurroundEngine._instances) {
       SurroundEngine._instances = new WeakMap();
     }
@@ -189,8 +188,7 @@ export class SurroundEngine {
     let engine = SurroundEngine._instances.get(el);
 
     if (!engine) {
-      engine = new SurroundEngine(el);
-
+      engine = new SurroundEngine(el, options);
       SurroundEngine._instances.set(el, engine);
     }
 
@@ -207,6 +205,11 @@ export class SurroundEngine {
     }
 
     this.el = el;
+
+    // Use the player's existing audio graph when supplied.
+    this._externalContext = options.context || null;
+    this._externalSource = options.source || null;
+    this._ownsContext = !this._externalContext;
 
     this.mode = options.outputMode || 'speakers';
 
@@ -243,6 +246,15 @@ export class SurroundEngine {
    * Must normally be called from a user click/tap
    * because of browser autoplay/audio-context restrictions.
    */
+  /**
+ * Initialize the audio graph.
+ * Compatible with TheatrePlayer.jsx.
+ */
+  initialize() {
+    this._ensure();
+    return this;
+  }
+
   async enable(preset = 'cinema') {
 
     this._ensure();
@@ -412,34 +424,26 @@ export class SurroundEngine {
    * removed from the page.
    */
   dispose() {
-
     if (this._detectTimer) {
       clearInterval(this._detectTimer);
     }
 
-
-    if (this.ctx) {
-
-      try {
-        this.ctx.close();
-      } catch (e) {
-        // ignore
-      }
+    // Disconnect the engine's own graph nodes.
+    try {
+      this._teardownRenderer();
+    } catch (e) {
+      console.warn("Surround renderer cleanup:", e);
     }
 
-
-    this.ctx = null;
-
+    // Do not close or recreate the media element's
+    // AudioContext or MediaElementSourceNode here.
     this._active = false;
-
     this._r = null;
 
     this._listeners.clear();
 
-
-    if (SurroundEngine._instances) {
-      SurroundEngine._instances.delete(this.el);
-    }
+    // Keep the existing engine registered for this media element.
+    // Do not delete it while the media element is still in use.
   }
 
 
@@ -518,6 +522,7 @@ export class SurroundEngine {
      */
     const ctx = (
       this.ctx =
+      this._externalContext ||
       new AC({
         latencyHint: 'interactive'
       })
@@ -544,7 +549,10 @@ export class SurroundEngine {
      *
      * because both are HTMLMediaElement objects.
      */
+    // Use the existing EQ output when supplied.
+    // Otherwise retain the original standalone behavior.
     this.src =
+      this._externalSource ||
       ctx.createMediaElementSource(this.el);
 
 

@@ -135,7 +135,7 @@ function Visualizer({ analyser }) {
     <canvas
       ref={canvasRef}
       width={900}
-      height={180}
+      height={200}
       style={{
         width: "100%",
         maxWidth: "1100px",

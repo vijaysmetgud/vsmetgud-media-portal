@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import Playlist from "./Playlist";
 import EqualizerPanel from "./EqualizerPanel";
+import SurroundPanel from "./SurroundPanel";
+import { SurroundEngine } from "./surround-engine.js";
 import "../styles/theatre.css";
 
 import {
@@ -21,6 +23,12 @@ function TheatrePlayer() {
     useRef(null);
 
   const sourceRef =
+    useRef(null);
+
+  const sourceElementRef =
+    useRef(null);
+
+  const surroundEngineRef =
     useRef(null);
 
   const bassRef =
@@ -172,97 +180,94 @@ function TheatrePlayer() {
 
     console.log("setupAudio called");
 
+    const media = mediaRef.current;
+
+    if (!media) return;
+
+    /*
+     * Reuse the existing Web Audio graph when React keeps the same
+     * <video>/<audio> element. This is essential because a media element
+     * may only have one MediaElementSourceNode.
+     */
     if (
-      !mediaRef.current
-    ) return;
+      sourceElementRef.current === media &&
+      audioContextRef.current &&
+      surroundEngineRef.current
+    ) {
+      return;
+    }
 
+    /*
+     * If React replaced <video> with <audio> (or vice versa), tear down
+     * the old graph before creating the graph for the new element.
+     */
     try {
-
-      if (
-        audioContextRef.current
-      ) {
-
-        sourceRef.current
-          ?.disconnect();
-
-        audioContextRef
-          .current
-          .close();
-      }
-
+      surroundEngineRef.current?.dispose();
     } catch {}
 
+    surroundEngineRef.current = null;
+
+    try {
+      sourceRef.current?.disconnect();
+    } catch {}
+
+    try {
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    } catch {}
+
+    audioContextRef.current = null;
+    sourceRef.current = null;
+    sourceElementRef.current = null;
+
     const audioContext =
-      new window
-        .AudioContext();
-    
-    const media = mediaRef.current;
+      new window.AudioContext();
 
     console.log("currentSrc:", media.currentSrc);
     console.log("readyState:", media.readyState);
     console.log("networkState:", media.networkState);
     console.log("error:", media.error);
 
+    /*
+     * THE ONLY MediaElementSourceNode for this media element.
+     */
     const source =
-      audioContext
-        .createMediaElementSource(
-          mediaRef.current
-        );
+      audioContext.createMediaElementSource(media);
 
     // bass
     const bass =
-      audioContext
-        .createBiquadFilter();
+      audioContext.createBiquadFilter();
 
-    bass.type =
-      "lowshelf";
-
-    bass.frequency.value =
-      120;
-
-    bass.gain.value =
-      0;
+    bass.type = "lowshelf";
+    bass.frequency.value = 120;
+    bass.gain.value = 9;
 
     // vocal
     const vocal =
-      audioContext
-        .createBiquadFilter();
+      audioContext.createBiquadFilter();
 
-    vocal.type =
-      "peaking";
-
-    vocal.frequency.value =
-      1800;
-
-    vocal.Q.value =
-      1;
-
-    vocal.gain.value =
-      0;
+    vocal.type = "peaking";
+    vocal.frequency.value = 1800;
+    vocal.Q.value = 1;
+    vocal.gain.value = 4;
 
     // treble
     const treble =
-      audioContext
-        .createBiquadFilter();
+      audioContext.createBiquadFilter();
 
-    treble.type =
-      "highshelf";
-
-    treble.frequency.value =
-      4500;
-
-    treble.gain.value =
-      0;
+    treble.type = "highshelf";
+    treble.frequency.value = 4500;
+    treble.gain.value = 8;
 
     // analyser
     const analyser =
-      audioContext
-        .createAnalyser();
-    
+      audioContext.createAnalyser();
+
     const masterGain =
       audioContext.createGain();
 
-    masterGain.gain.value = 1.5; // 30% boost    
+    masterGain.gain.value = 1.5; // existing 30% boost preserved
 
     const compressor =
       audioContext.createDynamicsCompressor();
@@ -271,8 +276,8 @@ function TheatrePlayer() {
     compressor.knee.value = 20;
     compressor.ratio.value = 8;
     compressor.attack.value = 0.003;
-    compressor.release.value = 0.25;    
-   
+    compressor.release.value = 0.25;
+
     const splitter =
       audioContext.createChannelSplitter(2);
 
@@ -286,7 +291,7 @@ function TheatrePlayer() {
       audioContext.createGain();
 
     leftGain.gain.value = 1.2;
-    rightGain.gain.value = 1.2;  
+    rightGain.gain.value = 1.2;
 
     const leftDelay =
       audioContext.createDelay();
@@ -295,18 +300,14 @@ function TheatrePlayer() {
       audioContext.createDelay();
 
     leftDelay.delayTime.value = 0.030;
-    rightDelay.delayTime.value = 0.060;  
+    rightDelay.delayTime.value = 0.060;
 
-    analyser.fftSize =
-      128;
+    analyser.fftSize = 128;
+
     source.connect(bass);
-
     bass.connect(vocal);
-
     vocal.connect(treble);
-
     treble.connect(compressor);
-
     compressor.connect(splitter);
 
     splitter.connect(leftDelay, 0);
@@ -327,7 +328,6 @@ function TheatrePlayer() {
     crossR.connect(merger, 0, 1);
     crossL.connect(merger, 0, 0);
 
-
     crossL.gain.value = 0.45;
     crossR.gain.value = 0.45;
 
@@ -346,9 +346,7 @@ function TheatrePlayer() {
     leftPanner.connect(merger, 0, 0);
     rightPanner.connect(merger, 0, 1);
 
-    merger.connect(
-      analyser
-    );
+    merger.connect(analyser);
 
     const convolver =
       audioContext.createConvolver();
@@ -364,18 +362,13 @@ function TheatrePlayer() {
       );
 
     for (let channel = 0; channel < 2; channel++) {
-
       const data =
         impulse.getChannelData(channel);
 
       for (let i = 0; i < length; i++) {
-
         data[i] =
           (Math.random() * 2 - 1) *
-          Math.pow(
-            1 - i / length,
-            2
-          );
+          Math.pow(1 - i / length, 2);
       }
     }
 
@@ -391,42 +384,45 @@ function TheatrePlayer() {
     dryGain.gain.value = 0.85;
 
     merger.connect(dryGain);
-
     merger.connect(convolver);
-
     convolver.connect(wetGain);
 
     dryGain.connect(masterGain);
-
     wetGain.connect(masterGain);
 
-    masterGain.connect(
-      audioContext.destination
-    );
+    /*
+     * IMPORTANT:
+     * Do NOT connect masterGain directly to destination.
+     *
+     * SurroundEngine receives masterGain as its input. Its dry path
+     * handles normal/original EQ sound, and its master path handles
+     * Surround. This gives us exactly one final destination path.
+     */
+    const engine =
+      SurroundEngine.attach(
+        media,
+        {
+          context: audioContext,
+          source: masterGain
+        }
+      );
 
-    audioContextRef.current =
-      audioContext;
+    engine.initialize();
 
-    analyserRef.current =
-      analyser;
+    // Make the shared engine discoverable by SurroundPanel.
+    media.__surroundEngine = engine;
 
-    sourceRef.current =
-      source;
+    audioContextRef.current = audioContext;
+    analyserRef.current = analyser;
+    sourceRef.current = source;
+    sourceElementRef.current = media;
+    surroundEngineRef.current = engine;
 
-    bassRef.current =
-      bass;
-
-    vocalRef.current =
-      vocal;
-
-    trebleRef.current =
-      treble;
-
-    leftDelayRef.current =
-      leftDelay;
-
-    rightDelayRef.current =
-      rightDelay;  
+    bassRef.current = bass;
+    vocalRef.current = vocal;
+    trebleRef.current = treble;
+    leftDelayRef.current = leftDelay;
+    rightDelayRef.current = rightDelay;
   };
 
   const handleUpload =
@@ -548,6 +544,32 @@ function TheatrePlayer() {
     }
   };
 
+  // Final cleanup when TheatrePlayer itself is unmounted.
+  useEffect(() => {
+    return () => {
+      const media = mediaRef.current;
+
+      try {
+        if (media?.__surroundEngine === surroundEngineRef.current) {
+          delete media.__surroundEngine;
+        }
+      } catch {}
+
+      try {
+        surroundEngineRef.current?.dispose();
+      } catch {}
+
+      try {
+        audioContextRef.current?.close();
+      } catch {}
+
+      surroundEngineRef.current = null;
+      sourceRef.current = null;
+      sourceElementRef.current = null;
+      audioContextRef.current = null;
+    };
+  }, []);
+
   return (
 
     <div className="theatre-container">
@@ -621,6 +643,14 @@ function TheatrePlayer() {
             volume={volume}
             setVolume={setVolume}
             fullscreen={fullscreen}
+          />
+        )}
+
+        {/* SURROUND SOUND */}
+        {mediaSrc && surroundEngineRef.current && (
+          <SurroundPanel
+            videoRef={mediaRef}
+            engine={surroundEngineRef.current}
           />
         )}
 
