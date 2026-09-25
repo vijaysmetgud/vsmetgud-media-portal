@@ -1,8 +1,8 @@
-replicaCount: 5
+replicaCount: 1
 
 image:
   repository: vsmetgud/media-portal
-  tag: "4623091a9bee8c724195e82456e1c55888453cd0"
+  tag: "618d1762c1323e2c126aba4f7277020b63a9d6fc"
   pullPolicy: IfNotPresent
 
 service:
@@ -23,11 +23,11 @@ ingress:
 
 resources:
   limits:
+    cpu: 2500m
+    memory: 2560Mi
+  requests:
     cpu: 500m
     memory: 512Mi
-  requests:
-    cpu: 200m
-    memory: 256Mi
 
 nodeSelector:
   kubernetes.io/hostname: k8s-worker
