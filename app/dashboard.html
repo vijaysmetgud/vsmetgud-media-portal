@@ -224,7 +224,13 @@
         <div class="sub" id="userLine">Loading your account...</div>
     </div>
     <div class="actions">
-        <button class="secondary" onclick="refreshAll()">↻ Refresh</button>
+        <button
+            id="refreshBtn"
+            class="secondary"
+            type="button"
+            onclick="manualRefresh()">
+            ↻ Refresh
+        </button>
         <button class="secondary" onclick="window.close()">✖ Close</button>
     </div>
 </header>
@@ -353,6 +359,31 @@ function scheduleRetry() {
         retryTimer = null;
         refreshAll(true);
     }, 10000);
+}
+
+let refreshInProgress = false;
+
+async function manualRefresh() {
+    if (refreshInProgress) return;
+    refreshInProgress = true;
+
+    const btn = document.getElementById("refreshBtn");
+
+    try {
+        btn.disabled = true;
+        btn.textContent = "Refreshing...";
+
+        await refreshAll(false);
+
+        console.log(
+            "Dashboard refresh triggered:",
+            new Date().toLocaleString()
+        );
+    } finally {
+        refreshInProgress = false;
+        btn.disabled = false;
+        btn.textContent = "↻ Refresh";
+    }
 }
 
 async function refreshAll(isBackgroundRetry) {
