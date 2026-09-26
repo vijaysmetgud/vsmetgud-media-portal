@@ -331,7 +331,7 @@ FIX HELM UPDATION ISSUES:------>>>>
 
 helm upgrade --install media-portal . \
   --set image.repository=vsmetgud/media-portal \
-  --set image.tag=helm get values media-portal --all | grep -A4 "^image:"
+  --set image.tag=e16dcc9df694fef1d3c25663290b3da1dfb259af
 
   helm get values media-portal --all | grep -A4 "^image:"
 

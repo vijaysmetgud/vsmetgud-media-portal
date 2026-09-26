@@ -644,14 +644,51 @@ function escapeAttr(str) {
     return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
+function drawCanvasBarFallback(canvas, labels, values, maxValue, valueSuffix, barColor) {
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const width = Math.max(canvas.clientWidth || 600, 320);
+    const rowHeight = 42;
+    const height = Math.max(110, labels.length * rowHeight + 35);
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = "100%";
+    canvas.style.height = height + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    ctx.font = "12px Segoe UI, Arial";
+    const labelWidth = Math.min(190, Math.max(90, width * 0.30));
+    const chartLeft = labelWidth + 12;
+    const chartWidth = Math.max(60, width - chartLeft - 48);
+    labels.forEach((label, i) => {
+        const y = 12 + i * rowHeight;
+        const shown = String(label).length > 28 ? String(label).slice(0, 25) + "…" : String(label);
+        ctx.fillStyle = "#e2e8f0";
+        ctx.textAlign = "right";
+        ctx.fillText(shown, labelWidth, y + 15);
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(chartLeft, y, chartWidth, 20);
+        const value = Number(values[i]) || 0;
+        const barWidth = Math.max(value > 0 ? 2 : 0, chartWidth * Math.min(1, value / Math.max(1, maxValue)));
+        ctx.fillStyle = barColor;
+        ctx.fillRect(chartLeft, y, barWidth, 20);
+        ctx.fillStyle = "#cbd5e1";
+        ctx.textAlign = "left";
+        ctx.fillText(`${value}${valueSuffix}`, Math.min(chartLeft + barWidth + 6, width - 42), y + 15);
+    });
+}
+
 function renderRemainingChart(inProgressRows) {
     const canvas = document.getElementById("remainingChartCanvas");
     if (!canvas) return;
 
     if (typeof window.Chart === "undefined") {
-        console.warn(
-            "Chart.js is unavailable. Rendering dashboard without charts."
-        );
+        console.warn("Chart.js unavailable; using native canvas chart fallback.");
+        const sortedFallback = [...inProgressRows].sort((a, b) =>
+            Math.max(0, a.durationSeconds - a.positionSeconds) - Math.max(0, b.durationSeconds - b.positionSeconds));
+        const labelsFallback = sortedFallback.map(r => fileName(r.filePath));
+        const valuesFallback = sortedFallback.map(r => Math.round(Math.max(0, r.durationSeconds - r.positionSeconds) / 60 * 10) / 10);
+        drawCanvasBarFallback(canvas, labelsFallback, valuesFallback, Math.max(1, ...valuesFallback), " min", "#f59e0b");
         return;
     }
 
@@ -727,9 +764,11 @@ function renderChart(rows) {
     if (!canvas) return;
 
     if (typeof window.Chart === "undefined") {
-        console.warn(
-            "Chart.js is unavailable. Rendering dashboard without charts."
-        );
+        console.warn("Chart.js unavailable; using native canvas chart fallback.");
+        const sortedFallback = [...rows].sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt));
+        drawCanvasBarFallback(canvas, sortedFallback.map(r => fileName(r.filePath)),
+            sortedFallback.map(r => Math.max(0, Math.min(100, Math.round(Number(r.percent) || 0)))), 100, "%",
+            "#2563eb");
         return;
     }
 
