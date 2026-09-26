@@ -1521,7 +1521,35 @@ PYTHON PRACTICE
         🎬 Theatre Media Player
     </button>
 
+    <label
+        class="dashboard-radio-toggle"
+        style="
+            display:flex;
+            align-items:center;
+            gap:8px;
+            padding:0 14px;
+            cursor:pointer;
+            color:#fff;
+            font-weight:600;
+        "
+        title="Open your personal viewing dashboard in a new window"
+    >
+        <input
+            type="radio"
+            id="dashboardRadioBtn"
+            name="dashboardLauncher"
+            onclick="openUserDashboard(); setTimeout(() => { this.checked = false; }, 150);"
+        >
+        📊 My Dashboard
+    </label>
+
 </div>
+
+<script>
+function openUserDashboard() {
+    window.open('/dashboard.html', '_blank', 'width=1200,height=800');
+}
+</script>
 
 <div id="fileSection">    
 
@@ -1862,6 +1890,11 @@ async function logPortalActivity(action, page, details = '') {
     } catch (err) {
         console.warn('Unable to log portal activity:', err);
     }
+}
+
+function logFileAccess(file, action) {
+    if (!file) return;
+    logPortalActivity('file_access', 'media', file);
 }
 
 function formatIST(timestamp) {
@@ -3740,6 +3773,8 @@ function renderFiles(files){
                     canAccessMedia('${file.replace(/'/g, "\\'")}', 'open/download').then(allowed => {
                         if (!allowed) return;
 
+                        logFileAccess('${file.replace(/'/g, "\\'")}', 'open/download');
+
                         window.open(
                             '/media/${encodeURIComponent(file)}',
                             '_blank'
@@ -3768,6 +3803,8 @@ function renderFiles(files){
 
         card.ondblclick = async () => {
             if (!(await canAccessMedia(file, 'open/download'))) return;
+
+            logFileAccess(file, 'open/download');
 
             window.open(
                 "/media/" +
@@ -4018,6 +4055,8 @@ function renderCategoryFiles(files) {
                 return;
             }
 
+            logFileAccess(file, "open/download");
+
             window.open(
                 "/media/" +
                 encodeURIComponent(file),
@@ -4042,6 +4081,8 @@ function renderCategoryFiles(files) {
             ))) { 
                 return;
             }
+
+            logFileAccess(file, "open/download");
 
             window.open(
                 "/media/" +
@@ -4624,12 +4665,101 @@ function handleChatQuery(query){
  *  - aborts the stream when the popup closes so the server can
  *    release its ffmpeg slot immediately.
  */
-function popupVideoBootstrap(base, fallback) {
+function popupVideoBootstrap(base, fallback, fileKey) {
     var v = document.getElementById("pv");
     var msg = document.getElementById("pvMsg");
     var tries = 0;
     var current = base;
     var usedFallback = false;
+
+    // ---------------------------------------------------------
+    // WATCH PROGRESS TRACKING (dashboard: % played, remaining
+    // time, start/last-accessed date, resume position). Same
+    // origin fetch, session cookie identifies the user, so the
+    // record is scoped to whoever is logged in.
+    // ---------------------------------------------------------
+    var lastReportedAt = 0;
+    var lastReportedPercent = -1;
+    var resumeAt = 0;
+    var resumeApplied = !fileKey;
+
+    function reportProgress(evt) {
+        if (!fileKey) return;
+        var duration = v.duration || 0;
+        var position = v.currentTime || 0;
+        if (!duration || isNaN(duration)) return;
+
+        var payload = JSON.stringify({
+            filePath: fileKey,
+            duration: duration,
+            position: position,
+            event: evt || "progress"
+        });
+
+        if (evt === "ended" || evt === "exit") {
+            try {
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon(
+                        "/api/media-progress",
+                        new Blob([payload], { type: "application/json" })
+                    );
+                    return;
+                }
+            } catch (e) {}
+        }
+
+        fetch("/api/media-progress", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: payload
+        }).catch(function () {});
+    }
+
+    function maybeReportProgress() {
+        var now = Date.now();
+        var percent = v.duration ? (v.currentTime / v.duration) * 100 : 0;
+        var percentMoved = Math.abs(percent - lastReportedPercent) >= 2;
+        if (now - lastReportedAt >= 5000 || percentMoved) {
+            lastReportedAt = now;
+            lastReportedPercent = percent;
+            reportProgress("progress");
+        }
+    }
+
+    if (fileKey) {
+        fetch(
+            "/api/media-progress?file=" + encodeURIComponent(fileKey),
+            { credentials: "include", cache: "no-store" }
+        ).then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (
+                data && data.success && data.progress &&
+                data.progress.status !== "completed" &&
+                data.progress.positionSeconds > 5
+            ) {
+                resumeAt = data.progress.positionSeconds;
+            }
+        }).catch(function () {})
+        .finally(function () {
+            // metadata may already have loaded by the time this resolves
+            if (resumeAt && v.readyState >= 1 && !resumeApplied) {
+                resumeApplied = true;
+                try { v.currentTime = resumeAt; } catch (e) {}
+            }
+        });
+    }
+
+    v.addEventListener("loadedmetadata", function () {
+        if (resumeAt && !resumeApplied) {
+            resumeApplied = true;
+            try { v.currentTime = resumeAt; } catch (e) {}
+        }
+    });
+
+    v.addEventListener("timeupdate", maybeReportProgress);
+    v.addEventListener("pause", function () { reportProgress("progress"); });
+    v.addEventListener("ended", function () { reportProgress("ended"); });
 
     function say(t) {
         msg.textContent = t || "";
@@ -4683,6 +4813,7 @@ function popupVideoBootstrap(base, fallback) {
     });
 
     window.addEventListener("pagehide", function () {
+        reportProgress("exit");
         try {
             v.pause();
             v.removeAttribute("src");
@@ -4726,6 +4857,8 @@ async function openMediaWindow(file,type){
             JSON.stringify(streamUrl).replace(/</g, "\\u003c") +
             "," +
             JSON.stringify(mediaUrl).replace(/</g, "\\u003c") +
+            "," +
+            JSON.stringify(file).replace(/</g, "\\u003c") +
             ");<\/script>";
     }
 
@@ -4920,6 +5053,7 @@ async function openFile(file) {
         return;
     }
 
+    logFileAccess(file, 'view');
 
     const lower =
         file.toLowerCase();

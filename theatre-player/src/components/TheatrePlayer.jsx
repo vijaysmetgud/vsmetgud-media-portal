@@ -1,9 +1,9 @@
 import { useRef, useState, useEffect } from "react";
 import Playlist from "./Playlist";
 import EqualizerPanel from "./EqualizerPanel";
-import SurroundPanel from "./SurroundPanel";
-import { SurroundEngine } from "./surround-engine.js";
 import "../styles/theatre.css";
+import SurroundPanel from "../SurroundPanel.jsx";
+import { SurroundEngine } from "../surround-engine.js";
 
 import {
   FaPlay,

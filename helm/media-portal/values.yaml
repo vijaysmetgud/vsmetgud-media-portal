@@ -16,6 +16,15 @@ persistence:
   hostPath: /media/sf_e-drive
   #hostPath: /mnt/media
 
+# Separate persistent mount for the SQLite database (visitors.db):
+# logins, payments, activity log, and per-user watch-progress all
+# live here. Without this, every pod restart / redeploy wipes it,
+# because it currently sits on the container's writable layer.
+persistenceData:
+  enabled: true
+  mountPath: /usr/src/app/data
+  hostPath: /media/sf_e-drive-data
+
 ingress:
   enabled: false
   className: nginx

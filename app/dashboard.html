@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Dashboard - VSMETGUD Media Portal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+    :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --card-hover: #273347;
+        --border: #334155;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --accent: #2563eb;
+        --green: #22c55e;
+        --amber: #f59e0b;
+        --red: #ef4444;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding-bottom: 60px;
+    }
+
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 18px 26px;
+        background: #111827;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    header h1 {
+        font-size: 20px;
+        margin: 0;
+    }
+
+    header .sub {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 2px;
+    }
+
+    header .actions button {
+        background: var(--accent);
+        border: none;
+        color: white;
+        padding: 9px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    header .actions button.secondary {
+        background: #475569;
+    }
+
+    main {
+        padding: 22px 26px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .stat-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 26px;
+    }
+
+    .stat-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px;
+    }
+
+    .stat-card .value {
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .stat-card .label {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 4px;
+    }
+
+    section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 26px;
+    }
+
+    section h2 {
+        margin: 0 0 14px 0;
+        font-size: 17px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    section h2 .count {
+        color: var(--muted);
+        font-weight: 400;
+        font-size: 13px;
+    }
+
+    .chart-wrap {
+        position: relative;
+        height: 340px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+
+    th {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    tr:hover td {
+        background: var(--card-hover);
+    }
+
+    .file-link {
+        color: #93c5fd;
+        text-decoration: none;
+        cursor: pointer;
+        word-break: break-word;
+    }
+
+    .file-link:hover {
+        text-decoration: underline;
+    }
+
+    .progress-bar-outer {
+        width: 140px;
+        height: 8px;
+        border-radius: 6px;
+        background: #0f172a;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+
+    .progress-bar-inner {
+        height: 100%;
+        background: var(--accent);
+    }
+
+    .progress-bar-inner.completed {
+        background: var(--green);
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11.5px;
+        font-weight: 700;
+    }
+
+    .badge.completed { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge.in-progress { background: rgba(245,158,11,0.15); color: var(--amber); }
+
+    .empty {
+        color: var(--muted);
+        padding: 24px;
+        text-align: center;
+    }
+
+    .center-msg {
+        text-align: center;
+        padding: 80px 20px;
+        color: var(--muted);
+    }
+
+    .center-msg button {
+        margin-top: 16px;
+        background: var(--accent);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>📊 My Dashboard</h1>
+        <div class="sub" id="userLine">Loading your account...</div>
+    </div>
+    <div class="actions">
+        <button class="secondary" onclick="refreshAll()">↻ Refresh</button>
+        <button class="secondary" onclick="window.close()">✖ Close</button>
+    </div>
+</header>
+
+<main id="mainArea">
+    <div class="center-msg">Loading your dashboard...</div>
+</main>
+
+<script>
+let currentUsername = null;
+let progressChart = null;
+let remainingChart = null;
+
+function escapeHtml(str) {
+    return String(str || "").replace(/[&<>"']/g, s => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[s]));
+}
+
+function formatDateTime(iso) {
+    if (!iso) return "-";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso);
+    return d.toLocaleString(undefined, {
+        year: "numeric", month: "short", day: "2-digit",
+        hour: "2-digit", minute: "2-digit"
+    });
+}
+
+function formatDuration(totalSeconds) {
+    const s = Math.max(0, Math.round(Number(totalSeconds) || 0));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${sec}s`;
+    return `${sec}s`;
+}
+
+function fileName(path) {
+    const parts = String(path).split("/");
+    return parts[parts.length - 1];
+}
+
+/* Opens a file through the main portal window when possible (so the
+   existing login/paywall checks and, for videos, resume-from-last-
+   position all keep working). Falls back to a direct link. */
+function openInPortal(file) {
+    try {
+        if (window.opener && !window.opener.closed && typeof window.opener.openFile === "function") {
+            window.opener.focus();
+            window.opener.openFile(file);
+            return;
+        }
+    } catch (e) {}
+    window.open("/media/" + encodeURIComponent(file), "_blank");
+}
+
+async function fetchJson(url) {
+    const res = await fetch(url, { credentials: "include", cache: "no-store" });
+    if (res.status === 401) {
+        const err = new Error("unauthorized");
+        err.unauthorized = true;
+        throw err;
+    }
+    return res.json();
+}
+
+// ---------------------------------------------------------
+// LOCAL RESILIENCE CACHE
+//
+// The dashboard re-fetches everything from the server on every
+// load/refresh, so a plain browser refresh already shows current
+// data - it never depends on in-page state. This cache exists for
+// the case the SERVER itself is briefly unreachable (pod restarting,
+// deployment rolling, network blip): instead of a blank error
+// screen, the last known-good snapshot for THIS username is shown
+// with a clear "reconnecting" banner, and it keeps retrying quietly
+// in the background until the server answers again.
+// ---------------------------------------------------------
+let retryTimer = null;
+
+function cacheKey(username) {
+    return `mediaPortalDashboardCache:${username}`;
+}
+
+function saveSnapshot(username, videoRows, fileRows) {
+    try {
+        localStorage.setItem(cacheKey(username), JSON.stringify({
+            videoRows, fileRows, savedAt: new Date().toISOString()
+        }));
+    } catch (e) {}
+}
+
+function loadSnapshot(username) {
+    try {
+        const raw = localStorage.getItem(cacheKey(username));
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function showReconnectBanner(savedAt) {
+    let banner = document.getElementById("reconnectBanner");
+    if (!banner) {
+        banner = document.createElement("div");
+        banner.id = "reconnectBanner";
+        banner.style.cssText =
+            "background:#7c2d12;color:#fed7aa;padding:10px 20px;font-size:13.5px;" +
+            "text-align:center;position:sticky;top:66px;z-index:9;";
+        document.body.insertBefore(banner, document.getElementById("mainArea"));
+    }
+    banner.textContent =
+        `⚠ Can't reach the server right now - showing data saved locally on ${formatDateTime(savedAt)}. Retrying...`;
+}
+
+function hideReconnectBanner() {
+    const banner = document.getElementById("reconnectBanner");
+    if (banner) banner.remove();
+}
+
+function scheduleRetry() {
+    if (retryTimer) return;
+    retryTimer = setTimeout(() => {
+        retryTimer = null;
+        refreshAll(true);
+    }, 10000);
+}
+
+async function refreshAll(isBackgroundRetry) {
+    try {
+        const me = await fetchJson("/api/me");
+        currentUsername = me.user.username;
+        try { localStorage.setItem("mediaPortalLastUsername", currentUsername); } catch (e) {}
+        document.getElementById("userLine").textContent =
+            `Signed in as ${me.user.name || me.user.username} - viewing history is private to this account`;
+
+        const [progressData, fileActivityData] = await Promise.all([
+            fetchJson("/api/media-progress"),
+            fetchJson("/api/file-activity-summary")
+        ]);
+
+        const videoRows = progressData.rows || [];
+        const fileRows = fileActivityData.rows || [];
+
+        hideReconnectBanner();
+        renderDashboard(videoRows, fileRows);
+        saveSnapshot(currentUsername, videoRows, fileRows);
+
+    } catch (err) {
+        if (err.unauthorized) {
+            hideReconnectBanner();
+            document.getElementById("mainArea").innerHTML = `
+                <div class="center-msg">
+                    You need to be logged in to the portal to view your dashboard.<br>
+                    <button onclick="window.location.href='/'">Go to Portal Login</button>
+                </div>
+            `;
+            document.getElementById("userLine").textContent = "Not signed in";
+            return;
+        }
+
+        // Network/server-down failure (pod restarting, deployment rolling, etc.)
+        console.error("Dashboard load failed, will retry:", err);
+
+        const cachedUsername = currentUsername || getLastKnownUsername();
+        const snapshot = cachedUsername ? loadSnapshot(cachedUsername) : null;
+
+        if (snapshot) {
+            if (!isBackgroundRetry) {
+                document.getElementById("userLine").textContent =
+                    `Last known account: ${cachedUsername} (offline)`;
+                renderDashboard(snapshot.videoRows, snapshot.fileRows);
+            }
+            showReconnectBanner(snapshot.savedAt);
+        } else {
+            document.getElementById("mainArea").innerHTML = `
+                <div class="center-msg">
+                    Can't reach the server right now and no locally saved dashboard data is
+                    available yet for this browser. Retrying automatically...
+                </div>
+            `;
+        }
+
+        scheduleRetry();
+    }
+}
+
+function getLastKnownUsername() {
+    try {
+        return localStorage.getItem("mediaPortalLastUsername") || null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function renderDashboard(videoRows, fileRows) {
+
+    const inProgress = videoRows
+        .filter(r => r.status !== "completed")
+        .sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt));
+
+    const completed = videoRows
+        .filter(r => r.status === "completed")
+        .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+
+    const totalAccessedFiles = fileRows.length;
+
+    document.getElementById("mainArea").innerHTML = `
+        <div class="stat-row">
+            <div class="stat-card">
+                <div class="value">${videoRows.length}</div>
+                <div class="label">Videos Tracked</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" style="color:var(--amber)">${inProgress.length}</div>
+                <div class="label">In Progress</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" style="color:var(--green)">${completed.length}</div>
+                <div class="label">Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="value">${totalAccessedFiles}</div>
+                <div class="label">Total Files Accessed</div>
+            </div>
+        </div>
+
+        <section>
+            <h2>📈 Progress by Video <span class="count">${videoRows.length} tracked</span></h2>
+            <div class="chart-wrap">
+                <canvas id="progressChartCanvas"></canvas>
+            </div>
+        </section>
+
+        <section>
+            <h2>⏳ Remaining Time to Completion <span class="count">${inProgress.length} incomplete video${inProgress.length === 1 ? "" : "s"}</span></h2>
+            <div class="chart-wrap">
+                <canvas id="remainingChartCanvas"></canvas>
+            </div>
+        </section>
+
+        <section>
+            <h2>▶ Incomplete Videos - Click to Resume <span class="count">${inProgress.length} pending completion</span></h2>
+            ${renderContinueTable(inProgress)}
+        </section>
+
+        <section>
+            <h2>✅ Completed Videos <span class="count">${completed.length}</span></h2>
+            ${renderCompletedTable(completed)}
+        </section>
+
+        <section>
+            <h2>🕒 Last Accessed Files - Click to Open <span class="count">${fileRows.length} files (any type), newest first</span></h2>
+            ${renderFileActivityTable(fileRows)}
+        </section>
+    `;
+
+    renderChart(videoRows);
+    renderRemainingChart(inProgress);
+}
+
+function renderContinueTable(rows) {
+    if (rows.length === 0) {
+        return `<div class="empty">Nothing in progress right now - videos you start watching will show up here.</div>`;
+    }
+
+    const body = rows.map(r => {
+        const remaining = Math.max(0, r.durationSeconds - r.positionSeconds);
+        const pct = Math.round(r.percent);
+        return `
+            <tr>
+                <td><a class="file-link" onclick="openInPortal('${escapeAttr(r.filePath)}')">${escapeHtml(fileName(r.filePath))}</a></td>
+                <td>
+                    <div class="progress-bar-outer">
+                        <div class="progress-bar-inner" style="width:${pct}%"></div>
+                    </div>
+                    ${pct}%
+                </td>
+                <td>${formatDuration(remaining)} left</td>
+                <td>${formatDateTime(r.startedAt)}</td>
+                <td>${formatDateTime(r.lastAccessedAt)}</td>
+                <td><span class="badge in-progress">IN PROGRESS</span></td>
+            </tr>
+        `;
+    }).join("");
+
+    return `
+        <table>
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>% Complete</th>
+                    <th>Remaining Time</th>
+                    <th>Started</th>
+                    <th>Last Accessed</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>${body}</tbody>
+        </table>
+    `;
+}
+
+function renderCompletedTable(rows) {
+    if (rows.length === 0) {
+        return `<div class="empty">No completed videos yet.</div>`;
+    }
+
+    const body = rows.map(r => `
+        <tr>
+            <td><a class="file-link" onclick="openInPortal('${escapeAttr(r.filePath)}')">${escapeHtml(fileName(r.filePath))}</a></td>
+            <td>${formatDuration(r.durationSeconds)}</td>
+            <td>${formatDateTime(r.startedAt)}</td>
+            <td>${formatDateTime(r.completedAt)}</td>
+            <td><span class="badge completed">COMPLETED</span></td>
+        </tr>
+    `).join("");
+
+    return `
+        <table>
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>Total Length</th>
+                    <th>Started</th>
+                    <th>Completed On</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>${body}</tbody>
+        </table>
+    `;
+}
+
+function renderFileActivityTable(rows) {
+    if (rows.length === 0) {
+        return `<div class="empty">No file access recorded yet - files you open or download will show up here.</div>`;
+    }
+
+    const body = rows.map(r => `
+        <tr>
+            <td><a class="file-link" onclick="openInPortal('${escapeAttr(r.filePath)}')">${escapeHtml(fileName(r.filePath))}</a></td>
+            <td>${formatDateTime(r.firstAccessed)}</td>
+            <td>${formatDateTime(r.lastAccessed)}</td>
+            <td>${r.accessCount}</td>
+        </tr>
+    `).join("");
+
+    return `
+        <table>
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>First Accessed</th>
+                    <th>Last Accessed</th>
+                    <th>Times Opened</th>
+                </tr>
+            </thead>
+            <tbody>${body}</tbody>
+        </table>
+    `;
+}
+
+function escapeAttr(str) {
+    return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+function renderRemainingChart(inProgressRows) {
+    const canvas = document.getElementById("remainingChartCanvas");
+    if (!canvas) return;
+
+    if (remainingChart) {
+        remainingChart.destroy();
+        remainingChart = null;
+    }
+
+    if (inProgressRows.length === 0) {
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "14px Segoe UI";
+        ctx.fillText("Nothing in progress - nothing left to complete.", 20, 30);
+        return;
+    }
+
+    const sorted = [...inProgressRows].sort((a, b) => {
+        const remA = a.durationSeconds - a.positionSeconds;
+        const remB = b.durationSeconds - b.positionSeconds;
+        return remA - remB;
+    });
+
+    const labels = sorted.map(r => fileName(r.filePath));
+    const minutesRemaining = sorted.map(r =>
+        Math.round(Math.max(0, r.durationSeconds - r.positionSeconds) / 60 * 10) / 10
+    );
+
+    remainingChart = new Chart(canvas.getContext("2d"), {
+        type: "bar",
+        data: {
+            labels,
+            datasets: [{
+                label: "Minutes remaining",
+                data: minutesRemaining,
+                backgroundColor: "#f59e0b",
+                borderRadius: 6
+            }]
+        },
+        options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const row = sorted[ctx.dataIndex];
+                            const remaining = Math.max(0, row.durationSeconds - row.positionSeconds);
+                            return `${formatDuration(remaining)} left (${Math.round(row.percent)}% done)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: { display: true, text: "Minutes remaining", color: "#94a3b8" },
+                    ticks: { color: "#94a3b8" },
+                    grid: { color: "#334155" }
+                },
+                y: {
+                    ticks: { color: "#e2e8f0", autoSkip: false },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+function renderChart(rows) {
+    const canvas = document.getElementById("progressChartCanvas");
+    if (!canvas) return;
+
+    if (progressChart) {
+        progressChart.destroy();
+        progressChart = null;
+    }
+
+    if (rows.length === 0) {
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "14px Segoe UI";
+        ctx.fillText("No videos watched yet.", 20, 30);
+        return;
+    }
+
+    const sorted = [...rows].sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt));
+
+    const labels = sorted.map(r => fileName(r.filePath));
+    const data = sorted.map(r => Math.round(r.percent));
+    const colors = sorted.map(r => r.status === "completed" ? "#22c55e" : "#2563eb");
+
+    progressChart = new Chart(canvas.getContext("2d"), {
+        type: "bar",
+        data: {
+            labels,
+            datasets: [{
+                label: "% Complete",
+                data,
+                backgroundColor: colors,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `${ctx.parsed.x}% complete`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    min: 0,
+                    max: 100,
+                    ticks: { color: "#94a3b8", callback: v => v + "%" },
+                    grid: { color: "#334155" }
+                },
+                y: {
+                    ticks: { color: "#e2e8f0", autoSkip: false },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+refreshAll();
+</script>
+
+</body>
+</html>

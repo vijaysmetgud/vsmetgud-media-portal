@@ -115,6 +115,23 @@ db.prepare(`
   )
 `).run();
 
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS media_watch_progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    filePath TEXT NOT NULL,
+    durationSeconds REAL DEFAULT 0,
+    positionSeconds REAL DEFAULT 0,
+    percent REAL DEFAULT 0,
+    status TEXT DEFAULT 'in_progress',
+    startedAt TEXT,
+    lastAccessedAt TEXT,
+    completedAt TEXT,
+    updateCount INTEGER DEFAULT 0,
+    UNIQUE(username, filePath)
+  )
+`).run();
+
 // ============================================================
 // GLOBAL PORTAL SETTINGS
 // ============================================================
@@ -2592,6 +2609,178 @@ app.get("/api/metrics", async (req, res) => {
 
     }
 
+});
+
+// ============================================================
+// USER DASHBOARD - CURRENT SESSION USER
+// ============================================================
+
+app.get('/api/me', (req, res) => {
+  const user = getAuthenticatedUser(req);
+
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Not logged in'
+    });
+  }
+
+  res.json({ success: true, user });
+});
+
+// ============================================================
+// USER DASHBOARD - VIDEO WATCH PROGRESS
+//
+// One row per (username, filePath). Upserted on every progress
+// ping from the popup video player. Survives sign-out/sign-in
+// and server restarts because it lives in the same local SQLite
+// file as everything else (data/visitors.db).
+// ============================================================
+
+app.post('/api/media-progress', (req, res) => {
+  try {
+    const user = getAuthenticatedUser(req);
+
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Login required' });
+    }
+
+    const filePath = String(req.body?.filePath || '').trim();
+    const event = String(req.body?.event || 'progress');
+    const durationRaw = Number(req.body?.duration || 0);
+    const positionRaw = Number(req.body?.position || 0);
+
+    if (!filePath) {
+      return res.status(400).json({ success: false, error: 'filePath is required' });
+    }
+
+    const durationSeconds = durationRaw > 0 ? durationRaw : 0;
+    const positionSeconds = Math.max(
+      0,
+      durationSeconds > 0 ? Math.min(positionRaw, durationSeconds) : positionRaw
+    );
+
+    let percent = durationSeconds > 0 ? (positionSeconds / durationSeconds) * 100 : 0;
+    if (event === 'ended') percent = 100;
+    percent = Math.max(0, Math.min(100, percent));
+
+    const status = percent >= 95 ? 'completed' : 'in_progress';
+    const now = new Date().toISOString();
+
+    const existing = db.prepare(`
+      SELECT id, completedAt FROM media_watch_progress
+      WHERE username = ? AND filePath = ?
+    `).get(user.username, filePath);
+
+    if (existing) {
+      db.prepare(`
+        UPDATE media_watch_progress
+        SET durationSeconds = ?,
+            positionSeconds = ?,
+            percent = ?,
+            status = ?,
+            lastAccessedAt = ?,
+            completedAt = CASE
+              WHEN ? = 'completed' AND completedAt IS NULL THEN ?
+              ELSE completedAt
+            END,
+            updateCount = updateCount + 1
+        WHERE id = ?
+      `).run(durationSeconds, positionSeconds, percent, status, now, status, now, existing.id);
+    } else {
+      db.prepare(`
+        INSERT INTO media_watch_progress
+          (username, filePath, durationSeconds, positionSeconds, percent, status, startedAt, lastAccessedAt, completedAt, updateCount)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+      `).run(
+        user.username,
+        filePath,
+        durationSeconds,
+        positionSeconds,
+        percent,
+        status,
+        now,
+        now,
+        status === 'completed' ? now : null
+      );
+    }
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error('Media progress save error:', err);
+    res.status(500).json({ success: false, error: 'Unable to save media progress' });
+  }
+});
+
+app.get('/api/media-progress', (req, res) => {
+  try {
+    const user = getAuthenticatedUser(req);
+
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Login required' });
+    }
+
+    const file = req.query.file ? String(req.query.file) : '';
+
+    if (file) {
+      const row = db.prepare(`
+        SELECT * FROM media_watch_progress
+        WHERE username = ? AND filePath = ?
+      `).get(user.username, file);
+
+      return res.json({ success: true, progress: row || null });
+    }
+
+    const rows = db.prepare(`
+      SELECT * FROM media_watch_progress
+      WHERE username = ?
+      ORDER BY lastAccessedAt DESC
+    `).all(user.username);
+
+    res.json({ success: true, rows });
+
+  } catch (err) {
+    console.error('Media progress fetch error:', err);
+    res.status(500).json({ success: false, error: 'Unable to fetch media progress' });
+  }
+});
+
+// ============================================================
+// USER DASHBOARD - ANY FILE ACCESS HISTORY (video, pdf, audio,
+// docs, etc.) Built from the existing portal_activity log, so no
+// extra table is needed for this part.
+// ============================================================
+
+app.get('/api/file-activity-summary', (req, res) => {
+  try {
+    const user = getAuthenticatedUser(req);
+
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Login required' });
+    }
+
+    const rows = db.prepare(`
+      SELECT
+        details AS filePath,
+        MIN(timestamp) AS firstAccessed,
+        MAX(timestamp) AS lastAccessed,
+        COUNT(*) AS accessCount
+      FROM portal_activity
+      WHERE username = ?
+        AND action = 'file_access'
+        AND details IS NOT NULL
+        AND details != ''
+      GROUP BY details
+      ORDER BY lastAccessed DESC
+    `).all(user.username);
+
+    res.json({ success: true, rows });
+
+  } catch (err) {
+    console.error('File activity summary error:', err);
+    res.status(500).json({ success: false, error: 'Unable to fetch file activity' });
+  }
 });
 
 app.get('*', (req, res) => {
