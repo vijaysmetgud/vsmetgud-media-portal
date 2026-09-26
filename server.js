@@ -1407,54 +1407,92 @@ function getActivityQueryFilters(req) {
   return { sql, params };
 }
 
+
 app.post('/api/log-activity', (req, res) => {
   try {
-    const ip = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
-    const payload = req.body || {};
-    function getISTTimestamp() {
-        const now = new Date();
+    // Always identify the user from the authenticated session.
+    // Never trust a username supplied by the browser.
+    const user = getAuthenticatedUser(req);
 
-        const parts = new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'Asia/Kolkata',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hourCycle: 'h23'
-        }).formatToParts(now);
-
-        const get = type => parts.find(p => p.type === type)?.value;
-        
-        return `${get('year')}-${get('month')}-${get('day')} T ${get('hour')}:${get('minute')}:${get('second')}+05:30`;
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Login required'
+      });
     }
+
+    const payload = req.body || {};
+
+    const username = String(user.username || '').trim();
+
+    if (!username) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authenticated username is missing'
+      });
+    }
+
+    const action = String(payload.action || 'page_view').trim();
+    const page = String(payload.page || 'portal').trim();
+    const details = String(payload.details || '').trim();
+
+    const ip = (
+      req.headers['x-forwarded-for'] ||
+      req.ip ||
+      ''
+    ).split(',')[0].trim();
+
+    // ISO timestamp is consistent with the video-progress API.
+    const timestamp = new Date().toISOString();
 
     db.prepare(`
       INSERT INTO portal_activity (
-        username, name, email, authMethod, action, page, details, ip, userAgent, platform, language, screen, timezone, timestamp
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        username,
+        name,
+        email,
+        authMethod,
+        action,
+        page,
+        details,
+        ip,
+        userAgent,
+        platform,
+        language,
+        screen,
+        timezone,
+        timestamp
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      payload.username || '',
-      payload.name || payload.username || 'User',
-      payload.email || '',
-      payload.authMethod || 'local',
-      payload.action || 'page_view',
-      payload.page || 'portal',
-      payload.details || '',
+      username,
+      user.name || payload.name || username,
+      user.email || payload.email || '',
+      user.authMethod || payload.authMethod || 'local',
+      action,
+      page,
+      details,
       ip,
-      payload.userAgent || '',
-      payload.platform || '',
-      payload.language || '',
-      payload.screen || '',
-      payload.timezone || '',
-      getISTTimestamp()
+      String(payload.userAgent || req.headers['user-agent'] || ''),
+      String(payload.platform || ''),
+      String(payload.language || ''),
+      String(payload.screen || ''),
+      String(payload.timezone || ''),
+      timestamp
     );
 
-    res.json({ success: true });
+    return res.json({
+      success: true,
+      username,
+      timestamp
+    });
+
   } catch (err) {
     console.error('Activity log error:', err);
-    res.status(500).json({ success: false, error: 'Failed to save activity log' });
+
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to save activity log'
+    });
   }
 });
 
@@ -2760,6 +2798,7 @@ app.get('/api/file-activity-summary', (req, res) => {
       return res.status(401).json({ success: false, error: 'Login required' });
     }
 
+    
     const rows = db.prepare(`
       SELECT
         details AS filePath,
@@ -2767,7 +2806,7 @@ app.get('/api/file-activity-summary', (req, res) => {
         MAX(timestamp) AS lastAccessed,
         COUNT(*) AS accessCount
       FROM portal_activity
-      WHERE username = ?
+      WHERE username = ? COLLATE NOCASE
         AND action = 'file_access'
         AND details IS NOT NULL
         AND details != ''

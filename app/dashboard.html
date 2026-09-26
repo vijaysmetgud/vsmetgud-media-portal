@@ -728,6 +728,12 @@ function renderChart(rows) {
 }
 
 refreshAll();
+
+// Refresh the dashboard every 10 seconds.
+setInterval(() => {
+    refreshAll(true);
+}, 10000);
+
 </script>
 
 </body>

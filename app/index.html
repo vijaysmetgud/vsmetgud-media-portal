@@ -1866,13 +1866,23 @@ async function saveLoginRecord(user) {
     }
 }
 
+
 async function logPortalActivity(action, page, details = '') {
-    if (!currentUser) return;
+    if (!currentUser) {
+        console.warn('Activity not logged: no current user');
+        return false;
+    }
+
     try {
-        await fetch('/api/log-activity', {
+        const response = await fetch('/api/log-activity', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            keepalive: true,
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
+                // Username is verified by the backend session.
                 username: currentUser.username || '',
                 name: currentUser.name || currentUser.username || 'User',
                 email: currentUser.email || '',
@@ -1887,14 +1897,87 @@ async function logPortalActivity(action, page, details = '') {
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
             })
         });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+            console.error('Activity logging failed:', response.status, data);
+            return false;
+        }
+
+        return true;
+
     } catch (err) {
-        console.warn('Unable to log portal activity:', err);
+        console.error('Unable to log portal activity:', err);
+        return false;
     }
 }
 
-function logFileAccess(file, action) {
-    if (!file) return;
-    logPortalActivity('file_access', 'media', file);
+async function logFileAccess(file, action = 'view') {
+    if (!file) return false;
+
+    return await logPortalActivity(
+        'file_access',
+        'media',
+        String(file)
+    );
+}
+
+
+async function logPortalActivity(action, page, details = '') {
+    if (!currentUser) {
+        console.warn('Activity not logged: no current user');
+        return false;
+    }
+
+    try {
+        const response = await fetch('/api/log-activity', {
+            method: 'POST',
+            credentials: 'same-origin',
+            keepalive: true,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                // Username is verified by the backend session.
+                username: currentUser.username || '',
+                name: currentUser.name || currentUser.username || 'User',
+                email: currentUser.email || '',
+                authMethod: currentUser.authMethod || 'local',
+                action,
+                page,
+                details,
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                screen: `${window.screen.width}x${window.screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+            console.error('Activity logging failed:', response.status, data);
+            return false;
+        }
+
+        return true;
+
+    } catch (err) {
+        console.error('Unable to log portal activity:', err);
+        return false;
+    }
+}
+
+async function logFileAccess(file, action = 'view') {
+    if (!file) return false;
+
+    return await logPortalActivity(
+        'file_access',
+        'media',
+        String(file)
+    );
 }
 
 function formatIST(timestamp) {
@@ -3769,17 +3852,22 @@ function renderFiles(files){
             <button
                 onclick="
                     event.stopPropagation();
-                    // if (!canAccessMedia('${file.replace(/'/g, "\\'")}', 'open/download')) return;
-                    canAccessMedia('${file.replace(/'/g, "\\'")}', 'open/download').then(allowed => {
-                        if (!allowed) return;
 
-                        logFileAccess('${file.replace(/'/g, "\\'")}', 'open/download');
+                    canAccessMedia('${file.replace(/'/g, "\\'")}', 'open/download')
+                        .then(async allowed => {
+                            if (!allowed) return;
 
-                        window.open(
-                            '/media/${encodeURIComponent(file)}',
-                            '_blank'
-                        );
-                    });                    
+                            await logFileAccess(
+                                '${file.replace(/'/g, "\\'")}',
+                                'open/download'
+                            );
+
+                            window.open(
+                                '/media/${encodeURIComponent(file)}',
+                                '_blank'
+                            );
+                        })
+                        .catch(console.error);
                 "
                 style="
                     padding:6px 12px;
@@ -3802,13 +3890,14 @@ function renderFiles(files){
         /* DOUBLE CLICK = NEW TAB */
 
         card.ondblclick = async () => {
-            if (!(await canAccessMedia(file, 'open/download'))) return;
+            if (!(await canAccessMedia(file, 'open/download'))) {
+                return;
+            }
 
-            logFileAccess(file, 'open/download');
+            await logFileAccess(file, 'open/download');
 
             window.open(
-                "/media/" +
-                encodeURIComponent(file),
+                "/media/" + encodeURIComponent(file),
                 "_blank"
             );
         };
@@ -4044,22 +4133,20 @@ function renderCategoryFiles(files) {
         const button =
             card.querySelector("button");
 
-        button.onclick = async function(event) {    
-
+        button.onclick = async function(event) {
             event.stopPropagation();
 
             if (!(await canAccessMedia(
                 file,
                 "open/download"
-            ))) { 
+            ))) {
                 return;
             }
 
-            logFileAccess(file, "open/download");
+            await logFileAccess(file, "open/download");
 
             window.open(
-                "/media/" +
-                encodeURIComponent(file),
+                "/media/" + encodeURIComponent(file),
                 "_blank"
             );
         };
@@ -4073,20 +4160,18 @@ function renderCategoryFiles(files) {
             openFile(file);
         };
 
-        card.ondblclick = async function() {    
-
+        card.ondblclick = async function() {
             if (!(await canAccessMedia(
                 file,
                 "open/download"
-            ))) { 
+            ))) {
                 return;
             }
 
-            logFileAccess(file, "open/download");
+            await logFileAccess(file, "open/download");
 
             window.open(
-                "/media/" +
-                encodeURIComponent(file),
+                "/media/" + encodeURIComponent(file),
                 "_blank"
             );
         };
@@ -5053,7 +5138,7 @@ async function openFile(file) {
         return;
     }
 
-    logFileAccess(file, 'view');
+    await logFileAccess(file, 'view');
 
     const lower =
         file.toLowerCase();
