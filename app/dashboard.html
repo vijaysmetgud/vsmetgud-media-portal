@@ -286,7 +286,7 @@ function openInPortal(file) {
             return;
         }
     } catch (e) {}
-    window.open("/media/" + encodeURIComponent(file), "_blank");
+    window.open("/media/" + String(file).split("/").map(encodeURIComponent).join("/"), "_blank");
 }
 
 async function fetchJson(url) {
@@ -317,10 +317,10 @@ function cacheKey(username) {
     return `mediaPortalDashboardCache:${username}`;
 }
 
-function saveSnapshot(username, videoRows, fileRows) {
+function saveSnapshot(username, videoRows, fileRows, catalogRows) {
     try {
         localStorage.setItem(cacheKey(username), JSON.stringify({
-            videoRows, fileRows, savedAt: new Date().toISOString()
+            videoRows, fileRows, catalogRows: catalogRows || [], savedAt: new Date().toISOString()
         }));
     } catch (e) {}
 }
@@ -396,7 +396,8 @@ async function refreshAll(isBackgroundRetry) {
 
         const [progressData, fileActivityData] = await Promise.all([
             fetchJson("/api/media-progress"),
-            fetchJson("/api/file-activity-summary")
+            fetchJson("/api/file-activity-summary"),
+            fetchJson("/media-index.json")
         ]);
 
         const videoRows = progressData.rows || [];
@@ -429,7 +430,7 @@ async function refreshAll(isBackgroundRetry) {
             if (!isBackgroundRetry) {
                 document.getElementById("userLine").textContent =
                     `Last known account: ${cachedUsername} (offline)`;
-                renderDashboard(snapshot.videoRows, snapshot.fileRows);
+                renderDashboard(snapshot.videoRows, snapshot.fileRows, snapshot.catalogRows || []);
             }
             showReconnectBanner(snapshot.savedAt);
         } else {
@@ -453,7 +454,7 @@ function getLastKnownUsername() {
     }
 }
 
-function renderDashboard(videoRows, fileRows) {
+function renderDashboard(videoRows, fileRows, catalogRows = []) {
 
     const inProgress = videoRows
         .filter(r => r.status !== "completed")
@@ -464,6 +465,23 @@ function renderDashboard(videoRows, fileRows) {
         .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
 
     const totalAccessedFiles = fileRows.length;
+    const activityByPath = new Map(fileRows.map(r => [String(r.filePath || "").replace(/\\/g, "/").toLowerCase(), r]));
+    const videoByPath = new Map(videoRows.map(r => [String(r.filePath || "").replace(/\\/g, "/").toLowerCase(), r]));
+    const allFileRows = [...new Set([...(catalogRows || []), ...fileRows.map(r => r.filePath), ...videoRows.map(r => r.filePath)].filter(Boolean))]
+        .map(filePath => {
+            const key = String(filePath).replace(/\\/g, "/").toLowerCase();
+            const activity = activityByPath.get(key) || {};
+            const video = videoByPath.get(key) || {};
+            return { filePath, firstAccessed: activity.firstAccessed || video.startedAt || null,
+                lastAccessed: activity.lastAccessed || video.lastAccessedAt || null,
+                accessCount: activity.accessCount || 0, percent: Number(video.percent || 0),
+                status: video.status || "not_accessed" };
+        }).sort((a,b) => {
+            if (a.lastAccessed && b.lastAccessed) return new Date(b.lastAccessed)-new Date(a.lastAccessed);
+            if (a.lastAccessed) return -1;
+            if (b.lastAccessed) return 1;
+            return String(a.filePath).localeCompare(String(b.filePath));
+        });
 
     document.getElementById("mainArea").innerHTML = `
         <div class="stat-row">
@@ -510,8 +528,8 @@ function renderDashboard(videoRows, fileRows) {
         </section>
 
         <section>
-            <h2>🕒 Last Accessed Files - Click to Open <span class="count">${fileRows.length} files (any type), newest first</span></h2>
-            ${renderFileActivityTable(fileRows)}
+            <h2>📁 All Media Files - Click to Open <span class="count">${allFileRows.length} files in the media library; accessed files first</span></h2>
+            ${renderFileActivityTable(allFileRows)}
         </section>
     `;
 
@@ -602,32 +620,24 @@ function renderCompletedTable(rows) {
 }
 
 function renderFileActivityTable(rows) {
-    if (rows.length === 0) {
-        return `<div class="empty">No file access recorded yet - files you open or download will show up here.</div>`;
+    if (!rows.length) {
+        return `<div class="empty">No media files were found in the server media library.</div>`;
     }
-
-    const body = rows.map(r => `
-        <tr>
-            <td><a class="file-link" onclick="openInPortal('${escapeAttr(r.filePath)}')">${escapeHtml(fileName(r.filePath))}</a></td>
-            <td>${formatDateTime(r.firstAccessed)}</td>
-            <td>${formatDateTime(r.lastAccessed)}</td>
-            <td>${r.accessCount}</td>
-        </tr>
-    `).join("");
-
-    return `
-        <table>
-            <thead>
-                <tr>
-                    <th>File</th>
-                    <th>First Accessed</th>
-                    <th>Last Accessed</th>
-                    <th>Times Opened</th>
-                </tr>
-            </thead>
-            <tbody>${body}</tbody>
-        </table>
-    `;
+    const body = rows.map(r => {
+        const accessed = Number(r.accessCount || 0) > 0 || !!r.lastAccessed;
+        const pct = Math.max(0, Math.min(100, Math.round(Number(r.percent || 0))));
+        const status = r.status === "completed" ? `<span class="badge completed">COMPLETED</span>` :
+            r.status === "in_progress" ? `<span class="badge in-progress">IN PROGRESS (${pct}%)</span>` :
+            `<span class="badge" style="background:rgba(148,163,184,.15);color:#94a3b8">NOT ACCESSED</span>`;
+        return `<tr>
+            <td><a class="file-link" href="javascript:void(0)" onclick="openInPortal('${escapeAttr(r.filePath)}')">${escapeHtml(fileName(r.filePath))}</a><br><small style="color:var(--muted)">${escapeHtml(r.filePath)}</small></td>
+            <td>${accessed ? formatDateTime(r.firstAccessed) : "Not accessed yet"}</td>
+            <td>${accessed ? formatDateTime(r.lastAccessed) : "-"}</td>
+            <td>${Number(r.accessCount || 0)}</td>
+            <td>${status}</td>
+        </tr>`;
+    }).join("");
+    return `<div style="overflow-x:auto"><table><thead><tr><th>File</th><th>First Accessed</th><th>Last Accessed</th><th>Times Opened</th><th>Viewing Status</th></tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
 function escapeAttr(str) {
