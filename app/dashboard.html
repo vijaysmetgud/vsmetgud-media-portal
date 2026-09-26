@@ -515,8 +515,17 @@ function renderDashboard(videoRows, fileRows) {
         </section>
     `;
 
+    try {
     renderChart(videoRows);
-    renderRemainingChart(inProgress);
+} catch (err) {
+    console.error("Progress chart rendering failed:", err);
+}
+
+    try {
+        renderRemainingChart(inProgress);
+    } catch (err) {
+        console.error("Remaining-time chart rendering failed:", err);
+    }
 }
 
 function renderContinueTable(rows) {
@@ -629,6 +638,13 @@ function renderRemainingChart(inProgressRows) {
     const canvas = document.getElementById("remainingChartCanvas");
     if (!canvas) return;
 
+    if (typeof window.Chart === "undefined") {
+        console.warn(
+            "Chart.js is unavailable. Rendering dashboard without charts."
+        );
+        return;
+    }
+
     if (remainingChart) {
         remainingChart.destroy();
         remainingChart = null;
@@ -699,6 +715,13 @@ function renderRemainingChart(inProgressRows) {
 function renderChart(rows) {
     const canvas = document.getElementById("progressChartCanvas");
     if (!canvas) return;
+
+    if (typeof window.Chart === "undefined") {
+        console.warn(
+            "Chart.js is unavailable. Rendering dashboard without charts."
+        );
+        return;
+    }
 
     if (progressChart) {
         progressChart.destroy();
