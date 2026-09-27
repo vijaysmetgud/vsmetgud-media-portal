@@ -1,0 +1,45 @@
+replicaCount: 1
+
+image:
+  repository: vsmetgud/media-portal
+  tag: "618d1762c1323e2c126aba4f7277020b63a9d6fc"
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30080
+
+persistence:
+  enabled: true
+  mountPath: /usr/src/app/media
+  hostPath: /media/sf_e-drive
+  #hostPath: /mnt/media
+
+# Separate persistent mount for the SQLite database (visitors.db):
+# logins, payments, activity log, and per-user watch-progress all
+# live here. Without this, every pod restart / redeploy wipes it,
+# because it currently sits on the container's writable layer.
+persistenceData:
+  enabled: true
+  mountPath: /usr/src/app/data
+  hostPath: /media/sf_e-drive-data
+
+ingress:
+  enabled: false
+  className: nginx
+  host: vsmetgud.online
+
+resources:
+  limits:
+    cpu: 2500m
+    memory: 2560Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+nodeSelector:
+  kubernetes.io/hostname: k8s-worker
+
+autoscaling:
+  enabled: false

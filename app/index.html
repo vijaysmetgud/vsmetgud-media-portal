@@ -1521,27 +1521,11 @@ PYTHON PRACTICE
         🎬 Theatre Media Player
     </button>
 
-    <label
-        class="dashboard-radio-toggle"
-        style="
-            display:flex;
-            align-items:center;
-            gap:8px;
-            padding:0 14px;
-            cursor:pointer;
-            color:#fff;
-            font-weight:600;
-        "
-        title="Open your personal viewing dashboard in a new window"
-    >
-        <input
-            type="radio"
-            id="dashboardRadioBtn"
-            name="dashboardLauncher"
-            onclick="openUserDashboard(); setTimeout(() => { this.checked = false; }, 150);"
-        >
+    <button
+        id="dashboardBtn"
+        onclick="openUserDashboard()">
         📊 My Dashboard
-    </label>
+    </button>
 
 </div>
 
@@ -4911,12 +4895,22 @@ function popupVideoBootstrap(base, fallback, fileKey) {
 
 async function openMediaWindow(file,type){    
 
+    // Open the window FIRST, synchronously, so it stays tied to the click
+    // and isn't blocked by the browser's popup blocker.
+    const newWindow = window.open("", "_blank");
+
+    if (!newWindow) {
+        alert("Popup blocked. Please allow popups for this site and try again.");
+        return;
+    }
+
     if (!(await canAccessMedia(
         file,
         type === 'video'
             ? 'watch video'
             : 'listen audio'
     ))) {
+        newWindow.close();
         return;
     }
 
@@ -4992,11 +4986,6 @@ async function openMediaWindow(file,type){
             </div>
         `;
     }
-
-    const newWindow = window.open(
-        "",
-        "_blank"
-    );
 
     newWindow.document.write(`
         <!DOCTYPE html>
@@ -5075,12 +5064,16 @@ async function openMediaWindow(file,type){
 
             <div class="quickApps">
 
-                <button id="expenseTrackerBtn">
+                <button id="expenseTrackerBtn" onclick="window.opener ? window.opener.open('/expense.html','_blank') : window.open('/expense.html','_blank')">
                     🔥 EXPENSE TRACKER
                 </button>
 
-                <button id="theatrePlayerBtn">
+                <button id="theatrePlayerBtn" onclick="window.opener ? window.opener.open('http://theatre.vsmetgud.online','_blank') : window.open('http://theatre.vsmetgud.online','_blank')">
                     🎬 THEATRE MEDIA PLAYER
+                </button>
+
+                <button id="dashboardBtn" onclick="window.opener ? window.opener.open('/dashboard.html','_blank') : window.open('/dashboard.html','_blank')">
+                    📊 DASHBOARD
                 </button>
 
             </div>
