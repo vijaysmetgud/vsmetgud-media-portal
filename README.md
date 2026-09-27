@@ -1,8 +1,8 @@
 This Portal is for accessing my files like pdfs, videos, audios etc on local laptop 
 
-HELLO VIJAY METGUD
+HELLO VIJAYKUMAR METGUD
 
-
+----------------------------------------------------------------------------
 In Master node:
 
 sudo  cp -r /media/sf_e-drive/AUDIOS--- /mnt/media/AUDIOS---
@@ -15,7 +15,7 @@ In WORKER VM:
 sudo cp -r /media/sf_e-drive/ /mnt/media/
 sudo chown -R 101:101 /mnt/media
 sudo chmod -R 755 /mnt/media
-
+------------------------------------------------------------------------------
 
 
    1  wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
