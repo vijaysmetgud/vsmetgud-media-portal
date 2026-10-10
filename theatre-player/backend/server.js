@@ -183,7 +183,11 @@ app.use((err, req, res, next) => {
     console.error("Unhandled Express Error:");
     console.error(err);
 
-    res.status(500).send(err.message);
+    if (res.headersSent) {
+        return next(err);
+    }
+
+    res.status(500).send("Internal Server Error");
 });
 
 // Start server

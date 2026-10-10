@@ -8,7 +8,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/style.css">
 
 <style>
 
@@ -290,6 +290,34 @@ header {
 .nav-btn.active {
     background:linear-gradient(135deg,#22c55e,#16a34a);
     animation:pulse 1.5s infinite;
+}
+
+.nav-radio {
+    display:inline-flex;
+    align-items:center;
+    gap:9px;
+    padding:11px 18px;
+    border:1px solid #475569;
+    border-radius:30px;
+    background:#1e293b;
+    color:white;
+    cursor:pointer;
+    font-size:14px;
+    transition:0.3s;
+}
+
+.nav-radio:hover {
+    border-color:#60a5fa;
+    background:#273347;
+}
+
+.nav-radio.active {
+    border-color:#22c55e;
+    background:linear-gradient(135deg,#166534,#15803d);
+}
+
+.nav-radio input {
+    accent-color:#22c55e;
 }
 
 @keyframes pulse {
@@ -1047,7 +1075,19 @@ body.light .metric h3 {
     </div>
 
     <div id="mediaPaywallPanel" style="display:none; margin:20px auto; max-width:1000px; background:rgba(15,23,42,0.88); border:1px solid rgba(148,163,184,0.25); border-radius:18px; padding:18px;">
-        <h3 style="margin-top:0; color:#f8fafc;">Media Access Paywall</h3>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px;">
+            <h3 style="margin:0; color:#f8fafc;">Media Access Paywall</h3>
+            <button
+                id="adminQrToggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="adminQrDisplay"
+                onclick="toggleAdminQrCode()"
+                style="padding:9px 14px; border:1px solid rgba(148,163,184,0.4); border-radius:10px; background:rgba(30,41,59,0.9); color:#f8fafc; cursor:pointer; font-weight:700;"
+            >
+                Show Admin QR Code
+            </button>
+        </div>
 
         <div style="display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-bottom:18px;">
             <label style="display:flex; align-items:center; gap:8px; color:#e2e8f0; font-weight:600;">
@@ -1062,7 +1102,7 @@ body.light .metric h3 {
             </button>
         </div>
 
-        <div style="display:flex; flex-wrap:wrap; gap:24px; align-items:center; background:rgba(15,23,42,0.6); padding:18px; border-radius:14px;">
+        <div id="adminQrDisplay" hidden style="display:flex; flex-wrap:wrap; gap:24px; align-items:center; background:rgba(15,23,42,0.6); padding:18px; border-radius:14px; margin-bottom:16px;">
             <img src="/AccountQRCodeCanara%20Bank%20-%201114_DARK_THEME.png" alt="Bank QR code" style="width:220px; height:220px; border-radius:12px; object-fit:cover; background:#fff; padding:10px; box-shadow:0 12px 28px rgba(0,0,0,0.25);">
             <div style="max-width:480px; color:#cbd5e1;">
                 <p style="margin:0 0 10px; font-size:15px; font-weight:600; color:#f8fafc;">Minimum Payment required: ₹10 INR</p>
@@ -1138,6 +1178,28 @@ body.light .metric h3 {
         clockElement.innerText =
             `${hours}:${minutes}:${seconds}`;
 
+        const secondHand = document.getElementById('analogSecondHand');
+        const minuteHand = document.getElementById('analogMinuteHand');
+        const hourHand = document.getElementById('analogHourHand');
+        const analogClock = document.getElementById('analogClock');
+        const fractionalMinutes = now.getMinutes() + now.getSeconds() / 60;
+
+        if (secondHand && minuteHand && hourHand) {
+            secondHand.style.transform =
+                `translateX(-50%) rotate(${now.getSeconds() * 6}deg)`;
+            minuteHand.style.transform =
+                `translateX(-50%) rotate(${fractionalMinutes * 6}deg)`;
+            hourHand.style.transform =
+                `translateX(-50%) rotate(${(now.getHours() % 12 + fractionalMinutes / 60) * 30}deg)`;
+        }
+
+        if (analogClock) {
+            analogClock.setAttribute(
+                'aria-label',
+                `Analog clock showing local time ${hours}:${minutes}:${seconds}`
+            );
+        }
+
         // ===============================
         // DATE DD-MM-YYYY
         // ===============================
@@ -1160,8 +1222,8 @@ body.light .metric h3 {
 // run immediately
 updateClock();
 
-// run every second
-setInterval(updateClock, 2000);
+// Keep the analog second hand in sync with the digital clock.
+setInterval(updateClock, 1000);
 
 /* ================= CLOCK REMINDER ================= */
 
@@ -1421,6 +1483,21 @@ function startReminderChecker(){
             ✏️ Edit Health Reminder
         </button>
 
+        <div
+            id="analogClock"
+            class="analog-clock"
+            role="img"
+            aria-label="Analog clock showing local time">
+            <span class="analog-clock-number analog-clock-12">12</span>
+            <span class="analog-clock-number analog-clock-3">3</span>
+            <span class="analog-clock-number analog-clock-6">6</span>
+            <span class="analog-clock-number analog-clock-9">9</span>
+            <span id="analogHourHand" class="analog-clock-hand analog-clock-hour"></span>
+            <span id="analogMinuteHand" class="analog-clock-hand analog-clock-minute"></span>
+            <span id="analogSecondHand" class="analog-clock-hand analog-clock-second"></span>
+            <span class="analog-clock-center"></span>
+        </div>
+
     </div>
 
 </div>
@@ -1499,6 +1576,15 @@ DEVOPS SHACK
 PYTHON PRACTICE
 </button>
 
+<label class="nav-radio">
+    <input
+        type="radio"
+        name="media-category"
+        value="SCREENSHOTS-DEVOPS-INFOGRAPHICS"
+        onchange="loadCategory(this.value, this.closest('.nav-radio'))">
+    <span>SCREENSHOTS-DEVOPS-INFOGRAPHICS</span>
+</label>
+
 </div>    
 
 <div class="quickApps">
@@ -1507,12 +1593,6 @@ PYTHON PRACTICE
         id="expenseTrackerBtn"
         onclick="window.open('/expense.html','_blank')">
         💰 Expense Tracker
-    </button>
-
-    <button
-        id="paywallDemoBtn"
-        onclick="window.open('/paywall-demo.html','_blank')">
-        🎬 Payment Flow Demo
     </button>
 
     <button
@@ -1900,11 +1980,36 @@ async function logPortalActivity(action, page, details = '') {
 async function logFileAccess(file, action = 'view') {
     if (!file) return false;
 
+    saveLocalFileAccess(file);
     return await logPortalActivity(
         'file_access',
         'media',
         String(file)
     );
+}
+
+function portalHistoryKey(type, username) {
+    return `mediaPortal${type}:${String(username || '').toLowerCase()}`;
+}
+
+function saveLocalFileAccess(file) {
+    if (!currentUser?.username) return;
+
+    const key = portalHistoryKey('FileHistory', currentUser.username);
+    try {
+        const records = JSON.parse(localStorage.getItem(key) || '{}');
+        const now = new Date().toISOString();
+        const existing = records[file];
+        records[file] = {
+            filePath: file,
+            firstAccessed: existing?.firstAccessed || now,
+            lastAccessed: now,
+            accessCount: (Number(existing?.accessCount) || 0) + 1
+        };
+        localStorage.setItem(key, JSON.stringify(records));
+    } catch (err) {
+        console.warn('Unable to save local file history:', err);
+    }
 }
 
 
@@ -1957,6 +2062,7 @@ async function logPortalActivity(action, page, details = '') {
 async function logFileAccess(file, action = 'view') {
     if (!file) return false;
 
+    saveLocalFileAccess(file);
     return await logPortalActivity(
         'file_access',
         'media',
@@ -3363,6 +3469,23 @@ function toggleAdminUploadPanel() {
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
 
+function toggleAdminQrCode() {
+    if (!isAdminUser()) {
+        return;
+    }
+
+    const qrDisplay = document.getElementById('adminQrDisplay');
+    const toggle = document.getElementById('adminQrToggle');
+    if (!qrDisplay || !toggle) return;
+
+    const isShowing = qrDisplay.hidden;
+    qrDisplay.hidden = !isShowing;
+    toggle.setAttribute('aria-expanded', String(isShowing));
+    toggle.textContent = isShowing
+        ? 'Hide Admin QR Code'
+        : 'Show Admin QR Code';
+}
+
 async function publishAdminMedia() {
     const input = document.getElementById('adminUploadInput');
     const status = document.getElementById('adminUploadStatus');
@@ -3441,7 +3564,14 @@ function showMainContent() {
     const mediaPaywallPanel = document.getElementById('mediaPaywallPanel');
     if (mediaPaywallPanel) {
         mediaPaywallPanel.style.display = isAdminUser() ? 'block' : 'none';
-        // mediaPaywallPanel.style.display = 'block';
+    }
+
+    const adminQrDisplay = document.getElementById('adminQrDisplay');
+    const adminQrToggle = document.getElementById('adminQrToggle');
+    if (adminQrDisplay && adminQrToggle) {
+        adminQrDisplay.hidden = true;
+        adminQrToggle.setAttribute('aria-expanded', 'false');
+        adminQrToggle.textContent = 'Show Admin QR Code';
     }
 
     const badge = document.getElementById('mediaPaymentStatusBadge');
@@ -3899,8 +4029,11 @@ function loadCategory(folder, element) {
     aiMemory.currentCategory = folder;
 
     // Highlight selected category
-    document.querySelectorAll(".nav-btn")
+    document.querySelectorAll(".nav-btn, .nav-radio")
         .forEach(btn => btn.classList.remove("active"));
+
+    document.querySelectorAll('input[name="media-category"]')
+        .forEach(radio => { radio.checked = radio.value === folder; });
 
     if (element) {
         element.classList.add("active");
@@ -4001,11 +4134,7 @@ function getCategoryFiles(folder) {
             .replace(/\\/g, "/")
             .toLowerCase();
 
-        // Exact folder/path match
-        return (
-            normalizedFile.startsWith(normalizedFolder + "/") ||
-            normalizedFile.startsWith(normalizedFolder)
-        );
+        return normalizedFile.startsWith(normalizedFolder + "/");
     });
 }
 
@@ -4734,7 +4863,7 @@ function handleChatQuery(query){
  *  - aborts the stream when the popup closes so the server can
  *    release its ffmpeg slot immediately.
  */
-function popupVideoBootstrap(base, fallback, fileKey) {
+function popupVideoBootstrap(base, fallback, fileKey, username) {
     var v = document.getElementById("pv");
     var msg = document.getElementById("pvMsg");
     var tries = 0;
@@ -4751,12 +4880,60 @@ function popupVideoBootstrap(base, fallback, fileKey) {
     var lastReportedPercent = -1;
     var resumeAt = 0;
     var resumeApplied = !fileKey;
+    var localProgressKey = username
+        ? "mediaPortalVideoProgress:" + username.toLowerCase()
+        : "";
+    var localProgress = null;
+
+    function saveLocalProgress(evt, duration, position) {
+        if (!localProgressKey || !fileKey) return;
+        try {
+            var records = JSON.parse(localStorage.getItem(localProgressKey) || "{}");
+            var percent = duration > 0 ? Math.min(100, position / duration * 100) : 0;
+            var now = new Date().toISOString();
+            var existing = records[fileKey];
+            records[fileKey] = {
+                filePath: fileKey,
+                durationSeconds: duration,
+                positionSeconds: position,
+                percent: evt === "ended" ? 100 : percent,
+                status: evt === "ended" || percent >= 95 ? "completed" : "in_progress",
+                startedAt: existing && existing.startedAt || now,
+                lastAccessedAt: now,
+                completedAt: evt === "ended" || percent >= 95
+                    ? existing && existing.completedAt || now
+                    : null,
+                updateCount: (Number(existing && existing.updateCount) || 0) + 1
+            };
+            localProgress = records[fileKey];
+            localStorage.setItem(localProgressKey, JSON.stringify(records));
+        } catch (error) {
+            console.warn("Unable to save local video progress:", error);
+        }
+    }
+
+    if (localProgressKey) {
+        try {
+            var savedProgress = JSON.parse(localStorage.getItem(localProgressKey) || "{}");
+            localProgress = savedProgress[fileKey] || null;
+            if (
+                localProgress &&
+                localProgress.status !== "completed" &&
+                localProgress.positionSeconds > 5
+            ) {
+                resumeAt = Number(localProgress.positionSeconds) || 0;
+            }
+        } catch (error) {
+            console.warn("Unable to load local video progress:", error);
+        }
+    }
 
     function reportProgress(evt) {
         if (!fileKey) return;
         var duration = v.duration || 0;
         var position = v.currentTime || 0;
         if (!duration || isNaN(duration)) return;
+        saveLocalProgress(evt, duration, position);
 
         var payload = JSON.stringify({
             filePath: fileKey,
@@ -4802,12 +4979,16 @@ function popupVideoBootstrap(base, fallback, fileKey) {
             { credentials: "include", cache: "no-store" }
         ).then(function (r) { return r.json(); })
         .then(function (data) {
-            if (
-                data && data.success && data.progress &&
-                data.progress.status !== "completed" &&
-                data.progress.positionSeconds > 5
-            ) {
-                resumeAt = data.progress.positionSeconds;
+            if (data && data.success && data.progress) {
+                var remote = data.progress;
+                var localIsNewer = localProgress &&
+                    new Date(localProgress.lastAccessedAt).getTime() >
+                    new Date(remote.lastAccessedAt).getTime();
+                var bestProgress = localIsNewer ? localProgress : remote;
+                resumeAt = bestProgress.status !== "completed" &&
+                    bestProgress.positionSeconds > 5
+                    ? Number(bestProgress.positionSeconds)
+                    : 0;
             }
         }).catch(function () {})
         .finally(function () {
@@ -4938,6 +5119,8 @@ async function openMediaWindow(file,type){
             JSON.stringify(mediaUrl).replace(/</g, "\\u003c") +
             "," +
             JSON.stringify(file).replace(/</g, "\\u003c") +
+            "," +
+            JSON.stringify(currentUser?.username || "").replace(/</g, "\\u003c") +
             ");<\/script>";
     }
 
@@ -6926,5 +7109,6 @@ function closeAutomaticHealthReminder() {
         type="audio/mpeg">
 </audio>
 
+<script src="js/backup.js"></script>
 </body>
 </html>

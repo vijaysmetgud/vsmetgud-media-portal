@@ -51,8 +51,8 @@ function crossOriginProblem(el) {
     if (!src || src.startsWith('blob:') || src.startsWith('data:')) return null;
     const url = new URL(src, window.location.href);
     if (url.origin !== window.location.origin && !el.crossOrigin) return url.origin;
-  } catch (e) {
-    /* ignore */
+  } catch (error) {
+    console.warn('Unable to inspect the media source origin:', error);
   }
   return null;
 }
@@ -171,7 +171,9 @@ export default function SurroundPanel({
               <p style={css.status}>
                 {active ? `ON · ${state.preset}` : 'Off (original sound)'}
                 <br />
-                Output: {state.outputMode} · Source: {state.layout}
+                Output: {state.outputMode === 'multichannel'
+                  ? `${state.maxChannels >= 8 ? '7.1' : '5.1'} surround`
+                  : state.outputMode} · Source: {state.layout}
                 {state.requestedMode !== state.outputMode && state.requestedMode !== 'auto'
                   ? ` · this device has only ${state.maxChannels} channels`
                   : ''}
@@ -209,8 +211,8 @@ export default function SurroundPanel({
               >
                 <option value="speakers">Stereo tower speakers / TV</option>
                 <option value="headphones">Headphones (binaural)</option>
-                <option value="multichannel">5.1 speakers / receiver (HDMI)</option>
-                <option value="auto">Auto</option>
+                <option value="multichannel">7.1 / 5.1 speakers / receiver (HDMI)</option>
+                <option value="auto">Auto (7.1 / 5.1 / stereo)</option>
               </select>
 
               <select

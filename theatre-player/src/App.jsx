@@ -1,13 +1,7 @@
 import TheatrePlayer from "./components/TheatrePlayer";
-import SurroundPanel from './SurroundPanel.jsx';
 
 function App() {
-  return (
-    <>
-      <TheatrePlayer />
-      <SurroundPanel />
-    </>
-  );
+  return <TheatrePlayer />;
 }
 
 export default App;

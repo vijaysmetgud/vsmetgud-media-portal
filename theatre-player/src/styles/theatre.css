@@ -191,6 +191,92 @@ input[type="file"] {
   box-shadow: 0 0 18px rgba(124, 58, 237, 0.2);
 }
 
+.assistant-window {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 24px 16px;
+  background:
+    radial-gradient(circle at top, rgba(124, 58, 237, 0.2), transparent 55%),
+    #05050a;
+}
+
+.voice-assistant-window {
+  width: min(100%, 520px);
+  margin: 24px auto;
+  padding: 22px;
+}
+
+.voice-assistant-window .voice-assistant-header h1 {
+  margin: 0;
+  color: #f3e8ff;
+  font-size: 1.35rem;
+}
+
+.assistant-intro,
+.assistant-examples {
+  color: #c4b5fd;
+  line-height: 1.5;
+}
+
+.assistant-examples {
+  margin-top: 16px;
+  font-size: 0.85rem;
+}
+
+.assistant-close {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9px;
+  padding: 8px 11px;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  cursor: pointer;
+}
+
+.assistant-launcher {
+  position: fixed;
+  right: 24px;
+  bottom: 78px;
+  z-index: 2147483001;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 13px 18px;
+  background: linear-gradient(135deg, #7c3aed, #d946ef);
+  color: white;
+  box-shadow: 0 8px 26px rgba(124, 58, 237, 0.45);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.assistant-launcher:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.6);
+}
+
+.gesture-toggle {
+  margin: 0 8px 12px;
+  padding: 9px 13px;
+  border: 1px solid #475569;
+  border-radius: 9px;
+  background: #1e293b;
+  color: #f8fafc;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.gesture-toggle[aria-pressed="true"] {
+  border-color: #22c55e;
+  background: #166534;
+}
+
+.gesture-hint {
+  margin: 0 auto 10px;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
 .voice-assistant-header {
   display: flex;
   justify-content: space-between;
@@ -495,6 +581,10 @@ input[type="file"] {
     background: #000;
 }
 
+.media-wrapper.gesture-mode .media-player {
+    touch-action: none;
+}
+
 /* ======================================
    EMPTY STATE
 ====================================== */
@@ -726,4 +816,183 @@ input[type="file"] {
     color: #f5d0fe;
 
     font-size: 20px;
+}
+
+.library-controls {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: min(100%, 1100px);
+  margin: 18px auto 6px;
+}
+
+.recent-assistant-tracks {
+  width: min(100%, 1100px);
+  margin: 18px auto 10px;
+  padding: 16px;
+  border: 1px solid rgba(147, 197, 253, 0.25);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(30, 58, 95, 0.45), rgba(23, 23, 23, 0.85));
+}
+
+.recent-assistant-tracks h2 {
+  margin: 0 0 12px;
+  color: #bfdbfe;
+  font-size: 17px;
+}
+
+.recent-assistant-track-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: 8px;
+}
+
+.recent-assistant-track {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(147, 197, 253, 0.22);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #e2e8f0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.recent-assistant-track:hover:not(:disabled) {
+  border-color: #60a5fa;
+  background: rgba(30, 58, 95, 0.8);
+}
+
+.recent-assistant-track span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-assistant-track small {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: #fbbf24;
+  font-size: 11px;
+}
+
+.recent-assistant-track:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.recent-assistant-hint {
+  margin: 10px 0 0;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.library-controls button,
+.library-controls select {
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9px;
+  background: #292044;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.library-controls .clear-library-button {
+  background: #7f1d1d;
+}
+
+.media-library-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+  color: #ddd6fe;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.media-library-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #7c3aed;
+}
+
+.library-controls button[aria-pressed="true"] {
+  background: #6d28d9;
+}
+
+.library-controls label {
+  display: grid;
+  gap: 5px;
+  color: #ddd6fe;
+  font-size: 12px;
+}
+
+.library-status {
+  min-height: 1.4em;
+  width: min(100%, 1100px);
+  margin: 5px auto;
+  color: #c4b5fd;
+  text-align: center;
+  font-size: 13px;
+}
+
+.track-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.track-selector {
+  flex: 1;
+  border: 0;
+  font: inherit;
+}
+
+.track:focus-visible {
+  outline: 2px solid #c4b5fd;
+  outline-offset: 2px;
+}
+
+.track > span {
+  overflow-wrap: anywhere;
+}
+
+.favorite-toggle {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 5px 10px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #fde68a;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.favorite-toggle:focus-visible,
+.library-controls button:focus-visible,
+.library-controls select:focus-visible {
+  outline: 2px solid #c4b5fd;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .library-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .library-controls label,
+  .library-controls select {
+    width: 100%;
+  }
 }

@@ -5,8 +5,8 @@
  * built only on the Web Audio API (no libraries, no licences).
  *
  * What it does
- *   - Builds a virtual 5.1 + 2 height-speaker room
- *     (FL FR C LFE SL SR + TL TR).
+ *   - Builds a virtual surround room with 7.1 output on supported devices
+ *     and 5.1 output on devices with six channels.
  *   - Real 5.1 tracks are used as they are.
  *   - Stereo tracks are up-mixed:
  *       centre (dialogue) from L+R
@@ -23,9 +23,8 @@
  * Three output modes
  *   'speakers'     stereo tower speakers / TV / laptop -> wide-stage fold-down
  *   'headphones'   binaural HRTF
- *   'multichannel' real 5.1 output to AV receiver / soundbar over HDMI
- *   'auto'         multichannel when device offers >= 6 channels,
- *                  otherwise speakers
+ *   'multichannel' multichannel output to AV receiver / soundbar
+ *   'auto'         7.1 or 5.1 when available, otherwise stereo
  *
  * Note:
  *   This is virtual surround, not a licensed Dolby Atmos decoder.
@@ -51,10 +50,10 @@
 
 const PRESETS = {
   cinema: {
-    bass: 0.60,
-    space: 0.45,
-    height: 0.60,
-    dialogue: 0.50,
+    bass: 1.00,
+    space: 0.93,
+    height: 0.87,
+    dialogue: 0.40,
     night: false
   },
 
@@ -211,7 +210,8 @@ export class SurroundEngine {
     this._externalSource = options.source || null;
     this._ownsContext = !this._externalContext;
 
-    this.mode = options.outputMode || 'speakers';
+    this.mode = options.outputMode || 'auto';
+    this._autoStart = true;
 
     this.preset = 'off';
 
@@ -267,6 +267,7 @@ export class SurroundEngine {
 
   disable() {
 
+    this._autoStart = false;
     this.setPreset('off');
   }
 
@@ -573,8 +574,7 @@ export class SurroundEngine {
      * Master output.
      *
      * Carries either:
-     *   stereo
-     *   5.1
+     *   stereo, 5.1, or 7.1
      */
     this.master = g(0);
 
@@ -1238,12 +1238,27 @@ export class SurroundEngine {
     this.el.addEventListener(
       'play',
       () => {
+        if (!this.ctx) return;
 
-        if (
-          this.ctx &&
-          this.ctx.state === 'suspended'
-        ) {
-          this.ctx.resume();
+        if (this._autoStart && this.preset === 'off') {
+          this.enable('cinema').then(
+            () => {
+              this._autoStart = false;
+            },
+            (error) => {
+              console.error(
+                'Unable to enable default Cinema surround:',
+                error
+              );
+            }
+          );
+          return;
+        }
+
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume().catch((error) => {
+            console.error('Unable to resume Theatre audio:', error);
+          });
         }
 
       }
@@ -1421,7 +1436,7 @@ export class SurroundEngine {
 
           try {
             n.disconnect();
-          } catch (e) {
+          } catch {
             // already disconnected
           }
 
@@ -1440,7 +1455,7 @@ export class SurroundEngine {
 
         try {
           t.disconnect();
-        } catch (e) {
+        } catch {
           // ignore
         }
 
@@ -1462,7 +1477,7 @@ export class SurroundEngine {
       dest.channelInterpretation =
         'speakers';
 
-    } catch (e) {
+    } catch {
       // ignore
     }
   }
@@ -1511,26 +1526,16 @@ export class SurroundEngine {
 
     if (mode === 'multichannel') {
 
-      /*
-       * Discrete:
-       *
-       * 0 FL
-       * 1 FR
-       * 2 C
-       * 3 LFE
-       * 4 SL
-       * 5 SR
-       */
-
       const dest =
         ctx.destination;
 
+      const channels =
+        dest.maxChannelCount >= 8
+          ? 8
+          : 6;
 
       dest.channelCount =
-        Math.min(
-          6,
-          dest.maxChannelCount
-        );
+        channels;
 
 
       dest.channelInterpretation =
@@ -1539,7 +1544,7 @@ export class SurroundEngine {
 
       const merger =
         track(
-          ctx.createChannelMerger(6)
+          ctx.createChannelMerger(channels)
         );
 
 
@@ -1594,22 +1599,13 @@ export class SurroundEngine {
       );
 
 
-      /*
-       * No ceiling speakers on a 5.1 setup.
-       * Fold heights into surrounds.
-       */
-
-      feed(
-        T.TL,
-        4,
-        0.5
-      );
-
-      feed(
-        T.TR,
-        5,
-        0.5
-      );
+      if (channels === 8) {
+        feed(T.TL, 6, 0.5);
+        feed(T.TR, 7, 0.5);
+      } else {
+        feed(T.TL, 4, 0.5);
+        feed(T.TR, 5, 0.5);
+      }
 
 
       const rs =
@@ -2117,7 +2113,7 @@ export class SurroundEngine {
 
     set(
       this.presence.gain,
-      dialogue * 5
+      dialogue * 3
     );
 
 
@@ -2141,7 +2137,7 @@ export class SurroundEngine {
 
     set(
       this.reverbWet.gain,
-      0.05 + 0.4 * space
+      0.05 + 0.3 * space
     );
 
 
@@ -2164,13 +2160,13 @@ export class SurroundEngine {
     this.comp.threshold.value =
       night
         ? -32
-        : -18;
+        : -16;
 
 
     this.comp.ratio.value =
       night
         ? 8
-        : 3;
+        : 2.5;
 
 
     this.comp.knee.value = 20;

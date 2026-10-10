@@ -604,6 +604,136 @@ body.light .dateLabel {
         0 0 24px #ffb700;
 }
 
+.analog-clock {
+    position: relative;
+    flex: 0 0 112px;
+    width: 112px;
+    height: 112px;
+    margin-left: auto;
+    border: 3px solid #93c5fd;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, transparent 0 67%, rgba(148, 163, 184, 0.15) 68% 69%, transparent 70%),
+        repeating-conic-gradient(from -1deg, #cbd5e1 0deg 1deg, transparent 1deg 30deg),
+        radial-gradient(circle at 35% 28%, #1e3a5f, #0b1220 72%);
+    box-shadow:
+        0 0 14px rgba(59, 130, 246, 0.55),
+        inset 0 0 12px rgba(148, 163, 184, 0.25);
+}
+
+.analog-clock-number {
+    position: absolute;
+    z-index: 1;
+    color: #e2e8f0;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    text-shadow: 0 1px 3px #020617;
+}
+
+.analog-clock-12 {
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.analog-clock-3 {
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+}
+
+.analog-clock-6 {
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.analog-clock-9 {
+    top: 50%;
+    left: 8px;
+    transform: translateY(-50%);
+}
+
+.analog-clock-hand {
+    position: absolute;
+    z-index: 2;
+    bottom: 50%;
+    left: 50%;
+    border-radius: 999px;
+    transform-origin: 50% 100%;
+}
+
+.analog-clock-hour {
+    width: 4px;
+    height: 25%;
+    background: #f8fafc;
+}
+
+.analog-clock-minute {
+    width: 3px;
+    height: 36%;
+    background: #60a5fa;
+}
+
+.analog-clock-second {
+    z-index: 3;
+    width: 1px;
+    height: 40%;
+    background: #f87171;
+}
+
+.analog-clock-center {
+    position: absolute;
+    z-index: 4;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    border: 2px solid #e2e8f0;
+    border-radius: 50%;
+    background: #ef4444;
+    transform: translate(-50%, -50%);
+}
+
+body.light .analog-clock {
+    border-color: #2563eb;
+    background:
+        radial-gradient(circle, transparent 0 67%, rgba(15, 23, 42, 0.12) 68% 69%, transparent 70%),
+        repeating-conic-gradient(from -1deg, #475569 0deg 1deg, transparent 1deg 30deg),
+        radial-gradient(circle at 35% 28%, #ffffff, #dbeafe 72%);
+}
+
+body.light .analog-clock-number {
+    color: #0f172a;
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 768px) {
+    .analog-clock {
+        flex-basis: 88px;
+        width: 88px;
+        height: 88px;
+        margin: 8px 0 0 auto;
+    }
+
+    .analog-clock-12 {
+        top: 6px;
+    }
+
+    .analog-clock-3 {
+        right: 6px;
+    }
+
+    .analog-clock-6 {
+        bottom: 6px;
+    }
+
+    .analog-clock-9 {
+        left: 6px;
+    }
+}
+
 
 /* =========================================================
    NAVBAR

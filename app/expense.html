@@ -46,60 +46,93 @@
 
     </div>
 
-    <div class="topActionButtons">
+    <div class="topActionGroups">
+        <section class="topActionGroup graphActionGroup" aria-labelledby="graphActionsTitle">
+            <h2 id="graphActionsTitle">📈 Graphs & Trends</h2>
+            <div class="topActionButtons">
+                <button onclick="openBarChartWindow()">📊 Bar Graph</button>
+                <button onclick="openPieChartWindow()">🥧 Pie Graph</button>
+                <button onclick="openSplitGraphWindow()">💰 Split Share Graph</button>
+                <button onclick="openLineChartWindow()">📈 Trend Graph</button>
+            </div>
+        </section>
 
-        <button onclick="openBarChartWindow()">
-            📊 Bar Graph
-        </button>
+        <section class="topActionGroup reportActionGroup" aria-labelledby="reportActionsTitle">
+            <h2 id="reportActionsTitle">🧾 Reports & Actions</h2>
+            <div class="topActionButtons">
+                <button onclick="showSettlement()">💰 Settlement</button>
+                <button onclick="downloadSettlementReport()">📄 Report</button>
+                <button onclick="showExpenseSummaryTable()">📑 Summary Table</button>
+                <button onclick="shareExpenseSummary('whatsapp')">📲 WhatsApp Summary</button>
+                <button onclick="shareExpenseSummary('telegram')">📣 Telegram Summary</button>
+                <button onclick="shareExpenseSummary('email')">📧 Email Summary</button>
+                <button onclick="downloadCsvExport()">📤 CSV Export</button>
+                <button onclick="toggleTheme()">🌗 Theme</button>
+                <button onclick="clearAllExpenseData()">🗑 Delete All Data</button>
+            </div>
+        </section>
+    </div>
 
-        <button onclick="openPieChartWindow()">
-            🥧 Pie Graph
-        </button>
+    <div class="graphFilterPanel">
+        <h2>📊 Expense Analytics</h2>
 
-        <button onclick="openSplitGraphWindow()">
-            💰 Split Share Graph
-        </button>
+        <div class="graphTypeRadios" aria-label="Chart type selector">
+            <label class="chartRadio">
+                <input type="radio" name="chartKind" value="bar" checked>
+                <span>Bar</span>
+            </label>
+            <label class="chartRadio">
+                <input type="radio" name="chartKind" value="line">
+                <span>Line</span>
+            </label>
+            <label class="chartRadio">
+                <input type="radio" name="chartKind" value="pie">
+                <span>Pie</span>
+            </label>
+            <label class="chartRadio">
+                <input type="radio" name="chartKind" value="doughnut">
+                <span>Doughnut</span>
+            </label>
+        </div>
 
-        <button onclick="openLineChartWindow()">
-            📈 Trend Graph
-        </button>    
-
-        <button onclick="showSettlement()">
-            💰 Settlement
-        </button>
-
-        <button onclick="downloadSettlementReport()">
-            📄 Report
-        </button>
-
-        <button onclick="showExpenseSummaryTable()">
-            📑 Summary Table
-        </button>
-
-        <button onclick="shareExpenseSummary('whatsapp')">
-            📲 WhatsApp Summary
-        </button>
-
-        <button onclick="shareExpenseSummary('telegram')">
-            📣 Telegram Summary
-        </button>
-
-        <button onclick="shareExpenseSummary('email')">
-            📧 Email Summary
-        </button>
-
-        <button onclick="downloadCsvExport()">
-            📤 CSV Export
-        </button>
-
-        <button onclick="toggleTheme()">
-            🌗 Theme
-        </button>
-
-        <button onclick="clearAllExpenseData()">
-            🗑 Delete All Data
-        </button>
-
+        <div class="graphControls">
+            <div class="graphInput">
+                <label for="graphUser">User</label>
+                <select id="graphUser">
+                    <option value="all">All Users</option>
+                </select>
+            </div>
+            <div class="graphInput">
+                <label for="graphType">Expense Type</label>
+                <select id="graphType">
+                    <option value="normal">Individual Expenses</option>
+                    <option value="split">Split Share Expenses</option>
+                </select>
+            </div>
+            <div class="graphInput">
+                <label for="graphFilter">Period</label>
+                <select id="graphFilter">
+                    <option value="today">Today</option>
+                    <option value="week">Last 7 Days</option>
+                    <option value="date">Selected Date</option>
+                    <option value="month">Month</option>
+                    <option value="year">Year</option>
+                    <option value="overall" selected>Overall</option>
+                </select>
+            </div>
+            <div class="graphInput">
+                <label for="graphDate">Select Date</label>
+                <input type="date" id="graphDate">
+            </div>
+            <div class="graphInput">
+                <label for="graphMonth">Month</label>
+                <input type="month" id="graphMonth">
+            </div>
+            <div class="graphInput">
+                <label for="graphYear">Year</label>
+                <input type="number" id="graphYear" min="2000" max="2100">
+            </div>
+        </div>
     </div>
 
     <div class="dashboardStrip">
@@ -107,7 +140,7 @@
         <div class="budgetPanel">
             <h3>💼 Monthly Budget</h3>
             <div class="budgetRow">
-                <input type="number" id="monthlyBudgetInput" placeholder="Set budget" min="0" step="100">
+                <input type="number" id="monthlyBudgetInput" aria-label="Monthly expense budget" placeholder="Set budget" min="0" step="100">
                 <button onclick="saveMonthlyBudget()">Save</button>
             </div>
             <div class="budgetMeta">
@@ -117,7 +150,7 @@
             <div class="budgetProgress">
                 <div id="budgetProgressBar"></div>
             </div>
-            <small id="budgetStatus">Budget status: not set</small>
+            <small id="budgetStatus" role="status" aria-live="polite">Budget status: not set</small>
         </div>
 
         <div class="insightPanel">
@@ -136,18 +169,21 @@
         <input
             type="date"
             id="date"
+            aria-label="Expense date"
         />
 
         <input
             type="text"
             id="item"
             placeholder="Item"
+            aria-label="Expense item"
         />
 
         <input
             type="number"
             id="price"
             placeholder="Price"
+            aria-label="Expense amount"
         />
 
         <div class="buttonRow">
@@ -177,6 +213,21 @@
         <p id="voiceStatus"></p>
 
     </div>
+
+    <section class="recurringPanel" aria-labelledby="recurringTitle">
+        <h2 id="recurringTitle">🔁 Recurring Expenses</h2>
+        <p>Save a weekly or monthly expense template. Due entries are only added after you review them.</p>
+        <div class="recurringSetup">
+            <label for="recurringCadence">Repeat</label>
+            <select id="recurringCadence">
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+            </select>
+            <button type="button" onclick="addRecurringExpense()">Save item, amount &amp; date as recurring</button>
+        </div>
+        <small id="recurringStatus" role="status" aria-live="polite"></small>
+        <div id="recurringExpenseList" aria-live="polite"></div>
+    </section>
 
     <div class="toolRow">
         <div class="searchBox">
@@ -336,165 +387,6 @@
 
     </div>
 
-    <!-- ACTION BUTTONS -->
-
-    <!-- ================= GRAPH FILTER PANEL ================= -->
-
-<div class="graphFilterPanel">
-
-    <h2>
-        📊 Expense Analytics
-    </h2>
-
-    <div class="graphTypeRadios" aria-label="Chart type selector">
-        <label class="chartRadio">
-            <input type="radio" name="chartKind" value="bar" checked>
-            <span>Bar</span>
-        </label>
-        <label class="chartRadio">
-            <input type="radio" name="chartKind" value="line">
-            <span>Line</span>
-        </label>
-        <label class="chartRadio">
-            <input type="radio" name="chartKind" value="pie">
-            <span>Pie</span>
-        </label>
-        <label class="chartRadio">
-            <input type="radio" name="chartKind" value="doughnut">
-            <span>Doughnut</span>
-        </label>
-    </div>
-
-    <div class="graphControls">
-
-        <!-- USER -->
-
-        <div class="graphInput">
-
-            <label>
-                User
-            </label>
-
-            <select id="graphUser">
-                <option value="all">
-                    All Users
-                </option>
-            </select>
-
-        </div>
-
-        <!-- GRAPH TYPE -->
-
-        <div class="graphInput">
-
-            <label>
-                Expense Type
-            </label>
-
-            <select id="graphType">
-
-                <option value="normal">
-                    Individual Expenses
-                </option>
-
-                <option value="split">
-                    Split Share Expenses
-                </option>
-
-            </select>
-
-        </div>
-
-        <!-- FILTER -->
-
-        <div class="graphInput">
-
-            <label>
-                Filter
-            </label>
-
-            <select id="graphFilter">
-
-                <option value="today">
-                    Today
-                </option>
-
-                <option value="week">
-                    Week
-                </option>
-
-                <option value="date">
-                    Selected Date
-                </option>
-
-                <option value="month">
-                    Month
-                </option>
-
-                <option value="year">
-                    Year
-                </option>
-
-                <option value="overall" selected>
-                    Overall
-                </option>
-
-            </select>
-
-        </div>
-
-        <!-- DATE -->
-
-        <div class="graphInput">
-
-            <label>
-                Select Date
-            </label>
-
-            <input
-                type="date"
-                id="graphDate"
-            />
-
-        </div>
-
-        <!-- MONTH -->
-
-        <div class="graphInput">
-
-            <label>
-                Month
-            </label>
-
-            <input
-                type="month"
-                id="graphMonth"
-            />
-
-        </div>
-
-        <!-- YEAR -->
-
-        <div class="graphInput">
-
-            <label>
-                Year
-            </label>
-
-            <input
-                type="number"
-                id="graphYear"
-                min="2000"
-                max="2100"
-                value="2026"
-            />
-
-        </div>
-
-    </div>
-
-</div>
-
     <!-- EXPENSE LIST -->
 
     <div
@@ -550,6 +442,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="js/expense.js"></script>
+<script src="js/backup.js"></script>
 
 </body>
 

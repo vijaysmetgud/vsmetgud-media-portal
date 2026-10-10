@@ -1,121 +1,93 @@
 import { useEffect, useRef, useState } from "react";
 
+function applyEqualizerPreset(mode, { bass, vocal, treble, delay, feedback, leftDelay, rightDelay }) {
+  if (!bass || !vocal || !treble) return;
+
+  bass.gain.value = 0;
+  vocal.gain.value = 0;
+  treble.gain.value = 0;
+
+  if (delay) delay.delayTime.value = 0;
+  if (feedback) feedback.gain.value = 0;
+
+  switch (mode) {
+    case "surround":
+      bass.gain.value = 9;
+      vocal.gain.value = 4;
+      treble.gain.value = 8;
+      if (leftDelay) leftDelay.delayTime.value = 0.020;
+      if (rightDelay) rightDelay.delayTime.value = 0.040;
+      break;
+    case "theatre":
+      bass.gain.value = 2.5;
+      vocal.gain.value = 7;
+      treble.gain.value = 4;
+      if (leftDelay) leftDelay.delayTime.value = 0.025;
+      if (rightDelay) rightDelay.delayTime.value = 0.050;
+      break;
+    case "cinema":
+      bass.gain.value = 2;
+      vocal.gain.value = 8;
+      treble.gain.value = 5;
+      if (leftDelay) leftDelay.delayTime.value = 0.035;
+      if (rightDelay) rightDelay.delayTime.value = 0.070;
+      break;
+    case "music":
+      bass.gain.value = 2.2;
+      vocal.gain.value = 8;
+      treble.gain.value = 4;
+      break;
+    case "night":
+      bass.gain.value = 2;
+      vocal.gain.value = 8;
+      treble.gain.value = 2;
+      break;
+    case "vocal":
+      bass.gain.value = -2;
+      vocal.gain.value = 8;
+      treble.gain.value = 4;
+      break;
+    case "party":
+      bass.gain.value = 4;
+      vocal.gain.value = 3;
+      treble.gain.value = 9;
+      break;
+    case "podcast":
+      bass.gain.value = 1;
+      vocal.gain.value = 8;
+      treble.gain.value = 2;
+      break;
+    case "bass-boost":
+      bass.gain.value = 7;
+      vocal.gain.value = -1;
+      treble.gain.value = 1;
+      break;
+    default:
+      return;
+  }
+
+  console.log("Preset:", mode, "Bass:", bass.gain.value, "Vocal:", vocal.gain.value, "Treble:", treble.gain.value);
+}
+
+function configureAnalyser(analyser) {
+  analyser.fftSize = 128;
+  analyser.smoothingTimeConstant = 0.85;
+}
+
 function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, leftDelay, rightDelay, currentFile, playPrevious, playPause, playNext, playing, progress, seek, volume, setVolume, fullscreen }) {
   const canvasRef = useRef(null);
   const [activeMode, setActiveMode] = useState("surround");
 
-  // Presets
   const preset = (mode) => {
     setActiveMode(mode);
-
-    if (!bass || !vocal || !treble) {
-      return;
-    }
-
-    // Reset EQ
-
-    bass.gain.value = 0;
-    vocal.gain.value = 0;
-    treble.gain.value = 0;
-
-    if (delay) delay.delayTime.value = 0;
-    if (feedback) feedback.gain.value = 0;
-
-    switch (mode) {
-
-      case "surround":
-        bass.gain.value = 9; // 90% target
-        vocal.gain.value = 4; // 40% target
-        treble.gain.value = 8; // 80% target
-
-        if (leftDelay)
-          leftDelay.delayTime.value = 0.020;
-
-        if (rightDelay)
-          rightDelay.delayTime.value = 0.040;
-
-        break;
-
-      case "theatre":
-        bass.gain.value = 2.5;
-        vocal.gain.value = 7;
-        treble.gain.value = 4;
-
-        if (leftDelay)
-          leftDelay.delayTime.value = 0.025;
-
-        if (rightDelay)
-          rightDelay.delayTime.value = 0.050;
-
-        break;  
-
-      case "cinema":
-        bass.gain.value = 2;
-        vocal.gain.value = 8;
-        treble.gain.value = 5;
-
-        if (leftDelay)
-          leftDelay.delayTime.value = 0.035;
-
-        if (rightDelay)
-          rightDelay.delayTime.value = 0.070;
-
-        break;
-
-      case "music":
-        bass.gain.value = 2.2;
-        vocal.gain.value = 8;
-        treble.gain.value = 4;
-        break;
-
-      case "night":
-        bass.gain.value = 2;
-        vocal.gain.value = 8;
-        treble.gain.value = 2;
-        break;
-
-      case "vocal":
-        bass.gain.value = -2;
-        vocal.gain.value = 8;
-        treble.gain.value = 4;
-        break;
-
-      case "party":
-        bass.gain.value = 4;
-        vocal.gain.value = 3;
-        treble.gain.value = 9;
-        break;
-
-      case "podcast":
-        bass.gain.value = 1;
-        vocal.gain.value = 8;
-        treble.gain.value = 2;
-        break;
-
-      case "bass-boost":
-        bass.gain.value = 7;
-        vocal.gain.value = -1;
-        treble.gain.value = 1;
-        break;
-
-      default:
-        break;
-    }
-    console.log(
-      "Preset:",
-      mode,
-      "Bass:", bass.gain.value,
-      "Vocal:", vocal.gain.value,
-      "Treble:", treble.gain.value
-    );
+    applyEqualizerPreset(mode, { bass, vocal, treble, delay, feedback, leftDelay, rightDelay });
   };
 
-  // Set initial EQ preset on mount
   useEffect(() => {
     if (bass && vocal && treble) {
-      preset("surround");
+      applyEqualizerPreset("surround", { bass, vocal, treble, delay, feedback, leftDelay, rightDelay });
     }
-  }, [bass, vocal, treble]);
+  }, [bass, vocal, treble, delay, feedback, leftDelay, rightDelay]);
 
   // Animation/visualizer loop
   useEffect(() => {
@@ -125,8 +97,7 @@ function EqualizerPanel({ bass, vocal, treble, analyser, delay, feedback, leftDe
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-    analyser.fftSize = 128;
-    analyser.smoothingTimeConstant = 0.85;
+    configureAnalyser(analyser);
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 

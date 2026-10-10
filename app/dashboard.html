@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My Dashboard - VSMETGUD Media Portal</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
     :root {
         --bg: #0f172a;
@@ -124,7 +123,51 @@
 
     .chart-wrap {
         position: relative;
-        height: 340px;
+        min-height: 340px;
+    }
+
+    .chart-wrap canvas {
+        display: block;
+        width: 100%;
+    }
+
+    .dashboard-filter-controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 12px;
+        align-items: end;
+    }
+
+    .dashboard-filter-controls label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .dashboard-filter-controls input,
+    .dashboard-filter-controls select,
+    .dashboard-filter-controls button {
+        min-width: 0;
+        min-height: 40px;
+        padding: 9px 11px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #0f172a;
+        color: var(--text);
+        font: inherit;
+    }
+
+    .dashboard-filter-controls button {
+        background: var(--accent);
+        cursor: pointer;
+        font-weight: 700;
+    }
+
+    .dashboard-filter-controls :focus-visible {
+        outline: 2px solid #93c5fd;
+        outline-offset: 2px;
     }
 
     table {
@@ -241,8 +284,61 @@
 
 <script>
 let currentUsername = null;
-let progressChart = null;
-let remainingChart = null;
+let dashboardSourceData = { videoRows: [], fileRows: [] };
+
+function getDashboardFilters() {
+    try {
+        return JSON.parse(localStorage.getItem("mediaPortalDashboardFilters") || "{}");
+    } catch (error) {
+        console.error("Unable to load dashboard filters:", error);
+        return {};
+    }
+}
+
+function filterDashboardRows(rows, query, type, period, timestampKey) {
+    const now = Date.now();
+    const typePatterns = {
+        video: /\.(mp4|mkv|webm|mov|avi|m4v)$/i,
+        audio: /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|wma|aiff?)$/i,
+        image: /\.(png|jpe?g|gif|webp|bmp|svg|tiff?)$/i,
+        document: /\.(pdf|docx?|xlsx?|pptx?|txt|csv|md)$/i
+    };
+
+    return rows.filter(row => {
+        const path = String(row.filePath || "");
+        const fileMatches = !query || path.toLowerCase().includes(query);
+        const pattern = typePatterns[type];
+        const typeMatches = !pattern || pattern.test(path);
+        const accessedAt = new Date(row[timestampKey] || 0).getTime();
+        const days = Number(period);
+        const periodMatches = !days || (Number.isFinite(accessedAt) && now - accessedAt <= days * 86400000);
+        return fileMatches && typeMatches && periodMatches;
+    });
+}
+
+function saveDashboardFilters() {
+    const filters = {
+        query: document.getElementById("dashboardSearch")?.value || "",
+        type: document.getElementById("dashboardFileType")?.value || "all",
+        period: document.getElementById("dashboardPeriod")?.value || "all"
+    };
+    try {
+        localStorage.setItem("mediaPortalDashboardFilters", JSON.stringify(filters));
+    } catch (error) {
+        console.error("Unable to save dashboard filters:", error);
+    }
+
+    const focusedId = document.activeElement?.id;
+    const cursor = focusedId === "dashboardSearch"
+        ? document.activeElement.selectionStart
+        : null;
+    renderDashboard(dashboardSourceData.videoRows, dashboardSourceData.fileRows);
+    if (focusedId) {
+        const replacement = document.getElementById(focusedId);
+        replacement?.focus();
+        if (cursor !== null && replacement) replacement.setSelectionRange(cursor, cursor);
+    }
+}
 
 function escapeHtml(str) {
     return String(str || "").replace(/[&<>"']/g, s => ({
@@ -317,19 +413,143 @@ function cacheKey(username) {
     return `mediaPortalDashboardCache:${username}`;
 }
 
+function loadLocalRecords(type, username) {
+    try {
+        const key = `mediaPortal${type}:${String(username || "").toLowerCase()}`;
+        const records = JSON.parse(localStorage.getItem(key) || "{}");
+        return Object.values(records).filter(record =>
+            record && typeof record.filePath === "string"
+        );
+    } catch (err) {
+        console.warn(`Unable to load local ${type.toLowerCase()}:`, err);
+        return [];
+    }
+}
+
+function mergeVideoProgress(serverRows, username) {
+    const rowsByPath = new Map(serverRows.map(row => [row.filePath, row]));
+
+    loadLocalRecords("VideoProgress", username).forEach(localRow => {
+        const serverRow = rowsByPath.get(localRow.filePath);
+        if (
+            !serverRow ||
+            new Date(localRow.lastAccessedAt).getTime() >
+                new Date(serverRow.lastAccessedAt).getTime()
+        ) {
+            rowsByPath.set(localRow.filePath, { ...serverRow, ...localRow });
+        }
+    });
+
+    return Array.from(rowsByPath.values());
+}
+
+function mergeFileHistory(serverRows, username) {
+    const rowsByPath = new Map(serverRows.map(row => [row.filePath, row]));
+
+    loadLocalRecords("FileHistory", username).forEach(localRow => {
+        const serverRow = rowsByPath.get(localRow.filePath);
+        if (!serverRow) {
+            rowsByPath.set(localRow.filePath, localRow);
+            return;
+        }
+
+        rowsByPath.set(localRow.filePath, {
+            ...serverRow,
+            firstAccessed: new Date(localRow.firstAccessed) < new Date(serverRow.firstAccessed)
+                ? localRow.firstAccessed
+                : serverRow.firstAccessed,
+            lastAccessed: new Date(localRow.lastAccessed) > new Date(serverRow.lastAccessed)
+                ? localRow.lastAccessed
+                : serverRow.lastAccessed,
+            accessCount: Math.max(
+                Number(localRow.accessCount) || 0,
+                Number(serverRow.accessCount) || 0
+            )
+        });
+    });
+
+    return Array.from(rowsByPath.values())
+        .sort((a, b) => new Date(b.lastAccessed) - new Date(a.lastAccessed));
+}
+
+function mergeWithSavedSnapshot(videoRows, fileRows, username) {
+    const snapshot = loadSnapshot(username);
+    if (!snapshot) return { videoRows, fileRows };
+
+    const videosByPath = new Map(videoRows.map(row => [row.filePath, row]));
+    snapshot.videoRows.forEach(savedRow => {
+        const current = videosByPath.get(savedRow.filePath);
+        const savedTime = new Date(savedRow.lastAccessedAt || 0).getTime();
+        const currentTime = new Date(current?.lastAccessedAt || 0).getTime();
+        if (!current || (Number.isFinite(savedTime) && (!Number.isFinite(currentTime) || savedTime > currentTime))) {
+            videosByPath.set(savedRow.filePath, { ...current, ...savedRow });
+        }
+    });
+
+    const filesByPath = new Map(fileRows.map(row => [row.filePath, row]));
+    snapshot.fileRows.forEach(savedRow => {
+        const current = filesByPath.get(savedRow.filePath);
+        if (!current) {
+            filesByPath.set(savedRow.filePath, savedRow);
+            return;
+        }
+        const savedLast = new Date(savedRow.lastAccessed || 0).getTime();
+        const currentLast = new Date(current.lastAccessed || 0).getTime();
+        const latest = Number.isFinite(savedLast) && (!Number.isFinite(currentLast) || savedLast > currentLast)
+            ? savedRow
+            : current;
+        const firstTimes = [savedRow.firstAccessed, current.firstAccessed]
+            .map(value => ({ value, time: new Date(value || 0).getTime() }))
+            .filter(entry => Number.isFinite(entry.time));
+        const firstAccessed = firstTimes.length
+            ? firstTimes.reduce((earliest, entry) => entry.time < earliest.time ? entry : earliest).value
+            : latest.firstAccessed;
+        filesByPath.set(savedRow.filePath, {
+            ...current,
+            ...latest,
+            firstAccessed,
+            accessCount: Math.max(
+                Number(savedRow.accessCount) || 0,
+                Number(current.accessCount) || 0
+            )
+        });
+    });
+
+    return {
+        videoRows: Array.from(videosByPath.values()),
+        fileRows: Array.from(filesByPath.values())
+    };
+}
+
 function saveSnapshot(username, videoRows, fileRows) {
     try {
         localStorage.setItem(cacheKey(username), JSON.stringify({
             videoRows, fileRows, savedAt: new Date().toISOString()
         }));
-    } catch (e) {}
+        return true;
+    } catch (error) {
+        console.error("Unable to save the dashboard recovery snapshot:", error);
+        return false;
+    }
 }
 
 function loadSnapshot(username) {
     try {
         const raw = localStorage.getItem(cacheKey(username));
-        return raw ? JSON.parse(raw) : null;
-    } catch (e) {
+        if (!raw) return null;
+        const snapshot = JSON.parse(raw);
+        if (
+            !snapshot ||
+            !Array.isArray(snapshot.videoRows) ||
+            !Array.isArray(snapshot.fileRows) ||
+            typeof snapshot.savedAt !== "string"
+        ) {
+            console.error("Saved dashboard recovery data has an unsupported shape.");
+            return null;
+        }
+        return snapshot;
+    } catch (error) {
+        console.error("Unable to read the dashboard recovery snapshot:", error);
         return null;
     }
 }
@@ -362,6 +582,21 @@ function scheduleRetry() {
 }
 
 let refreshInProgress = false;
+let dashboardHasRendered = false;
+
+function restoreDashboardSnapshotBeforeConnecting() {
+    const cachedUsername = getLastKnownUsername();
+    if (!cachedUsername) return;
+    const snapshot = loadSnapshot(cachedUsername);
+    if (!snapshot) return;
+
+    currentUsername = cachedUsername;
+    document.getElementById("userLine").textContent =
+        `Last known account: ${cachedUsername} (restored locally; checking server...)`;
+    renderDashboard(snapshot.videoRows, snapshot.fileRows);
+    dashboardHasRendered = true;
+    showReconnectBanner(snapshot.savedAt);
+}
 
 async function manualRefresh() {
     if (refreshInProgress) return;
@@ -387,6 +622,10 @@ async function manualRefresh() {
 }
 
 async function refreshAll(isBackgroundRetry) {
+    if (!dashboardHasRendered) {
+        restoreDashboardSnapshotBeforeConnecting();
+    }
+
     try {
         const me = await fetchJson("/api/me");
         currentUsername = me.user.username;
@@ -399,12 +638,22 @@ async function refreshAll(isBackgroundRetry) {
             fetchJson("/api/file-activity-summary")
         ]);
 
-        const videoRows = progressData.rows || [];
-        const fileRows = fileActivityData.rows || [];
+        const cachedRows = mergeWithSavedSnapshot(
+            mergeVideoProgress(progressData.rows || [], currentUsername),
+            mergeFileHistory(fileActivityData.rows || [], currentUsername),
+            currentUsername
+        );
+        const videoRows = cachedRows.videoRows;
+        const fileRows = cachedRows.fileRows;
 
         hideReconnectBanner();
         renderDashboard(videoRows, fileRows);
-        saveSnapshot(currentUsername, videoRows, fileRows);
+        dashboardHasRendered = true;
+        if (!saveSnapshot(currentUsername, videoRows, fileRows)) {
+            showSnapshotSaveWarning();
+        } else {
+            hideSnapshotSaveWarning();
+        }
 
     } catch (err) {
         if (err.unauthorized) {
@@ -416,6 +665,7 @@ async function refreshAll(isBackgroundRetry) {
                 </div>
             `;
             document.getElementById("userLine").textContent = "Not signed in";
+            dashboardHasRendered = false;
             return;
         }
 
@@ -426,13 +676,14 @@ async function refreshAll(isBackgroundRetry) {
         const snapshot = cachedUsername ? loadSnapshot(cachedUsername) : null;
 
         if (snapshot) {
-            if (!isBackgroundRetry) {
+            if (!dashboardHasRendered || !isBackgroundRetry) {
                 document.getElementById("userLine").textContent =
                     `Last known account: ${cachedUsername} (offline)`;
                 renderDashboard(snapshot.videoRows, snapshot.fileRows);
+                dashboardHasRendered = true;
             }
             showReconnectBanner(snapshot.savedAt);
-        } else {
+        } else if (!dashboardHasRendered) {
             document.getElementById("mainArea").innerHTML = `
                 <div class="center-msg">
                     Can't reach the server right now and no locally saved dashboard data is
@@ -445,6 +696,23 @@ async function refreshAll(isBackgroundRetry) {
     }
 }
 
+function showSnapshotSaveWarning() {
+    let warning = document.getElementById("snapshotSaveWarning");
+    if (!warning) {
+        warning = document.createElement("div");
+        warning.id = "snapshotSaveWarning";
+        warning.style.cssText =
+            "background:#78350f;color:#fef3c7;padding:9px 16px;text-align:center;font-size:13px;";
+        document.body.insertBefore(warning, document.getElementById("mainArea"));
+    }
+    warning.textContent =
+        "⚠ Dashboard refreshed, but this browser could not save a recovery snapshot. Download a backup or free browser storage.";
+}
+
+function hideSnapshotSaveWarning() {
+    document.getElementById("snapshotSaveWarning")?.remove();
+}
+
 function getLastKnownUsername() {
     try {
         return localStorage.getItem("mediaPortalLastUsername") || null;
@@ -454,6 +722,19 @@ function getLastKnownUsername() {
 }
 
 function renderDashboard(videoRows, fileRows) {
+    dashboardSourceData = { videoRows, fileRows };
+    const filters = getDashboardFilters();
+    const query = String(filters.query || "").trim().toLowerCase();
+    const type = ["all", "video", "audio", "image", "document"].includes(filters.type)
+        ? filters.type
+        : "all";
+    const period = ["all", "7", "30"].includes(String(filters.period))
+        ? String(filters.period)
+        : "all";
+    videoRows = type === "all" || type === "video"
+        ? filterDashboardRows(videoRows, query, "video", period, "lastAccessedAt")
+        : [];
+    fileRows = filterDashboardRows(fileRows, query, type, period, "lastAccessed");
 
     const inProgress = videoRows
         .filter(r => r.status !== "completed")
@@ -466,6 +747,31 @@ function renderDashboard(videoRows, fileRows) {
     const totalAccessedFiles = fileRows.length;
 
     document.getElementById("mainArea").innerHTML = `
+        <section aria-labelledby="dashboardFilterTitle">
+            <h2 id="dashboardFilterTitle">🔎 Find files and history</h2>
+            <div class="dashboard-filter-controls">
+                <label>Search files
+                    <input id="dashboardSearch" type="search" placeholder="Search by file name or path" value="${escapeHtml(filters.query || "")}">
+                </label>
+                <label>File type
+                    <select id="dashboardFileType">
+                        <option value="all">All files</option>
+                        <option value="video">Videos</option>
+                        <option value="audio">Audio</option>
+                        <option value="image">Images</option>
+                        <option value="document">Documents</option>
+                    </select>
+                </label>
+                <label>Recently accessed
+                    <select id="dashboardPeriod">
+                        <option value="all">Any time</option>
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                    </select>
+                </label>
+                <button type="button" id="clearDashboardFilters">Clear filters</button>
+            </div>
+        </section>
         <div class="stat-row">
             <div class="stat-card">
                 <div class="value">${videoRows.length}</div>
@@ -514,6 +820,18 @@ function renderDashboard(videoRows, fileRows) {
             ${renderFileActivityTable(fileRows)}
         </section>
     `;
+
+    document.getElementById("dashboardFileType").value = type;
+    document.getElementById("dashboardPeriod").value = period;
+    document.getElementById("dashboardSearch").addEventListener("input", saveDashboardFilters);
+    document.getElementById("dashboardFileType").addEventListener("change", saveDashboardFilters);
+    document.getElementById("dashboardPeriod").addEventListener("change", saveDashboardFilters);
+    document.getElementById("clearDashboardFilters").addEventListener("click", () => {
+        document.getElementById("dashboardSearch").value = "";
+        document.getElementById("dashboardFileType").value = "all";
+        document.getElementById("dashboardPeriod").value = "all";
+        saveDashboardFilters();
+    });
 
     try {
     renderChart(videoRows);
@@ -634,150 +952,118 @@ function escapeAttr(str) {
     return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
-function renderRemainingChart(inProgressRows) {
-    const canvas = document.getElementById("remainingChartCanvas");
+function renderHorizontalBarChart(canvas, {
+    labels,
+    values,
+    colors,
+    maxValue,
+    axisLabel,
+    emptyText
+}) {
     if (!canvas) return;
 
-    if (typeof window.Chart === "undefined") {
-        console.warn(
-            "Chart.js is unavailable. Rendering dashboard without charts."
-        );
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+        console.error("Unable to render dashboard chart: canvas context is unavailable.");
         return;
     }
 
-    if (remainingChart) {
-        remainingChart.destroy();
-        remainingChart = null;
-    }
+    const width = Math.max(canvas.clientWidth, 320);
+    const rowHeight = 34;
+    const height = Math.max(340, labels.length * rowHeight + 70);
+    const pixelRatio = window.devicePixelRatio || 1;
 
-    if (inProgressRows.length === 0) {
-        const ctx = canvas.getContext("2d");
+    canvas.style.height = `${height}px`;
+    canvas.width = Math.round(width * pixelRatio);
+    canvas.height = Math.round(height * pixelRatio);
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    ctx.font = "12px Segoe UI, Arial, sans-serif";
+    ctx.textBaseline = "middle";
+
+    if (labels.length === 0) {
         ctx.fillStyle = "#94a3b8";
-        ctx.font = "14px Segoe UI";
-        ctx.fillText("Nothing in progress - nothing left to complete.", 20, 30);
+        ctx.textAlign = "left";
+        ctx.font = "14px Segoe UI, Arial, sans-serif";
+        ctx.fillText(emptyText, 20, 30);
         return;
     }
 
+    const left = Math.min(230, Math.max(130, width * 0.38));
+    const right = 28;
+    const top = 24;
+    const bottom = 42;
+    const plotWidth = Math.max(40, width - left - right);
+    const plotHeight = height - top - bottom;
+    const safeMax = maxValue > 0 ? maxValue : 1;
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    for (let tick = 0; tick <= 4; tick += 1) {
+        const x = left + plotWidth * tick / 4;
+        const value = safeMax * tick / 4;
+        ctx.strokeStyle = "#334155";
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, top + plotHeight);
+        ctx.stroke();
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText(`${Number(value.toFixed(1))}${axisLabel === "%" ? "%" : ""}`, x, height - 20);
+    }
+
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText(axisLabel, left + plotWidth / 2, height - 4);
+
+    labels.forEach((label, index) => {
+        const centerY = top + plotHeight * (index + 0.5) / labels.length;
+        const value = Math.max(0, Number(values[index]) || 0);
+        const barWidth = plotWidth * Math.min(value, safeMax) / safeMax;
+        const maxLabelWidth = left - 20;
+        let displayLabel = String(label);
+        while (displayLabel.length > 3 && ctx.measureText(`${displayLabel}...`).width > maxLabelWidth) {
+            displayLabel = displayLabel.slice(0, -1);
+        }
+        if (displayLabel !== label) displayLabel += "...";
+
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#e2e8f0";
+        ctx.fillText(displayLabel, left - 12, centerY);
+        ctx.fillStyle = colors[index];
+        ctx.fillRect(left, centerY - 8, barWidth, 16);
+    });
+}
+
+function renderRemainingChart(inProgressRows) {
     const sorted = [...inProgressRows].sort((a, b) => {
         const remA = a.durationSeconds - a.positionSeconds;
         const remB = b.durationSeconds - b.positionSeconds;
         return remA - remB;
     });
-
-    const labels = sorted.map(r => fileName(r.filePath));
-    const minutesRemaining = sorted.map(r =>
-        Math.round(Math.max(0, r.durationSeconds - r.positionSeconds) / 60 * 10) / 10
+    const minutesRemaining = sorted.map(row =>
+        Math.round(Math.max(0, row.durationSeconds - row.positionSeconds) / 60 * 10) / 10
     );
 
-    remainingChart = new Chart(canvas.getContext("2d"), {
-        type: "bar",
-        data: {
-            labels,
-            datasets: [{
-                label: "Minutes remaining",
-                data: minutesRemaining,
-                backgroundColor: "#f59e0b",
-                borderRadius: 6
-            }]
-        },
-        options: {
-            indexAxis: "y",
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => {
-                            const row = sorted[ctx.dataIndex];
-                            const remaining = Math.max(0, row.durationSeconds - row.positionSeconds);
-                            return `${formatDuration(remaining)} left (${Math.round(row.percent)}% done)`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    title: { display: true, text: "Minutes remaining", color: "#94a3b8" },
-                    ticks: { color: "#94a3b8" },
-                    grid: { color: "#334155" }
-                },
-                y: {
-                    ticks: { color: "#e2e8f0", autoSkip: false },
-                    grid: { display: false }
-                }
-            }
-        }
+    renderHorizontalBarChart(document.getElementById("remainingChartCanvas"), {
+        labels: sorted.map(row => fileName(row.filePath)),
+        values: minutesRemaining,
+        colors: sorted.map(() => "#f59e0b"),
+        maxValue: Math.max(...minutesRemaining, 0),
+        axisLabel: "Minutes remaining",
+        emptyText: "Nothing in progress - nothing left to complete."
     });
 }
 
 function renderChart(rows) {
-    const canvas = document.getElementById("progressChartCanvas");
-    if (!canvas) return;
-
-    if (typeof window.Chart === "undefined") {
-        console.warn(
-            "Chart.js is unavailable. Rendering dashboard without charts."
-        );
-        return;
-    }
-
-    if (progressChart) {
-        progressChart.destroy();
-        progressChart = null;
-    }
-
-    if (rows.length === 0) {
-        const ctx = canvas.getContext("2d");
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "14px Segoe UI";
-        ctx.fillText("No videos watched yet.", 20, 30);
-        return;
-    }
-
     const sorted = [...rows].sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt));
 
-    const labels = sorted.map(r => fileName(r.filePath));
-    const data = sorted.map(r => Math.round(r.percent));
-    const colors = sorted.map(r => r.status === "completed" ? "#22c55e" : "#2563eb");
-
-    progressChart = new Chart(canvas.getContext("2d"), {
-        type: "bar",
-        data: {
-            labels,
-            datasets: [{
-                label: "% Complete",
-                data,
-                backgroundColor: colors,
-                borderRadius: 6
-            }]
-        },
-        options: {
-            indexAxis: "y",
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => `${ctx.parsed.x}% complete`
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    min: 0,
-                    max: 100,
-                    ticks: { color: "#94a3b8", callback: v => v + "%" },
-                    grid: { color: "#334155" }
-                },
-                y: {
-                    ticks: { color: "#e2e8f0", autoSkip: false },
-                    grid: { display: false }
-                }
-            }
-        }
+    renderHorizontalBarChart(document.getElementById("progressChartCanvas"), {
+        labels: sorted.map(row => fileName(row.filePath)),
+        values: sorted.map(row => Math.round(row.percent)),
+        colors: sorted.map(row => row.status === "completed" ? "#22c55e" : "#2563eb"),
+        maxValue: 100,
+        axisLabel: "%",
+        emptyText: "No videos watched yet."
     });
 }
 
@@ -789,6 +1075,7 @@ setInterval(() => {
 }, 10000);
 
 </script>
+<script src="js/backup.js"></script>
 
 </body>
 </html>

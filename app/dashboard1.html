@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My Dashboard - VSMETGUD Media Portal</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
     :root {
         --bg: #0f172a;
@@ -124,7 +123,12 @@
 
     .chart-wrap {
         position: relative;
-        height: 340px;
+        min-height: 340px;
+    }
+
+    .chart-wrap canvas {
+        display: block;
+        width: 100%;
     }
 
     table {
@@ -241,8 +245,6 @@
 
 <script>
 let currentUsername = null;
-let progressChart = null;
-let remainingChart = null;
 
 function escapeHtml(str) {
     return String(str || "").replace(/[&<>"']/g, s => ({
@@ -315,6 +317,65 @@ let retryTimer = null;
 
 function cacheKey(username) {
     return `mediaPortalDashboardCache:${username}`;
+}
+
+function loadLocalRecords(type, username) {
+    try {
+        const key = `mediaPortal${type}:${String(username || "").toLowerCase()}`;
+        const records = JSON.parse(localStorage.getItem(key) || "{}");
+        return Object.values(records).filter(record =>
+            record && typeof record.filePath === "string"
+        );
+    } catch (err) {
+        console.warn(`Unable to load local ${type.toLowerCase()}:`, err);
+        return [];
+    }
+}
+
+function mergeVideoProgress(serverRows, username) {
+    const rowsByPath = new Map(serverRows.map(row => [row.filePath, row]));
+
+    loadLocalRecords("VideoProgress", username).forEach(localRow => {
+        const serverRow = rowsByPath.get(localRow.filePath);
+        if (
+            !serverRow ||
+            new Date(localRow.lastAccessedAt).getTime() >
+                new Date(serverRow.lastAccessedAt).getTime()
+        ) {
+            rowsByPath.set(localRow.filePath, { ...serverRow, ...localRow });
+        }
+    });
+
+    return Array.from(rowsByPath.values());
+}
+
+function mergeFileHistory(serverRows, username) {
+    const rowsByPath = new Map(serverRows.map(row => [row.filePath, row]));
+
+    loadLocalRecords("FileHistory", username).forEach(localRow => {
+        const serverRow = rowsByPath.get(localRow.filePath);
+        if (!serverRow) {
+            rowsByPath.set(localRow.filePath, localRow);
+            return;
+        }
+
+        rowsByPath.set(localRow.filePath, {
+            ...serverRow,
+            firstAccessed: new Date(localRow.firstAccessed) < new Date(serverRow.firstAccessed)
+                ? localRow.firstAccessed
+                : serverRow.firstAccessed,
+            lastAccessed: new Date(localRow.lastAccessed) > new Date(serverRow.lastAccessed)
+                ? localRow.lastAccessed
+                : serverRow.lastAccessed,
+            accessCount: Math.max(
+                Number(localRow.accessCount) || 0,
+                Number(serverRow.accessCount) || 0
+            )
+        });
+    });
+
+    return Array.from(rowsByPath.values())
+        .sort((a, b) => new Date(b.lastAccessed) - new Date(a.lastAccessed));
 }
 
 function saveSnapshot(username, videoRows, fileRows) {
@@ -399,8 +460,8 @@ async function refreshAll(isBackgroundRetry) {
             fetchJson("/api/file-activity-summary")
         ]);
 
-        const videoRows = progressData.rows || [];
-        const fileRows = fileActivityData.rows || [];
+        const videoRows = mergeVideoProgress(progressData.rows || [], currentUsername);
+        const fileRows = mergeFileHistory(fileActivityData.rows || [], currentUsername);
 
         hideReconnectBanner();
         renderDashboard(videoRows, fileRows);
@@ -634,150 +695,118 @@ function escapeAttr(str) {
     return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
-function renderRemainingChart(inProgressRows) {
-    const canvas = document.getElementById("remainingChartCanvas");
+function renderHorizontalBarChart(canvas, {
+    labels,
+    values,
+    colors,
+    maxValue,
+    axisLabel,
+    emptyText
+}) {
     if (!canvas) return;
 
-    if (typeof window.Chart === "undefined") {
-        console.warn(
-            "Chart.js is unavailable. Rendering dashboard without charts."
-        );
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+        console.error("Unable to render dashboard chart: canvas context is unavailable.");
         return;
     }
 
-    if (remainingChart) {
-        remainingChart.destroy();
-        remainingChart = null;
-    }
+    const width = Math.max(canvas.clientWidth, 320);
+    const rowHeight = 34;
+    const height = Math.max(340, labels.length * rowHeight + 70);
+    const pixelRatio = window.devicePixelRatio || 1;
 
-    if (inProgressRows.length === 0) {
-        const ctx = canvas.getContext("2d");
+    canvas.style.height = `${height}px`;
+    canvas.width = Math.round(width * pixelRatio);
+    canvas.height = Math.round(height * pixelRatio);
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    ctx.font = "12px Segoe UI, Arial, sans-serif";
+    ctx.textBaseline = "middle";
+
+    if (labels.length === 0) {
         ctx.fillStyle = "#94a3b8";
-        ctx.font = "14px Segoe UI";
-        ctx.fillText("Nothing in progress - nothing left to complete.", 20, 30);
+        ctx.textAlign = "left";
+        ctx.font = "14px Segoe UI, Arial, sans-serif";
+        ctx.fillText(emptyText, 20, 30);
         return;
     }
 
+    const left = Math.min(230, Math.max(130, width * 0.38));
+    const right = 28;
+    const top = 24;
+    const bottom = 42;
+    const plotWidth = Math.max(40, width - left - right);
+    const plotHeight = height - top - bottom;
+    const safeMax = maxValue > 0 ? maxValue : 1;
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    for (let tick = 0; tick <= 4; tick += 1) {
+        const x = left + plotWidth * tick / 4;
+        const value = safeMax * tick / 4;
+        ctx.strokeStyle = "#334155";
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, top + plotHeight);
+        ctx.stroke();
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText(`${Number(value.toFixed(1))}${axisLabel === "%" ? "%" : ""}`, x, height - 20);
+    }
+
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText(axisLabel, left + plotWidth / 2, height - 4);
+
+    labels.forEach((label, index) => {
+        const centerY = top + plotHeight * (index + 0.5) / labels.length;
+        const value = Math.max(0, Number(values[index]) || 0);
+        const barWidth = plotWidth * Math.min(value, safeMax) / safeMax;
+        const maxLabelWidth = left - 20;
+        let displayLabel = String(label);
+        while (displayLabel.length > 3 && ctx.measureText(`${displayLabel}...`).width > maxLabelWidth) {
+            displayLabel = displayLabel.slice(0, -1);
+        }
+        if (displayLabel !== label) displayLabel += "...";
+
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#e2e8f0";
+        ctx.fillText(displayLabel, left - 12, centerY);
+        ctx.fillStyle = colors[index];
+        ctx.fillRect(left, centerY - 8, barWidth, 16);
+    });
+}
+
+function renderRemainingChart(inProgressRows) {
     const sorted = [...inProgressRows].sort((a, b) => {
         const remA = a.durationSeconds - a.positionSeconds;
         const remB = b.durationSeconds - b.positionSeconds;
         return remA - remB;
     });
-
-    const labels = sorted.map(r => fileName(r.filePath));
-    const minutesRemaining = sorted.map(r =>
-        Math.round(Math.max(0, r.durationSeconds - r.positionSeconds) / 60 * 10) / 10
+    const minutesRemaining = sorted.map(row =>
+        Math.round(Math.max(0, row.durationSeconds - row.positionSeconds) / 60 * 10) / 10
     );
 
-    remainingChart = new Chart(canvas.getContext("2d"), {
-        type: "bar",
-        data: {
-            labels,
-            datasets: [{
-                label: "Minutes remaining",
-                data: minutesRemaining,
-                backgroundColor: "#f59e0b",
-                borderRadius: 6
-            }]
-        },
-        options: {
-            indexAxis: "y",
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => {
-                            const row = sorted[ctx.dataIndex];
-                            const remaining = Math.max(0, row.durationSeconds - row.positionSeconds);
-                            return `${formatDuration(remaining)} left (${Math.round(row.percent)}% done)`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    title: { display: true, text: "Minutes remaining", color: "#94a3b8" },
-                    ticks: { color: "#94a3b8" },
-                    grid: { color: "#334155" }
-                },
-                y: {
-                    ticks: { color: "#e2e8f0", autoSkip: false },
-                    grid: { display: false }
-                }
-            }
-        }
+    renderHorizontalBarChart(document.getElementById("remainingChartCanvas"), {
+        labels: sorted.map(row => fileName(row.filePath)),
+        values: minutesRemaining,
+        colors: sorted.map(() => "#f59e0b"),
+        maxValue: Math.max(...minutesRemaining, 0),
+        axisLabel: "Minutes remaining",
+        emptyText: "Nothing in progress - nothing left to complete."
     });
 }
 
 function renderChart(rows) {
-    const canvas = document.getElementById("progressChartCanvas");
-    if (!canvas) return;
-
-    if (typeof window.Chart === "undefined") {
-        console.warn(
-            "Chart.js is unavailable. Rendering dashboard without charts."
-        );
-        return;
-    }
-
-    if (progressChart) {
-        progressChart.destroy();
-        progressChart = null;
-    }
-
-    if (rows.length === 0) {
-        const ctx = canvas.getContext("2d");
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "14px Segoe UI";
-        ctx.fillText("No videos watched yet.", 20, 30);
-        return;
-    }
-
     const sorted = [...rows].sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt));
 
-    const labels = sorted.map(r => fileName(r.filePath));
-    const data = sorted.map(r => Math.round(r.percent));
-    const colors = sorted.map(r => r.status === "completed" ? "#22c55e" : "#2563eb");
-
-    progressChart = new Chart(canvas.getContext("2d"), {
-        type: "bar",
-        data: {
-            labels,
-            datasets: [{
-                label: "% Complete",
-                data,
-                backgroundColor: colors,
-                borderRadius: 6
-            }]
-        },
-        options: {
-            indexAxis: "y",
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => `${ctx.parsed.x}% complete`
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    min: 0,
-                    max: 100,
-                    ticks: { color: "#94a3b8", callback: v => v + "%" },
-                    grid: { color: "#334155" }
-                },
-                y: {
-                    ticks: { color: "#e2e8f0", autoSkip: false },
-                    grid: { display: false }
-                }
-            }
-        }
+    renderHorizontalBarChart(document.getElementById("progressChartCanvas"), {
+        labels: sorted.map(row => fileName(row.filePath)),
+        values: sorted.map(row => Math.round(row.percent)),
+        colors: sorted.map(row => row.status === "completed" ? "#22c55e" : "#2563eb"),
+        maxValue: 100,
+        axisLabel: "%",
+        emptyText: "No videos watched yet."
     });
 }
 

@@ -135,7 +135,7 @@ function saveMonthlyBudget(){
 
 function getCurrentMonthTotal(){
     const now = new Date();
-    const monthKey = now.toISOString().slice(0, 7);
+    const monthKey = getLocalDateKey(now).slice(0, 7);
     const all = getAllExpensesForGraph();
     return all
         .filter(exp => exp.date && exp.date.startsWith(monthKey))
@@ -166,14 +166,155 @@ function updateBudgetInfo(){
         if(budget <= 0){
             status.textContent = "Budget status: not set";
         } else if(currentMonthTotal <= budget){
-            status.textContent = `Budget status: within plan (${formatMoney(remainingAmount)} left)`;
+            const percentageUsed = (currentMonthTotal / budget) * 100;
+            status.textContent = percentageUsed >= 80
+                ? `Alert: ${percentageUsed.toFixed(0)}% of this month's budget used (${formatMoney(remainingAmount)} left).`
+                : `Budget status: within plan (${formatMoney(remainingAmount)} left)`;
+            status.classList.toggle("budget-alert", percentageUsed >= 80);
         } else {
-            status.textContent = `Budget status: exceeded by ${formatMoney(currentMonthTotal - budget)}`;
+            status.textContent = `Alert: monthly budget exceeded by ${formatMoney(currentMonthTotal - budget)}.`;
+            status.classList.add("budget-alert");
         }
+        if(budget <= 0) status.classList.remove("budget-alert");
     }
     if(progress){
         progress.style.width = `${budget > 0 ? percentage : 0}%`;
     }
+}
+
+function getRecurringKey(user = currentUser){
+    return `expenseRecurring_${user}`;
+}
+
+function loadRecurringExpenses(){
+    if(!currentUser) return [];
+    try{
+        const templates = JSON.parse(localStorage.getItem(getRecurringKey()) || "[]");
+        return Array.isArray(templates) ? templates : [];
+    } catch(error){
+        console.error("Unable to load recurring expenses:", error);
+        return [];
+    }
+}
+
+function saveRecurringExpenses(templates){
+    localStorage.setItem(getRecurringKey(), JSON.stringify(templates));
+}
+
+function escapeExpenseText(value){
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[character]);
+}
+
+function addRecurringExpense(){
+    if(!currentUser){
+        alert("Please add or select a user first.");
+        return;
+    }
+
+    const item = document.getElementById("item").value.trim();
+    const amount = Number(document.getElementById("price").value);
+    const frequency = document.getElementById("recurringCadence").value;
+    const nextDue = document.getElementById("date").value;
+    const status = document.getElementById("recurringStatus");
+
+    if(!item || !Number.isFinite(amount) || amount <= 0 || !nextDue){
+        status.textContent = "Enter an item, a positive amount, and the next due date in the expense form above.";
+        return;
+    }
+
+    const templates = loadRecurringExpenses();
+    templates.push({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        item,
+        amount,
+        frequency,
+        nextDue
+    });
+    saveRecurringExpenses(templates);
+    status.textContent = `"${item}" saved as a ${frequency} recurring expense.`;
+    renderRecurringExpenses();
+}
+
+function advanceRecurringDate(dateKey, frequency){
+    const [year, month, day] = dateKey.split("-").map(Number);
+    if(frequency === "weekly"){
+        const date = new Date(year, month - 1, day, 12);
+        date.setDate(date.getDate() + 7);
+        return getLocalDateKey(date);
+    }
+
+    const targetMonth = month;
+    const lastDay = new Date(year, targetMonth + 1, 0).getDate();
+    const date = new Date(year, targetMonth, Math.min(day, lastDay), 12);
+    return getLocalDateKey(date);
+}
+
+function addDueRecurringExpense(id){
+    const templates = loadRecurringExpenses();
+    const template = templates.find(entry => entry.id === id);
+    const today = getLocalDateKey();
+    if(!template || template.nextDue > today) return;
+
+    const confirmed = confirm(
+        `Add this recurring expense?\n\n${template.item}: ${formatMoney(template.amount)}\nDue: ${template.nextDue}`
+    );
+    if(!confirmed) return;
+
+    loadExpenses();
+    expenses.push({
+        id: Date.now(),
+        user: currentUser,
+        date: template.nextDue,
+        item: template.item,
+        price: Number(template.amount)
+    });
+    template.nextDue = advanceRecurringDate(template.nextDue, template.frequency);
+    saveRecurringExpenses(templates);
+    saveExpenses();
+    renderExpenses();
+}
+
+function deleteRecurringExpense(id){
+    if(!confirm("Delete this recurring expense template? Existing expense entries will remain.")) return;
+    saveRecurringExpenses(loadRecurringExpenses().filter(entry => entry.id !== id));
+    renderRecurringExpenses();
+}
+
+function renderRecurringExpenses(){
+    const container = document.getElementById("recurringExpenseList");
+    if(!container) return;
+
+    const templates = loadRecurringExpenses();
+    const today = getLocalDateKey();
+    const entries = templates.map(template => {
+        const isDue = template.nextDue <= today;
+        return `
+            <article class="recurringExpenseItem">
+                <div>
+                    <strong>${escapeExpenseText(template.item)}</strong>
+                    <span>${formatMoney(template.amount)} · ${template.frequency} · Next: ${escapeExpenseText(template.nextDue)}</span>
+                    ${isDue ? '<span class="recurringDueBadge">Due for review</span>' : ""}
+                </div>
+                <div class="recurringButtons">
+                    ${isDue ? `<button type="button" data-add-recurring="${escapeExpenseText(template.id)}">Review &amp; add</button>` : ""}
+                    <button type="button" class="secondaryButton" data-delete-recurring="${escapeExpenseText(template.id)}">Delete template</button>
+                </div>
+            </article>
+        `;
+    }).join("");
+    container.innerHTML = entries || '<p class="recurringEmpty">No recurring expenses saved for this user.</p>';
+    container.querySelectorAll("[data-add-recurring]").forEach(button => {
+        button.addEventListener("click", () => addDueRecurringExpense(button.dataset.addRecurring));
+    });
+    container.querySelectorAll("[data-delete-recurring]").forEach(button => {
+        button.addEventListener("click", () => deleteRecurringExpense(button.dataset.deleteRecurring));
+    });
 }
 
 function updateSmartInsight(){
@@ -458,6 +599,8 @@ function saveExpenses(){
 
         JSON.stringify(expenses)
     );
+    updateBudgetInfo();
+    updateSmartInsight();
 }
 
 /* ================= SPEAK ================= */
@@ -940,6 +1083,84 @@ function editExpense(id){
 
 /* ================= VOICE ================= */
 
+function requestVoiceExpenseDate(onSelected){
+    const dateInput = document.getElementById("date");
+    if(!dateInput){
+        throw new Error("The expense date field is unavailable.");
+    }
+
+    if(document.getElementById("voiceEntryDateDialog")){
+        return;
+    }
+
+    const dialog = document.createElement("dialog");
+    dialog.id = "voiceEntryDateDialog";
+    dialog.className = "voiceDateDialog";
+    dialog.setAttribute("aria-labelledby", "voiceEntryDateTitle");
+
+    const title = document.createElement("h2");
+    title.id = "voiceEntryDateTitle";
+    title.textContent = "Select expense date";
+
+    const instruction = document.createElement("p");
+    instruction.textContent = "Choose the date to use before selecting users by voice.";
+
+    const picker = document.createElement("input");
+    picker.type = "date";
+    picker.required = true;
+    picker.value = dateInput.value || getLocalDateKey();
+    picker.setAttribute("aria-label", "Expense date");
+
+    const actions = document.createElement("div");
+    actions.className = "voiceDateDialogActions";
+
+    const cancelButton = document.createElement("button");
+    cancelButton.type = "button";
+    cancelButton.textContent = "Cancel";
+
+    const continueButton = document.createElement("button");
+    continueButton.type = "button";
+    continueButton.textContent = "Continue";
+
+    let confirmed = false;
+    cancelButton.addEventListener("click", () => dialog.close());
+    continueButton.addEventListener("click", () => {
+        if(!picker.value){
+            picker.reportValidity();
+            return;
+        }
+
+        confirmed = true;
+        dateInput.value = picker.value;
+        dateInput.dispatchEvent(new Event("input", { bubbles: true }));
+        dateInput.dispatchEvent(new Event("change", { bubbles: true }));
+        dialog.close();
+
+        const voiceStatus = document.getElementById("voiceStatus");
+        if(voiceStatus){
+            voiceStatus.textContent = `Date selected: ${picker.value}. Starting voice input...`;
+        }
+
+        onSelected(picker.value);
+    });
+
+    actions.append(cancelButton, continueButton);
+    dialog.append(title, instruction, picker, actions);
+    dialog.addEventListener("close", () => {
+        dialog.remove();
+        if(!confirmed){
+            const voiceStatus = document.getElementById("voiceStatus");
+            if(voiceStatus){
+                voiceStatus.textContent = "Voice entry cancelled.";
+            }
+        }
+    }, { once: true });
+
+    document.body.appendChild(dialog);
+    dialog.showModal();
+    picker.focus();
+}
+
 function startVoice(){
 
     const SpeechRecognition =
@@ -965,64 +1186,7 @@ function startVoice(){
     let amountRetries = 0;
     const MAX_RETRIES = 2;
 
-    const dateInput =
-
-        document.getElementById(
-            "date"
-        );
-
-    /* ================= DATE FIRST ================= */
-
-    try{
-
-        dateInput.focus();
-
-        dateInput.showPicker?.();
-
-    }
-
-    catch(err){
-
-        console.log(
-            "Date picker fallback"
-        );
-    }
-
-    let voiceStarted = false;
-
-    function startVoiceFlow(){
-
-        if(voiceStarted){
-            return;
-        }
-
-        voiceStarted = true;
-
-        askUser();
-    }
-
-    /* WAIT FOR DATE */
-
-    setTimeout(()=>{
-
-        if(dateInput.value){
-
-            startVoiceFlow();
-        }
-
-    },300);
-
-    dateInput.onchange =
-    ()=>{
-
-        dateInput.onchange =
-            null;
-
-        if(dateInput.value){
-
-            startVoiceFlow();
-        }
-    };
+    requestVoiceExpenseDate(() => askUser());
 
     /* ================= COMMON ================= */
 
@@ -2016,6 +2180,9 @@ function renderExpenses(){
     renderPieChart();
 
     renderSplitHistory();
+    updateBudgetInfo();
+    updateSmartInsight();
+    renderRecurringExpenses();
 
     return;
     }
@@ -2143,6 +2310,7 @@ function renderExpenses(){
     renderPieChart();    
 
     renderSplitHistory();
+    renderRecurringExpenses();
 }
 
 /* ================= TODAY ================= */
@@ -2665,72 +2833,7 @@ setTimeout(()=>{
 
 
 function startSplitVoice(){
-
-    const dateInput =
-
-        document.getElementById(
-            "date"
-        );
-
-    /* RESET EVENTS */
-
-    dateInput.onchange =
-        null;
-
-    try{
-
-        dateInput.focus();
-
-        dateInput.showPicker?.();
-
-    }
-
-    catch(err){
-
-        console.log(
-            "Date picker fallback"
-        );
-    }
-
-    /* WAIT FOR DATE */
-
-    let splitVoiceStarted =
-        false;
-
-    function startSplitFlow(){
-
-        if(splitVoiceStarted){
-            return;
-        }
-
-        splitVoiceStarted =
-            true;
-
-        startSplitVoiceFlow();
-    }
-
-    /* WAIT FOR DATE */
-
-    setTimeout(()=>{
-
-        if(dateInput.value){
-
-            startSplitFlow();
-        }
-
-    },300);
-
-    dateInput.onchange =
-    ()=>{
-
-        dateInput.onchange =
-            null;
-
-        if(dateInput.value){
-
-            startSplitFlow();
-        }
-    };
+    requestVoiceExpenseDate(() => startSplitVoiceFlow());
 }
 
 function startSplitVoiceFlow(){
@@ -4506,11 +4609,11 @@ TOTAL = ₹${total}
 
 document.getElementById(
     "date"
-).value =
+).value = getLocalDateKey();
 
-    new Date()
-    .toISOString()
-    .split("T")[0];
+document.getElementById("graphDate").value = getLocalDateKey();
+document.getElementById("graphMonth").value = getLocalDateKey().slice(0, 7);
+document.getElementById("graphYear").value = String(new Date().getFullYear());
 
 applySavedTheme();
 
@@ -4710,6 +4813,45 @@ function getAllExpensesForGraph(){
     return expensesForUser.map(exp => ({ ...exp, user: owner }));
 }
 
+function getLocalDateKey(date = new Date()){
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function getDateKey(value){
+    const match = String(value || "").match(/^(\d{4}-\d{2}-\d{2})/);
+    return match ? match[1] : "";
+}
+
+function getGraphPeriodLabel(){
+    const filter = document.getElementById("graphFilter")?.value || "overall";
+    const selectedDate = document.getElementById("graphDate")?.value;
+    const selectedMonth = document.getElementById("graphMonth")?.value;
+    const selectedYear = document.getElementById("graphYear")?.value;
+
+    switch(filter){
+        case "today":
+            return `Today (${getLocalDateKey()})`;
+        case "week":
+            return "Last 7 Days";
+        case "date":
+            return selectedDate ? `Date: ${selectedDate}` : "Selected Date";
+        case "month":
+            return selectedMonth ? `Month: ${selectedMonth}` : "Month";
+        case "year":
+            return selectedYear ? `Year: ${selectedYear}` : "Year";
+        default:
+            return "Overall";
+    }
+}
+
+function getGraphUserLabel(){
+    const selectedUser = getSelectedGraphUser();
+    return selectedUser === "all" ? "All Users" : selectedUser;
+}
+
 function getFilteredNormalExpenses(){
     let data = getAllExpensesForGraph();
 
@@ -4717,20 +4859,30 @@ function getFilteredNormalExpenses(){
     const selectedDate = document.getElementById("graphDate")?.value;
     const selectedMonth = document.getElementById("graphMonth")?.value;
     const selectedYear = document.getElementById("graphYear")?.value;
-    const today = new Date().toISOString().split("T")[0];
+    const today = getLocalDateKey();
 
     switch(filter){
         case "today":
-            data = data.filter(exp => exp.date === today);
+            data = data.filter(exp => getDateKey(exp.date) === today);
             break;
+        case "week": {
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 6);
+            const start = getLocalDateKey(startDate);
+            data = data.filter(exp => {
+                const date = getDateKey(exp.date);
+                return date >= start && date <= today;
+            });
+            break;
+        }
         case "date":
-            data = data.filter(exp => exp.date === selectedDate);
+            data = data.filter(exp => getDateKey(exp.date) === selectedDate);
             break;
         case "month":
-            data = data.filter(exp => exp.date.startsWith(selectedMonth));
+            data = data.filter(exp => selectedMonth && getDateKey(exp.date).startsWith(selectedMonth));
             break;
         case "year":
-            data = data.filter(exp => exp.date.startsWith(selectedYear));
+            data = data.filter(exp => selectedYear && getDateKey(exp.date).startsWith(String(selectedYear)));
             break;
         case "overall":
         default:
@@ -4747,26 +4899,36 @@ function getFilteredSplitHistory(){
     const selectedDate = document.getElementById("graphDate")?.value;
     const selectedMonth = document.getElementById("graphMonth")?.value;
     const selectedYear = document.getElementById("graphYear")?.value;
-    const today = new Date().toISOString().split("T")[0];
+    const today = getLocalDateKey();
 
     if(selectedUser !== "all"){
         splitHistory = splitHistory.filter(split =>
-            split.paidBy === selectedUser || split.users.includes(selectedUser)
+            split.paidBy === selectedUser || (split.users || []).includes(selectedUser)
         );
     }
 
     switch(filter){
         case "today":
-            splitHistory = splitHistory.filter(split => split.date === today);
+            splitHistory = splitHistory.filter(split => getDateKey(split.date) === today);
             break;
+        case "week": {
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 6);
+            const start = getLocalDateKey(startDate);
+            splitHistory = splitHistory.filter(split => {
+                const date = getDateKey(split.date);
+                return date >= start && date <= today;
+            });
+            break;
+        }
         case "date":
-            splitHistory = splitHistory.filter(split => split.date === selectedDate);
+            splitHistory = splitHistory.filter(split => getDateKey(split.date) === selectedDate);
             break;
         case "month":
-            splitHistory = splitHistory.filter(split => split.date.startsWith(selectedMonth));
+            splitHistory = splitHistory.filter(split => selectedMonth && getDateKey(split.date).startsWith(selectedMonth));
             break;
         case "year":
-            splitHistory = splitHistory.filter(split => split.date.startsWith(selectedYear));
+            splitHistory = splitHistory.filter(split => selectedYear && getDateKey(split.date).startsWith(String(selectedYear)));
             break;
         case "overall":
         default:
@@ -4780,13 +4942,7 @@ function getTimelineLabels(filterValue, selectedDate, selectedMonth, selectedYea
     const today = new Date();
 
     if(filterValue === "today"){
-        const labels = [];
-        for(let i = 6; i >= 0; i--){
-            const d = new Date(today);
-            d.setDate(today.getDate() - i);
-            labels.push(d.toISOString().split("T")[0]);
-        }
-        return labels;
+        return [getLocalDateKey(today)];
     }
 
     if(filterValue === "week"){
@@ -4794,7 +4950,7 @@ function getTimelineLabels(filterValue, selectedDate, selectedMonth, selectedYea
         for(let i = 6; i >= 0; i--){
             const d = new Date(today);
             d.setDate(today.getDate() - i);
-            labels.push(d.toISOString().split("T")[0]);
+            labels.push(getLocalDateKey(d));
         }
         return labels;
     }
@@ -4809,7 +4965,7 @@ function getTimelineLabels(filterValue, selectedDate, selectedMonth, selectedYea
         const labels = [];
         for(let day = 1; day <= daysInMonth; day++){
             const date = new Date(year, month - 1, day);
-            labels.push(date.toISOString().split("T")[0]);
+            labels.push(getLocalDateKey(date));
         }
         return labels;
     }
@@ -4822,35 +4978,37 @@ function getTimelineLabels(filterValue, selectedDate, selectedMonth, selectedYea
     }
 
     const years = new Set();
-    const items = getAllExpensesForGraph().concat(JSON.parse(localStorage.getItem("splitHistory") || "[]"));
+    const selectedUser = getSelectedGraphUser();
+    const splitItems = JSON.parse(localStorage.getItem("splitHistory") || "[]").filter(item =>
+        selectedUser === "all" || item.paidBy === selectedUser || (item.users || []).includes(selectedUser)
+    );
+    const items = getAllExpensesForGraph().concat(splitItems);
     items.forEach(item => {
-        const date = item.date || item.timestamp || "";
-        if(date) {
-            const match = date.match(/^(\d{4})/);
-            if(match) years.add(match[1]);
-        }
+        const match = getDateKey(item.date || item.timestamp).match(/^(\d{4})/);
+        if(match) years.add(match[1]);
     });
 
-    return [...years].sort();
+    return [...years].sort((a, b) => Number(a) - Number(b));
 }
 
 function getBucketForFilter(dateValue, filterValue, selectedDate, selectedMonth, selectedYear){
-    if(!dateValue) return "Unknown";
+    const dateKey = getDateKey(dateValue);
+    if(!dateKey) return "Unknown";
 
     if(filterValue === "today" || filterValue === "week" || filterValue === "date"){
-        return dateValue;
+        return dateKey;
     }
 
     if(filterValue === "month"){
-        return dateValue;
+        return dateKey;
     }
 
     if(filterValue === "year"){
-        const monthIndex = new Date(`${dateValue}T00:00:00`).getMonth();
+        const monthIndex = Number(dateKey.slice(5, 7)) - 1;
         return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][monthIndex];
     }
 
-    const yearMatch = String(dateValue).match(/^(\d{4})/);
+    const yearMatch = dateKey.match(/^(\d{4})/);
     return yearMatch ? yearMatch[1] : "Unknown";
 }
 
@@ -4879,7 +5037,8 @@ function buildNormalChartData(){
 
     const totals = {};
     expenses.forEach(exp => {
-        totals[exp.item] = (totals[exp.item] || 0) + Number(exp.price);
+        const item = exp.item || "Unknown";
+        totals[item] = (totals[item] || 0) + Number(exp.price || 0);
     });
 
     const chartUsers = getSelectedGraphUser() === "all" ? [...usersInScope] : [getSelectedGraphUser() === "current" ? (currentUser || "Unknown") : getSelectedGraphUser()];
@@ -4914,7 +5073,7 @@ function buildSplitChartData(){
 
     splitHistory.forEach(split => {
         const bucket = getBucketForFilter(split.date, filter, selectedDate, selectedMonth, selectedYear);
-        const participants = new Set([...(split.users || []), split.paidBy]);
+        const participants = new Set([...(split.users || []), split.paidBy].filter(Boolean));
 
         participants.forEach(user => {
             if(!seriesByUser[user]){
@@ -4922,15 +5081,15 @@ function buildSplitChartData(){
             }
         });
 
-        payerTotals[split.paidBy] = (payerTotals[split.paidBy] || 0) + split.total;
+        payerTotals[split.paidBy] = (payerTotals[split.paidBy] || 0) + Number(split.total || 0);
 
         if(seriesByUser[split.paidBy] && seriesByUser[split.paidBy][bucket] !== undefined){
             seriesByUser[split.paidBy][bucket] += Number(split.total || 0);
         }
 
-        split.users.forEach(user => {
+        (split.users || []).forEach(user => {
             if(user === split.paidBy) return;
-            oweTotals[user] = (oweTotals[user] || 0) + split.each;
+            oweTotals[user] = (oweTotals[user] || 0) + Number(split.each || 0);
             if(seriesByUser[user] && seriesByUser[user][bucket] !== undefined){
                 seriesByUser[user][bucket] += Number(split.each || 0);
             }
@@ -4997,7 +5156,7 @@ function renderChart(){
         } else {
             labels = normalData.labels;
             datasets = [{
-                label: "Expenses",
+                label: `Expenses — ${getGraphUserLabel()}`,
                 data: normalData.values,
                 backgroundColor: "#facc15",
                 borderRadius: 12
@@ -5067,7 +5226,12 @@ function renderChart(){
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: "white" } }
+                legend: { labels: { color: "white" } },
+                title: {
+                    display: true,
+                    text: `Expenses — ${getGraphUserLabel()} — ${getGraphPeriodLabel()}`,
+                    color: "white"
+                }
             },
             scales: {
                 x: {
@@ -5142,7 +5306,12 @@ function renderPieChart(){
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: "white" } }
+                legend: { labels: { color: "white" } },
+                title: {
+                    display: true,
+                    text: `Expenses — ${getGraphUserLabel()} — ${getGraphPeriodLabel()}`,
+                    color: "white"
+                }
             }
         }
     });
@@ -5185,48 +5354,51 @@ setTimeout(() => {
 
 function openChartWindow(chartType, title, headingText){
     const graphType = document.getElementById("graphType")?.value || "normal";
+    const filter = document.getElementById("graphFilter")?.value || "overall";
+    const timeLabels = getTimelineLabels(
+        filter,
+        document.getElementById("graphDate")?.value,
+        document.getElementById("graphMonth")?.value,
+        document.getElementById("graphYear")?.value
+    );
+    const graphHeading = `${headingText} — ${getGraphUserLabel()} — ${getGraphPeriodLabel()}`;
     let labels = [];
     let datasets = [];
     let summary = "";
 
     if(graphType === "normal"){
         const normalData = buildNormalChartData();
-        labels = normalData.labels;
-        const values = normalData.values;
 
         if(chartType === "line"){
-            datasets = [{
-                label: "Expense Trend",
-                data: values,
-                borderColor: "#22c55e",
-                backgroundColor: "rgba(34,197,94,0.2)",
-                borderWidth: 3,
-                fill: false,
-                tension: 0.3,
-                pointRadius: 4
-            }];
+            labels = timeLabels;
+            datasets = normalData.lineDatasets;
         } else if(chartType === "pie"){
+            labels = normalData.labels;
+            const values = normalData.values;
             summary = `labels:${JSON.stringify(labels)}, data:${JSON.stringify(values)}`;
             datasets = [{ data: values, backgroundColor: ["#fbbf24", "#60a5fa", "#34d399", "#f87171", "#a78bfa", "#f472b6", "#38bdf8", "#f59e0b", "#4ade80"] }];
         } else if(chartType === "doughnut"){
+            labels = normalData.labels;
+            const values = normalData.values;
             datasets = [{ data: values, backgroundColor: ["#fbbf24", "#60a5fa", "#34d399", "#f87171", "#a78bfa", "#f472b6", "#38bdf8", "#f59e0b", "#4ade80"] }];
         } else {
-            datasets = [{ label: "Expenses", data: values, backgroundColor: "#facc15", borderRadius: 12 }];
+            labels = normalData.labels;
+            datasets = [{ label: `Expenses — ${getGraphUserLabel()}`, data: normalData.values, backgroundColor: "#facc15", borderRadius: 12 }];
         }
     } else {
         const splitData = buildSplitChartData();
-        labels = splitData.labels;
 
         if(chartType === "line"){
-            datasets = [
-                { label: "Paid Amount", data: splitData.paidValues, borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.15)", borderWidth: 3, fill: false, tension: 0.3, pointRadius: 4 },
-                { label: "Owe Amount", data: splitData.oweValues, borderColor: "#ef4444", backgroundColor: "rgba(239,68,68,0.15)", borderWidth: 3, fill: false, tension: 0.3, pointRadius: 4 }
-            ];
+            labels = timeLabels;
+            datasets = splitData.lineDatasets;
         } else if(chartType === "pie"){
+            labels = splitData.labels;
             datasets = [{ data: splitData.paidValues, backgroundColor: ["#3b82f6", "#ef4444", "#22c55e", "#f59e0b", "#8b5cf6", "#14b8a6"] }];
         } else if(chartType === "doughnut"){
+            labels = splitData.labels;
             datasets = [{ data: splitData.paidValues, backgroundColor: ["#3b82f6", "#ef4444", "#22c55e", "#f59e0b", "#8b5cf6", "#14b8a6"] }];
         } else {
+            labels = splitData.labels;
             datasets = [
                 { label: "Paid Amount", data: splitData.paidValues, backgroundColor: "#3b82f6", borderRadius: 12 },
                 { label: "Owe Amount", data: splitData.oweValues, backgroundColor: "#ef4444", borderRadius: 12 }
@@ -5247,7 +5419,7 @@ canvas{width:100% !important;height:72vh !important;}
 </style>
 </head>
 <body>
-<h1>${headingText}</h1>
+<h1>${graphHeading}</h1>
 <canvas id="graph"></canvas>
 <script>
 const ctx = document.getElementById('graph').getContext('2d');
@@ -5260,9 +5432,9 @@ new Chart(ctx, {
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: 'white' } } },
+        plugins: { legend: { labels: { color: 'white' } }, title: { display: true, text: ${JSON.stringify(`${getGraphUserLabel()} — ${getGraphPeriodLabel()}`)}, color: 'white' } },
         scales: ${JSON.stringify(chartType === 'line' || chartType === 'bar' ? {
-            x: { ticks: { color: 'white' }, title: { display: true, text: graphType === 'normal' ? 'Expense Item' : 'Users', color: 'white' } },
+            x: { ticks: { color: 'white' }, title: { display: true, text: chartType === 'line' ? 'Time Period' : graphType === 'normal' ? 'Expense Item' : 'Users', color: 'white' } },
             y: { beginAtZero: true, ticks: { color: 'white' }, title: { display: true, text: 'Amount (₹)', color: 'white' } }
         } : {})}
     }
@@ -5289,15 +5461,15 @@ function loadGraphUsers(){
     const graphUser = document.getElementById("graphUser");
     if(!graphUser){ return; }
 
-    graphUser.innerHTML = '<option value="all">All Users</option>';
-
+    const previousValue = graphUser.value;
+    graphUser.replaceChildren(new Option("All Users", "all"));
     users.forEach(user => {
-        graphUser.innerHTML += `<option value="${user}">${user}</option>`;
+        graphUser.add(new Option(user, user));
     });
 
-    const currentValue = currentUser || "all";
-    if([...graphUser.options].some(option => option.value === currentValue)){
-        graphUser.value = currentValue;
+    const preferredValue = previousValue && previousValue !== "all" ? previousValue : currentUser || "all";
+    if([...graphUser.options].some(option => option.value === preferredValue)){
+        graphUser.value = preferredValue;
     } else {
         graphUser.value = "all";
     }
@@ -5602,41 +5774,6 @@ ${historyHtml}
     chartWindow.document.close();
 }
 
-function loadGraphUsers(){
-
-    const graphUser =
-        document.getElementById(
-            "graphUser"
-        );
-
-    if(!graphUser){
-        return;
-    }
-
-    graphUser.innerHTML = `
-
-        <option value="all">
-            All Users
-        </option>
-    `;
-
-    users.forEach(user=>{
-
-        graphUser.innerHTML += `
-
-            <option value="${user}">
-                ${user}
-            </option>
-        `;
-    });
-
-    // graphUser.value =
-    //     currentUser || "all";
-
-    graphUser.value =
-        "all";    
-}
-
 /* ================= CLEAR ALL DATA ================= */
 
 /* ================= SECURE DELETE ALL DATA ================= */
@@ -5719,6 +5856,7 @@ This cannot be undone.`
 
             getExpenseKey(user)
         );
+        localStorage.removeItem(getRecurringKey(user));
     });
 
     /* remove storage */
@@ -5734,6 +5872,7 @@ This cannot be undone.`
     localStorage.removeItem(
         "splitHistory"
     );
+    localStorage.removeItem("monthlyBudget");
 
     /* reset memory */
 

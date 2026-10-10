@@ -1,5 +1,10 @@
 import { useEffect, useRef } from "react";
 
+function configureVisualizerAnalyser(analyser) {
+  analyser.fftSize = 256;
+  analyser.smoothingTimeConstant = 0.92;
+}
+
 function Visualizer({ analyser }) {
 
   const canvasRef = useRef();
@@ -14,10 +19,7 @@ function Visualizer({ analyser }) {
     const ctx =
       canvas.getContext("2d");
 
-    analyser.fftSize = 256;
-
-    analyser.smoothingTimeConstant =
-      0.92;
+    configureVisualizerAnalyser(analyser);
 
     const bufferLength =
       analyser.frequencyBinCount;

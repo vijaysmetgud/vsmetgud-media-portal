@@ -1,8 +1,9 @@
 This Portal is for accessing my files like pdfs, videos, audios etc on local laptop 
 
-HELLO VIJAYKUMAR METGUD
+HELLO VIJAY METGUD
 
-----------------------------------------------------------------------------
+
+
 In Master node:
 
 sudo  cp -r /media/sf_e-drive/AUDIOS--- /mnt/media/AUDIOS---
@@ -15,7 +16,7 @@ In WORKER VM:
 sudo cp -r /media/sf_e-drive/ /mnt/media/
 sudo chown -R 101:101 /mnt/media
 sudo chmod -R 755 /mnt/media
-------------------------------------------------------------------------------
+
 
 
    1  wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
@@ -330,9 +331,11 @@ FIX HELM UPDATION ISSUES:------>>>>
 
 helm upgrade --install media-portal . \
   --set image.repository=vsmetgud/media-portal \
-  --set image.tag=helm get values media-portal --all | grep -A4 "^image:"
+  --set image.tag=33c7dd845cab4a1090a97aa6f3162dac9fcbb962
 
   helm get values media-portal --all | grep -A4 "^image:"
+
+  kubectl rollout restart deployment/media-portal
 
   kubectl get deployment media-portal \
   -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
@@ -341,3 +344,22 @@ helm upgrade --install media-portal . \
 
   kubectl get pods -l app=media-portal \
   -o custom-columns='POD:.metadata.name,IMAGE:.spec.containers[0].image,READY:.status.containerStatuses[0].ready,STATUS:.status.phase'
+
+
+  -----------------------------------------------------------------
+
+
+  OLD_POD=$(kubectl get pods -l app=media-portal \
+  --field-selector=status.phase=Running \
+  -o jsonpath='{.items[0].metadata.name}')
+
+OLD_IMAGE=$(kubectl get pod "$OLD_POD" \
+  -o jsonpath='{.spec.containers[0].image}')
+
+echo "Working pod: $OLD_POD"
+echo "Working image: $OLD_IMAGE"
+
+kubectl set image deployment/media-portal \
+  media-portal="$OLD_IMAGE"
+
+kubectl rollout status deployment/media-portal --timeout=120s
