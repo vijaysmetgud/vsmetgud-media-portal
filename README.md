@@ -331,7 +331,7 @@ FIX HELM UPDATION ISSUES:------>>>>
 
 helm upgrade --install media-portal . \
   --set image.repository=vsmetgud/media-portal \
-  --set image.tag=33c7dd845cab4a1090a97aa6f3162dac9fcbb962
+  --set image.tag=034ec96a16b840788da0a1e156e8588608cd86c9
 
   helm get values media-portal --all | grep -A4 "^image:"
 
@@ -363,3 +363,9 @@ kubectl set image deployment/media-portal \
   media-portal="$OLD_IMAGE"
 
 kubectl rollout status deployment/media-portal --timeout=120s
+
+Local server admin password
+---------------------------
+Copy `.env.example` to `.env` and set `ADMIN_PASSWORD` to the password for the
+portal admin account. The local `.env` file is ignored by Git. Configure the
+same environment variable in the server environment when deploying.

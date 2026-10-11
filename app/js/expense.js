@@ -70,6 +70,25 @@ function updateSummaryInsights() {
     document.getElementById("overallInsight").textContent = `Peak: ${overallTop.item} • ${formatMoney(overallTop.amount)}`;
 }
 
+function updateSummaryMetricRings(){
+    const totalIds = ["dailyTotal", "weeklyTotal", "monthlyTotal", "yearlyTotal", "overallTotal"];
+    const overall = Number((document.getElementById("overallTotal")?.textContent || "").replace(/[^\d.-]/g, "")) || 0;
+
+    totalIds.forEach(totalId => {
+        const totalElement = document.getElementById(totalId);
+        const ring = document.querySelector(`[data-summary-ring="${totalId}"]`);
+        const shareElement = document.getElementById(totalId.replace("Total", "Share"));
+        if(!totalElement || !ring) return;
+
+        const amount = Number(totalElement.textContent.replace(/[^\d.-]/g, "")) || 0;
+        const share = overall > 0 ? Math.min((amount / overall) * 100, 100) : 0;
+        const period = totalId.replace("Total", "");
+        ring.style.setProperty("--metric-progress", `${share * 3.6}deg`);
+        ring.setAttribute("aria-label", `${period} expenses ${formatMoney(amount)}, ${share.toFixed(0)}% of overall expenses`);
+        if(shareElement) shareElement.textContent = `${share.toFixed(0)}% of overall`;
+    });
+}
+
 function getTopCategoryForGraphData(data) {
     if(!Array.isArray(data) || data.length === 0){
         return { name: "No data", value: 0 };
@@ -155,10 +174,13 @@ function updateBudgetInfo(){
     const remaining = document.getElementById("budgetRemaining");
     const status = document.getElementById("budgetStatus");
     const progress = document.getElementById("budgetProgressBar");
+    const metricRing = document.getElementById("budgetMetricRing");
+    const metricLabel = document.getElementById("budgetUsagePercent");
 
     const usedAmount = Math.min(currentMonthTotal, budget || currentMonthTotal);
     const remainingAmount = budget > 0 ? budget - currentMonthTotal : 0;
     const percentage = budget > 0 ? Math.min((currentMonthTotal / budget) * 100, 100) : 0;
+    const actualPercentage = budget > 0 ? (currentMonthTotal / budget) * 100 : 0;
 
     if(used){ used.textContent = `Used: ${formatMoney(usedAmount)}`; }
     if(remaining){ remaining.textContent = `Remaining: ${formatMoney(Math.max(remainingAmount, 0))}`; }
@@ -179,6 +201,15 @@ function updateBudgetInfo(){
     }
     if(progress){
         progress.style.width = `${budget > 0 ? percentage : 0}%`;
+    }
+    if(metricRing){
+        metricRing.style.setProperty("--metric-progress", `${percentage * 3.6}deg`);
+        metricRing.setAttribute("aria-label", budget > 0
+            ? `Monthly budget ${actualPercentage.toFixed(0)}% used`
+            : "Set a monthly budget to see usage");
+    }
+    if(metricLabel){
+        metricLabel.textContent = budget > 0 ? `${actualPercentage.toFixed(0)}%` : "—";
     }
 }
 
@@ -2174,6 +2205,7 @@ function renderExpenses(){
         "overallTotal"
     ).innerText = "₹0";
 
+    updateSummaryMetricRings();
     updateSummaryInsights();
     renderChart();
 
@@ -2301,6 +2333,7 @@ function renderExpenses(){
     ).innerText =
         "₹" + overall;
 
+    updateSummaryMetricRings();
     updateSummaryInsights();
     updateBudgetInfo();
     updateSmartInsight();
@@ -4455,10 +4488,17 @@ function getExpenseSummaryTableHtml(){
     const rows = getExpenseSummaryRows();
     const maxRows = rows.length ? rows.reduce((max, row) => row.total > max.total ? row : max, rows[0]) : null;
     const minRows = rows.length ? rows.reduce((min, row) => row.total < min.total ? row : min, rows[0]) : null;
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[character]);
 
     const tableRows = rows.map(row => `
         <tr>
-            <td>${row.user}</td>
+            <td>${escapeHtml(row.user)}</td>
             <td>₹${row.daily.toFixed(2)}</td>
             <td>₹${row.weekly.toFixed(2)}</td>
             <td>₹${row.monthly.toFixed(2)}</td>
@@ -4470,29 +4510,54 @@ function getExpenseSummaryTableHtml(){
     `).join("");
 
     const insight = rows.length
-        ? `Highest spender: ${maxRows.user} (₹${maxRows.total.toFixed(2)}) | Lowest spender: ${minRows.user} (₹${minRows.total.toFixed(2)})`
+        ? `Highest spender: ${escapeHtml(maxRows.user)} (₹${maxRows.total.toFixed(2)}) | Lowest spender: ${escapeHtml(minRows.user)} (₹${minRows.total.toFixed(2)})`
         : "No expense data available";
 
     return `
-        <div style="padding:20px; font-family:Arial, sans-serif; background:#111827; color:#fff; max-width:1100px; margin:20px auto;">
-            <h2 style="text-align:center; margin-bottom:12px;">Expense Summary Table</h2>
-            <p style="text-align:center; margin-bottom:20px; color:#cfe7ff;">${insight}</p>
-            <table style="width:100%; border-collapse:collapse; background:#1f2937; color:#fff; border:1px solid #374151;">
-                <thead>
-                    <tr>
-                        <th style="border:1px solid #374151; padding:10px;">User</th>
-                        <th style="border:1px solid #374151; padding:10px;">Daily</th>
-                        <th style="border:1px solid #374151; padding:10px;">Weekly</th>
-                        <th style="border:1px solid #374151; padding:10px;">Monthly</th>
-                        <th style="border:1px solid #374151; padding:10px;">Yearly</th>
-                        <th style="border:1px solid #374151; padding:10px;">Split Paid</th>
-                        <th style="border:1px solid #374151; padding:10px;">Split Owed</th>
-                        <th style="border:1px solid #374151; padding:10px;">Total</th>
-                    </tr>
-                </thead>
-                <tbody>${tableRows}</tbody>
-            </table>
-        </div>
+        <!doctype html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Expense Summary</title>
+            <style>
+                *{box-sizing:border-box}
+                body{margin:0;padding:20px;background:#111827;color:#fff;font:15px Arial,sans-serif}
+                main{max-width:1100px;margin:0 auto}
+                h2{text-align:center;margin:0 0 12px}
+                .insight{text-align:center;margin:0 0 20px;color:#cfe7ff}
+                .tableWrap{overflow-x:auto;border:1px solid #374151;border-radius:10px}
+                table{width:100%;min-width:760px;border-collapse:collapse;background:#1f2937}
+                th,td{padding:10px;border:1px solid #374151;text-align:left;white-space:nowrap}
+                th{background:#334155;color:#facc15}
+                tbody tr:nth-child(even){background:#263449}
+                @media(max-width:600px){body{padding:12px}h2{font-size:20px}}
+            </style>
+        </head>
+        <body>
+            <main>
+                <h2>Expense Summary</h2>
+                <p class="insight">${insight}</p>
+                <div class="tableWrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">User</th>
+                                <th scope="col">Daily</th>
+                                <th scope="col">Weekly</th>
+                                <th scope="col">Monthly</th>
+                                <th scope="col">Yearly</th>
+                                <th scope="col">Split Paid</th>
+                                <th scope="col">Split Owed</th>
+                                <th scope="col">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows || '<tr><td colspan="8">No expense data available</td></tr>'}</tbody>
+                    </table>
+                </div>
+            </main>
+        </body>
+        </html>
     `;
 }
 
@@ -4509,8 +4574,22 @@ function showExpenseSummaryTable(){
 }
 
 function shareExpenseSummary(mode){
-    const summaryHtml = getExpenseSummaryTableHtml();
-    const plainText = summaryHtml.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+    const rows = getExpenseSummaryRows();
+    const header = ["User", "Daily", "Weekly", "Monthly", "Yearly", "Split Paid", "Split Owed", "Total"];
+    const plainText = [
+        `| ${header.join(" | ")} |`,
+        `| ${header.map(() => "---").join(" | ")} |`,
+        ...rows.map(row => `| ${[
+            row.user,
+            row.daily,
+            row.weekly,
+            row.monthly,
+            row.yearly,
+            row.splitPaid,
+            row.splitOwed,
+            row.total
+        ].map((value, index) => index === 0 ? String(value).replace(/\|/g, "\\|") : `₹${Number(value).toFixed(2)}`).join(" | ")} |`)
+    ].join("\n");
     const message = encodeURIComponent(`Expense Summary\n\n${plainText}`);
 
     if(mode === "whatsapp"){
@@ -5123,6 +5202,7 @@ function renderChart(){
     const chartKind = getSelectedChartType();
     const graphType = document.getElementById("graphType")?.value || "normal";
     const ctx = canvas.getContext("2d");
+    const isHorizontalBar = chartKind === "horizontalBar";
 
     if(chartKind === "pie" || chartKind === "doughnut"){
         renderPieChart();
@@ -5143,7 +5223,7 @@ function renderChart(){
                 document.getElementById("graphYear")?.value
             );
             datasets = normalData.lineDatasets || [{
-                label: "Expense Trend",
+                label: "Expenses per User",
                 data: normalData.values,
                 borderColor: "#22c55e",
                 backgroundColor: "rgba(34,197,94,0.2)",
@@ -5225,6 +5305,7 @@ function renderChart(){
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            indexAxis: isHorizontalBar ? "y" : "x",
             plugins: {
                 legend: { labels: { color: "white" } },
                 title: {
@@ -5235,15 +5316,16 @@ function renderChart(){
             },
             scales: {
                 x: {
+                    beginAtZero: isHorizontalBar,
                     ticks: { color: "white" },
                     grid: { color: "rgba(255,255,255,0.08)" },
-                    title: { display: true, text: chartKind === "line" ? (graphType === "normal" ? "Time Period" : "Time Period") : (graphType === "normal" ? "Expense Item" : "Users"), color: "white" }
+                    title: { display: true, text: isHorizontalBar ? "Amount (₹)" : chartKind === "line" ? "Time Period" : graphType === "normal" ? "Expense Item" : "Users", color: "white" }
                 },
                 y: {
-                    beginAtZero: true,
+                    beginAtZero: !isHorizontalBar,
                     ticks: { color: "white" },
                     grid: { color: "rgba(255,255,255,0.08)" },
-                    title: { display: true, text: "Amount (₹)", color: "white" }
+                    title: { display: true, text: isHorizontalBar ? graphType === "normal" ? "Expense Item" : "Users" : "Amount (₹)", color: "white" }
                 }
             }
         }
@@ -5364,8 +5446,6 @@ function openChartWindow(chartType, title, headingText){
     const graphHeading = `${headingText} — ${getGraphUserLabel()} — ${getGraphPeriodLabel()}`;
     let labels = [];
     let datasets = [];
-    let summary = "";
-
     if(graphType === "normal"){
         const normalData = buildNormalChartData();
 
@@ -5375,7 +5455,6 @@ function openChartWindow(chartType, title, headingText){
         } else if(chartType === "pie"){
             labels = normalData.labels;
             const values = normalData.values;
-            summary = `labels:${JSON.stringify(labels)}, data:${JSON.stringify(values)}`;
             datasets = [{ data: values, backgroundColor: ["#fbbf24", "#60a5fa", "#34d399", "#f87171", "#a78bfa", "#f472b6", "#38bdf8", "#f59e0b", "#4ade80"] }];
         } else if(chartType === "doughnut"){
             labels = normalData.labels;
@@ -5432,10 +5511,11 @@ new Chart(ctx, {
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        indexAxis: '${chartType === "horizontalBar" ? "y" : "x"}',
         plugins: { legend: { labels: { color: 'white' } }, title: { display: true, text: ${JSON.stringify(`${getGraphUserLabel()} — ${getGraphPeriodLabel()}`)}, color: 'white' } },
-        scales: ${JSON.stringify(chartType === 'line' || chartType === 'bar' ? {
-            x: { ticks: { color: 'white' }, title: { display: true, text: chartType === 'line' ? 'Time Period' : graphType === 'normal' ? 'Expense Item' : 'Users', color: 'white' } },
-            y: { beginAtZero: true, ticks: { color: 'white' }, title: { display: true, text: 'Amount (₹)', color: 'white' } }
+        scales: ${JSON.stringify(chartType === 'line' || chartType === 'bar' || chartType === 'horizontalBar' ? {
+            x: { beginAtZero: chartType === 'horizontalBar', ticks: { color: 'white' }, title: { display: true, text: chartType === 'horizontalBar' ? 'Amount (₹)' : chartType === 'line' ? 'Time Period' : graphType === 'normal' ? 'Expense Item' : 'Users', color: 'white' } },
+            y: { beginAtZero: chartType !== 'horizontalBar', ticks: { color: 'white' }, title: { display: true, text: chartType === 'horizontalBar' ? graphType === 'normal' ? 'Expense Item' : 'Users' : 'Amount (₹)', color: 'white' } }
         } : {})}
     }
 });
@@ -5449,12 +5529,16 @@ function openBarChartWindow(){
     openChartWindow("bar", "Expense Bar Graph", "📊 Bar Graph - Individual Expense Breakdown");
 }
 
+function openHorizontalBarChartWindow(){
+    openChartWindow("horizontalBar", "Expense Horizontal Bar Graph", "↔ Horizontal Bar Graph - Expense Breakdown");
+}
+
 function openPieChartWindow(){
     openChartWindow("pie", "Expense Pie Graph", "🥧 Pie Graph - Individual Expense Share");
 }
 
 function openLineChartWindow(){
-    openChartWindow("line", "Expense Trend Graph", "📈 Line Graph - Individual Expense Trend");
+    openChartWindow("line", "Expense Line Graph by User", "📈 Line Graph - Expenses by User");
 }
 
 function loadGraphUsers(){
@@ -5549,7 +5633,7 @@ function openSplitGraphWindow(){
         color:#22c55e
         "
         >
-            👤 ${split.paidBy}
+            👤 <span style="color:#facc15">${split.paidBy}</span>
 
             paid ₹${split.total}
         </h3>
@@ -5576,7 +5660,7 @@ function openSplitGraphWindow(){
         "
         >
 
-        ${user}
+        <span style="color:#facc15">${user}</span>
 
         owes
 
@@ -5747,12 +5831,30 @@ responsive:true,
 
 maintainAspectRatio:false,
 
+plugins:{
+    legend:{labels:{color:"white"}},
+    title:{
+        display:true,
+        text:${JSON.stringify(`Split Share — ${getGraphUserLabel()} — ${getGraphPeriodLabel()}`)},
+        color:"white"
+    }
+},
+
 scales:{
 
 y:{
+    beginAtZero:true,
+    ticks:{color:"white"},
+    grid:{color:"rgba(255,255,255,0.08)"},
+    title:{display:true,text:"Amount (₹)",color:"white"}
+},
 
-beginAtZero:true
+x:{
+    ticks:{color:"white"},
+    grid:{color:"rgba(255,255,255,0.08)"},
+    title:{display:true,text:"Users",color:"white"}
 }
+
 }
 }
 });
@@ -5778,52 +5880,24 @@ ${historyHtml}
 
 /* ================= SECURE DELETE ALL DATA ================= */
 
-function clearAllExpenseData(){
+async function clearAllExpenseData(){
 
-    /* admin credentials */
+    try {
+        const response = await fetch("/api/me", {
+            credentials: "include",
+            cache: "no-store"
+        });
+        const result = await response.json();
 
-    const ADMIN_USER =
-        "admin";
-
-    const ADMIN_PASS =
-        "admin@12345";
-
-    const username =
-        prompt(
-            "Enter admin username"
-        );
-
-    if(username === null){
-        return;
-    }
-
-    const password =
-        prompt(
-            "Enter admin password"
-        );
-
-    if(password === null){
-        return;
-    }
-
-    /* validation */
-
-    if(
-
-        username !== ADMIN_USER ||
-
-        password !== ADMIN_PASS
-
-    ){
-
-        speak(
-            "Invalid credentials"
-        );
-
-        alert(
-            "❌ Invalid credentials"
-        );
-
+        if (!response.ok || result?.user?.role !== "admin") {
+            alert(response.status === 401
+                ? "Log in to the portal as an admin before deleting all expense data."
+                : "Admin access is required to delete all expense data.");
+            return;
+        }
+    } catch (error) {
+        console.error("Unable to verify admin access:", error);
+        alert("Unable to verify admin access. Please try again.");
         return;
     }
 
@@ -5941,6 +6015,7 @@ This cannot be undone.`
 
     [
         "dailyTotal",
+        "weeklyTotal",
         "monthlyTotal",
         "yearlyTotal",
         "overallTotal"
@@ -5959,6 +6034,9 @@ This cannot be undone.`
                 "₹0";
         }
     });
+
+    updateSummaryMetricRings();
+    updateBudgetInfo();
 
     /* destroy graphs */
 

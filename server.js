@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
@@ -9,7 +11,11 @@ const Database = require('better-sqlite3');
 const app = express();
 const PORT = process.env.PORT || 8080;
 const ADMIN_USERNAME = 'Vijay';
-const ADMIN_PASSWORD = 'victory#123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_PASSWORD) {
+  throw new Error('ADMIN_PASSWORD must be configured in the server environment.');
+}
 
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'visitors.db');

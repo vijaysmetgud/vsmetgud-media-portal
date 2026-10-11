@@ -9,6 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/payment-reminders.css">
 
 <style>
 
@@ -33,6 +34,13 @@
     width: min(1200px, 96vw);
     margin: 0 auto;
     padding: 0 12px;
+}
+
+.welcome-tools-left {
+    display: flex;
+    flex: 0 0 200px;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .welcome-side-btn {
@@ -195,9 +203,15 @@
         justify-content: center;
     }
 
+    .welcome-tools-left {
+        flex: 0 0 100%;
+        align-items: center;
+        gap: 8px;
+    }
+
     .welcome-side-btn {
         min-width: 0;
-        width: 100%;
+        width: min(100%, 280px);
     }
 }
 
@@ -290,34 +304,6 @@ header {
 .nav-btn.active {
     background:linear-gradient(135deg,#22c55e,#16a34a);
     animation:pulse 1.5s infinite;
-}
-
-.nav-radio {
-    display:inline-flex;
-    align-items:center;
-    gap:9px;
-    padding:11px 18px;
-    border:1px solid #475569;
-    border-radius:30px;
-    background:#1e293b;
-    color:white;
-    cursor:pointer;
-    font-size:14px;
-    transition:0.3s;
-}
-
-.nav-radio:hover {
-    border-color:#60a5fa;
-    background:#273347;
-}
-
-.nav-radio.active {
-    border-color:#22c55e;
-    background:linear-gradient(135deg,#166534,#15803d);
-}
-
-.nav-radio input {
-    accent-color:#22c55e;
 }
 
 @keyframes pulse {
@@ -486,10 +472,12 @@ header {
 /* ================= CHATBOT ================= */
 
 .chatbot {
-    position:fixed;
-    bottom:20px;
-    right:20px;
-    width:300px;
+    position:relative;
+    inset:auto;
+    width:min(450px, calc(100% - 32px));
+    max-width:100%;
+    box-sizing:border-box;
+    margin:24px auto;
     background:#1e293b;
     border-radius:15px;
     box-shadow:0 10px 40px rgba(0,0,0,0.7);
@@ -702,7 +690,7 @@ header {
 
 .chatbot-body {
     padding:10px;
-    height:200px;
+    height:240px;
     overflow-y:auto;
 }
 
@@ -724,9 +712,10 @@ header {
 }
 
 .chat-toggle {
-    position:fixed;
-    bottom:20px;
-    right:20px;
+    position:relative;
+    inset:auto;
+    width:max-content;
+    margin:0 auto 20px;
     background:#2563eb;
     padding:12px 18px;
     border-radius:50px;
@@ -1233,18 +1222,31 @@ window.addEventListener("DOMContentLoaded", () => {
 
     fetchVisitorStats();
 
-    fetchMetrics();
+    if (window.location.protocol === "file:") {
+        [
+            "cpu",
+            "memory",
+            "pods",
+            "health",
+            "diskTotal",
+            "diskUsed",
+            "diskFree",
+            "diskUsage"
+        ].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.innerText = "Unavailable offline";
+            }
+        });
+    } else {
+        fetchMetrics();
 
-    if(window.metricsInterval){
+        if (window.metricsInterval) {
+            clearInterval(window.metricsInterval);
+        }
 
-        clearInterval(
-            window.metricsInterval
-        );
-
+        window.metricsInterval = setInterval(fetchMetrics, 2000);
     }
-
-    window.metricsInterval =
-        setInterval(fetchMetrics, 2000);
 
 
 
@@ -1459,11 +1461,20 @@ function startReminderChecker(){
 
     <div class="welcome-toolbar">
 
-        <button
-            class="welcome-side-btn"
-            onclick="window.open('/world-time.html', '_blank')">
-            🌍 World Time Zone
-        </button>
+        <div class="welcome-tools-left">
+            <button
+                class="welcome-side-btn"
+                onclick="window.open('/world-time.html', '_blank')">
+                🌍 World Time Zone
+            </button>
+
+            <button
+                type="button"
+                class="welcome-side-btn"
+                onclick="window.open('/health-reminder.html?edit=1', '_blank')">
+                ✏️ Edit Health Reminder
+            </button>
+        </div>
 
         <header class="welcome-banner">
 
@@ -1475,13 +1486,6 @@ function startReminderChecker(){
             </p>
 
         </header>
-
-        <button
-            type="button"
-            class="welcome-side-btn"
-            onclick="window.open('/health-reminder.html?edit=1', '_blank')">
-            ✏️ Edit Health Reminder
-        </button>
 
         <div
             id="analogClock"
@@ -1576,38 +1580,79 @@ DEVOPS SHACK
 PYTHON PRACTICE
 </button>
 
-<label class="nav-radio">
-    <input
-        type="radio"
-        name="media-category"
-        value="SCREENSHOTS-DEVOPS-INFOGRAPHICS"
-        onchange="loadCategory(this.value, this.closest('.nav-radio'))">
-    <span>SCREENSHOTS-DEVOPS-INFOGRAPHICS</span>
-</label>
+<button
+    class="nav-btn"
+    onclick="loadCategory('SCREENSHOTS-DEVOPS-INFOGRAPHICS', this)">
+    SCREENSHOTS-DEVOPS-INFOGRAPHICS
+</button>
 
 </div>    
 
-<div class="quickApps">
+<div class="portalQuickApps">
+    <div class="portalQuickApps-left">
+        <button
+            id="expenseTrackerBtn"
+            onclick="window.open('/expense.html','_blank')">
+            💰 Expense Tracker
+        </button>
 
-    <button
-        id="expenseTrackerBtn"
-        onclick="window.open('/expense.html','_blank')">
-        💰 Expense Tracker
-    </button>
-
-    <button
-        id="theatrePlayerBtn"
-        onclick="openTheatrePlayer()">
-        🎬 Theatre Media Player
-    </button>
+        <button
+            id="theatrePlayerBtn"
+            onclick="openTheatrePlayer()">
+            🎬 Theatre Media Player
+        </button>
+    </div>
 
     <button
         id="dashboardBtn"
         onclick="openUserDashboard()">
         📊 My Dashboard
     </button>
-
 </div>
+
+<section id="paymentReminders" class="payment-reminders" aria-labelledby="paymentRemindersTitle">
+    <div class="payment-reminders-heading">
+        <div>
+            <h2 id="paymentRemindersTitle">🔔 Payment Reminders</h2>
+            <p>Name any payment—rent, hotel, transport, bills, subscriptions, renewals, or anything else.</p>
+        </div>
+        <button type="button" id="paymentReminderNotificationButton" onclick="enablePaymentReminderNotifications()">
+            🔔 Enable Due Notifications
+        </button>
+    </div>
+
+    <div class="payment-reminder-form">
+        <div class="payment-reminder-fields">
+            <label for="paymentReminderName">Payment name
+                <input type="text" id="paymentReminderName" maxlength="100" placeholder="Hotel bill, transportation, rent...">
+            </label>
+            <label for="paymentReminderAmount">Amount (optional)
+                <input type="number" id="paymentReminderAmount" min="0" step="0.01" placeholder="Amount">
+            </label>
+            <label for="paymentReminderDue">Next due date (DD-MM-YYYY)
+                <input type="text" id="paymentReminderDue" inputmode="numeric" placeholder="DD-MM-YYYY" maxlength="10" autocomplete="off">
+            </label>
+            <label for="paymentReminderFrequency">Repeat
+                <select id="paymentReminderFrequency">
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="once">One time</option>
+                </select>
+            </label>
+            <label class="payment-reminder-notes" for="paymentReminderNotes">Notes (optional)
+                <textarea id="paymentReminderNotes" rows="2" maxlength="500" placeholder="Account details or anything you need to remember"></textarea>
+            </label>
+        </div>
+        <div class="payment-reminder-actions">
+            <button type="button" id="savePaymentReminderButton" onclick="savePortalPaymentReminder()">Add Reminder</button>
+            <button type="button" class="payment-reminder-secondary" onclick="voiceFillPaymentReminder()">🎙️ Fill by Voice</button>
+            <button type="button" class="payment-reminder-secondary" id="cancelPaymentReminderEdit" onclick="cancelPortalPaymentReminderEdit()" hidden>Cancel Edit</button>
+        </div>
+        <small id="paymentReminderStatus" role="status" aria-live="polite"></small>
+    </div>
+    <div id="paymentReminderList" aria-live="polite"></div>
+</section>
 
 <script>
 function openUserDashboard() {
@@ -4029,11 +4074,8 @@ function loadCategory(folder, element) {
     aiMemory.currentCategory = folder;
 
     // Highlight selected category
-    document.querySelectorAll(".nav-btn, .nav-radio")
+    document.querySelectorAll(".nav-btn")
         .forEach(btn => btn.classList.remove("active"));
-
-    document.querySelectorAll('input[name="media-category"]')
-        .forEach(radio => { radio.checked = radio.value === folder; });
 
     if (element) {
         element.classList.add("active");
@@ -4366,60 +4408,124 @@ function findMatchingFiles(query){
     });
 }
 
-function renderSearchResults(files, query){
+function renderSearchResultsWindow(files, query){
+    const resultsWindow = window.open(
+        "",
+        "_blank",
+        "width=900,height=700,resizable=yes,scrollbars=yes"
+    );
 
-    const body = document.getElementById('chatBody');
-
-    if(!body){
-        return;
+    if(!resultsWindow){
+        const body = document.getElementById("chatBody");
+        if(body){
+            body.innerHTML += `
+                <div style="color:#fbbf24">
+                    <b>AI:</b> Allow pop-ups for this portal to open file lists in a separate window.
+                </div>
+            `;
+            body.scrollTop = body.scrollHeight;
+        }
+        return false;
     }
 
-    if(files.length === 0){
+    const resultsDocument = resultsWindow.document;
+    resultsDocument.open();
+    resultsDocument.write(`<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>File search results</title>
+            <style>
+                * { box-sizing: border-box; }
+                body {
+                    margin: 0;
+                    padding: 28px;
+                    background: #0f172a;
+                    color: #f8fafc;
+                    font: 15px/1.5 "Segoe UI", Arial, sans-serif;
+                }
+                main {
+                    max-width: 1000px;
+                    margin: 0 auto;
+                }
+                h1 { margin: 0 0 6px; font-size: 24px; }
+                .summary { margin: 0 0 20px; color: #94a3b8; }
+                .results {
+                    margin: 0;
+                    padding: 0;
+                    list-style: none;
+                }
+                .results li {
+                    margin: 8px 0;
+                    padding: 14px 16px;
+                    border: 1px solid #334155;
+                    border-radius: 10px;
+                    background: #1e293b;
+                    overflow-wrap: anywhere;
+                }
+                .results a { color: #93c5fd; text-decoration: none; }
+                .results a:hover { text-decoration: underline; }
+                .empty { color: #cbd5e1; }
+                @media (max-width: 600px) {
+                    body { padding: 18px 12px; }
+                    h1 { font-size: 20px; }
+                }
+            </style>
+        </head>
+        <body>
+            <main>
+                <h1 id="resultsTitle"></h1>
+                <p id="resultsSummary" class="summary"></p>
+                <ul id="resultsList" class="results"></ul>
+            </main>
+        </body>
+        </html>`);
+    resultsDocument.close();
 
-        const message = `Sorry, I could not find any files matching ${query}`;
+    resultsDocument.getElementById("resultsTitle").textContent = "File search results";
+    resultsDocument.getElementById("resultsSummary").textContent =
+        files.length
+            ? `Found ${files.length} matching files for "${query}". Select a file to open it in the portal.`
+            : `No files matched "${query}".`;
 
-        body.innerHTML += `
-            <div style='color:red'>
-                <b>AI:</b> ${message}
-            </div>
-        `;
-
-        speak(message);
-
+    const list = resultsDocument.getElementById("resultsList");
+    if(!files.length){
+        const emptyItem = resultsDocument.createElement("li");
+        emptyItem.className = "empty";
+        emptyItem.textContent = "Try another keyword or a shorter search phrase.";
+        list.appendChild(emptyItem);
     } else {
-
-        const message = `Found ${files.length} matching files for ${query}`;
-
-        speak(message);
-
-        const listItems = files.map(file =>
-            `<div style='margin:6px 0;'>
-                <a href="#"
-                onclick="
-                    event.preventDefault();
-                    canAccessMedia('${file.replace(/'/g, "\\'")}', 'view')
-                        .then(allowed => {
-                            if (allowed) {
-                                openFile('${file.replace(/'/g, "\\'")}');
-                            }
-                        });
-                "
-                style='color:#38bdf8;text-decoration:none;'>
-                ${escapeHtml(file)}
-                </a>
-            </div>`
-        ).join('');
-
-        body.innerHTML += `
-            <div style='color:#22c55e'>
-                <b>AI:</b> ${message}
-            </div>
-
-            ${listItems}
-        `;
+        files.forEach(file => {
+            const item = resultsDocument.createElement("li");
+            const link = resultsDocument.createElement("a");
+            link.href = "#";
+            link.textContent = file;
+            link.addEventListener("click", async event => {
+                event.preventDefault();
+                try {
+                    const portal = resultsWindow.opener;
+                    if(!portal || portal.closed){
+                        throw new Error("The portal window is no longer available.");
+                    }
+                    if(await portal.canAccessMedia(file, "view")){
+                        portal.openFile(file);
+                    }
+                } catch(error) {
+                    console.error("Unable to open file from search results:", error);
+                    resultsDocument.getElementById("resultsSummary").textContent =
+                        error.message || "Unable to open this file from the portal.";
+                }
+            });
+            item.appendChild(link);
+            list.appendChild(item);
+        });
     }
 
-    body.scrollTop = body.scrollHeight;
+    speak(files.length
+        ? `Found ${files.length} matching files for ${query}`
+        : `I could not find any files matching ${query}`);
+    return true;
 }
 /* ================= FUZZY SEARCH ================= */
 
@@ -4758,13 +4864,7 @@ function handleChatQuery(query){
     if(isListIntent(trimmed)){
         const listTerms = normalizeListQuery(trimmed);
         const listMatches = listTerms ? findMatchingFiles(listTerms) : [];
-
-        if(listMatches.length > 0){
-            renderSearchResults(listMatches, listTerms || trimmed);
-            return;
-        }
-
-        searchGoogleForQuery(trimmed);
+        renderSearchResultsWindow(listMatches, listTerms || trimmed);
         return;
     }
 
@@ -7109,6 +7209,7 @@ function closeAutomaticHealthReminder() {
         type="audio/mpeg">
 </audio>
 
+<script src="js/payment-reminders.js"></script>
 <script src="js/backup.js"></script>
 </body>
 </html>

@@ -242,14 +242,14 @@
     styles.textContent = `
         #portalBackupControls {
             position: fixed;
-            right: 12px;
+            left: 230px;
             bottom: 12px;
             z-index: 10000;
             display: flex;
             align-items: center;
             flex-wrap: wrap;
             gap: 8px;
-            max-width: min(520px, calc(100vw - 24px));
+            max-width: min(520px, calc(100vw - 550px));
             padding: 10px;
             border: 1px solid #64748b;
             border-radius: 12px;
@@ -275,9 +275,49 @@
             outline-offset: 2px;
         }
         #portalBackupStatus { flex: 1 1 100%; }
-        @media (max-width: 520px) {
-            #portalBackupControls { left: 10px; right: 10px; bottom: 10px; }
-            #portalBackupControls button { flex: 1; }
+        @media (max-width: 768px) {
+            #portalBackupControls {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px;
+                padding: 8px;
+            }
+            #portalBackupControls button {
+                width: 100%;
+                min-width: 0;
+                min-height: 36px;
+                padding: 6px;
+                font-size: 11px;
+            }
+            #portalBackupStatus {
+                grid-column: 1 / -1;
+                font-size: 10px;
+            }
+            .chatbot {
+                left: auto;
+                right: 16px;
+                bottom: 160px;
+                width: min(400px, calc(100vw - 32px));
+            }
+            .chatbot-body {
+                height: 170px;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+            .chatbot-input {
+                min-width: 0;
+            }
+            .chatbot-input input {
+                min-width: 0;
+                font-size: 16px;
+            }
+            .chatbot-input button {
+                flex: 0 0 auto;
+                padding: 8px 10px;
+            }
         }
     `;
     document.head.appendChild(styles);
@@ -290,7 +330,9 @@
 
     function mountWhenPortalIsAvailable() {
         const mainContent = document.getElementById("mainContent");
-        if (!mainContent || !mainContent.classList.contains("hidden")) {
+        if (!mainContent) return;
+
+        if (!mainContent.classList.contains("hidden")) {
             mountBackupControls();
             return;
         }

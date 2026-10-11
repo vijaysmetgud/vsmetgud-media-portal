@@ -284,61 +284,6 @@
 
 <script>
 let currentUsername = null;
-let dashboardSourceData = { videoRows: [], fileRows: [] };
-
-function getDashboardFilters() {
-    try {
-        return JSON.parse(localStorage.getItem("mediaPortalDashboardFilters") || "{}");
-    } catch (error) {
-        console.error("Unable to load dashboard filters:", error);
-        return {};
-    }
-}
-
-function filterDashboardRows(rows, query, type, period, timestampKey) {
-    const now = Date.now();
-    const typePatterns = {
-        video: /\.(mp4|mkv|webm|mov|avi|m4v)$/i,
-        audio: /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|wma|aiff?)$/i,
-        image: /\.(png|jpe?g|gif|webp|bmp|svg|tiff?)$/i,
-        document: /\.(pdf|docx?|xlsx?|pptx?|txt|csv|md)$/i
-    };
-
-    return rows.filter(row => {
-        const path = String(row.filePath || "");
-        const fileMatches = !query || path.toLowerCase().includes(query);
-        const pattern = typePatterns[type];
-        const typeMatches = !pattern || pattern.test(path);
-        const accessedAt = new Date(row[timestampKey] || 0).getTime();
-        const days = Number(period);
-        const periodMatches = !days || (Number.isFinite(accessedAt) && now - accessedAt <= days * 86400000);
-        return fileMatches && typeMatches && periodMatches;
-    });
-}
-
-function saveDashboardFilters() {
-    const filters = {
-        query: document.getElementById("dashboardSearch")?.value || "",
-        type: document.getElementById("dashboardFileType")?.value || "all",
-        period: document.getElementById("dashboardPeriod")?.value || "all"
-    };
-    try {
-        localStorage.setItem("mediaPortalDashboardFilters", JSON.stringify(filters));
-    } catch (error) {
-        console.error("Unable to save dashboard filters:", error);
-    }
-
-    const focusedId = document.activeElement?.id;
-    const cursor = focusedId === "dashboardSearch"
-        ? document.activeElement.selectionStart
-        : null;
-    renderDashboard(dashboardSourceData.videoRows, dashboardSourceData.fileRows);
-    if (focusedId) {
-        const replacement = document.getElementById(focusedId);
-        replacement?.focus();
-        if (cursor !== null && replacement) replacement.setSelectionRange(cursor, cursor);
-    }
-}
 
 function escapeHtml(str) {
     return String(str || "").replace(/[&<>"']/g, s => ({
@@ -722,20 +667,6 @@ function getLastKnownUsername() {
 }
 
 function renderDashboard(videoRows, fileRows) {
-    dashboardSourceData = { videoRows, fileRows };
-    const filters = getDashboardFilters();
-    const query = String(filters.query || "").trim().toLowerCase();
-    const type = ["all", "video", "audio", "image", "document"].includes(filters.type)
-        ? filters.type
-        : "all";
-    const period = ["all", "7", "30"].includes(String(filters.period))
-        ? String(filters.period)
-        : "all";
-    videoRows = type === "all" || type === "video"
-        ? filterDashboardRows(videoRows, query, "video", period, "lastAccessedAt")
-        : [];
-    fileRows = filterDashboardRows(fileRows, query, type, period, "lastAccessed");
-
     const inProgress = videoRows
         .filter(r => r.status !== "completed")
         .sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt));
@@ -747,31 +678,6 @@ function renderDashboard(videoRows, fileRows) {
     const totalAccessedFiles = fileRows.length;
 
     document.getElementById("mainArea").innerHTML = `
-        <section aria-labelledby="dashboardFilterTitle">
-            <h2 id="dashboardFilterTitle">🔎 Find files and history</h2>
-            <div class="dashboard-filter-controls">
-                <label>Search files
-                    <input id="dashboardSearch" type="search" placeholder="Search by file name or path" value="${escapeHtml(filters.query || "")}">
-                </label>
-                <label>File type
-                    <select id="dashboardFileType">
-                        <option value="all">All files</option>
-                        <option value="video">Videos</option>
-                        <option value="audio">Audio</option>
-                        <option value="image">Images</option>
-                        <option value="document">Documents</option>
-                    </select>
-                </label>
-                <label>Recently accessed
-                    <select id="dashboardPeriod">
-                        <option value="all">Any time</option>
-                        <option value="7">Last 7 days</option>
-                        <option value="30">Last 30 days</option>
-                    </select>
-                </label>
-                <button type="button" id="clearDashboardFilters">Clear filters</button>
-            </div>
-        </section>
         <div class="stat-row">
             <div class="stat-card">
                 <div class="value">${videoRows.length}</div>
@@ -820,18 +726,6 @@ function renderDashboard(videoRows, fileRows) {
             ${renderFileActivityTable(fileRows)}
         </section>
     `;
-
-    document.getElementById("dashboardFileType").value = type;
-    document.getElementById("dashboardPeriod").value = period;
-    document.getElementById("dashboardSearch").addEventListener("input", saveDashboardFilters);
-    document.getElementById("dashboardFileType").addEventListener("change", saveDashboardFilters);
-    document.getElementById("dashboardPeriod").addEventListener("change", saveDashboardFilters);
-    document.getElementById("clearDashboardFilters").addEventListener("click", () => {
-        document.getElementById("dashboardSearch").value = "";
-        document.getElementById("dashboardFileType").value = "all";
-        document.getElementById("dashboardPeriod").value = "all";
-        saveDashboardFilters();
-    });
 
     try {
     renderChart(videoRows);
@@ -1075,7 +969,5 @@ setInterval(() => {
 }, 10000);
 
 </script>
-<script src="js/backup.js"></script>
-
 </body>
 </html>

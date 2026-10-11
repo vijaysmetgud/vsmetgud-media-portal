@@ -1,3 +1,12 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Health Reminders</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
 <script>
 let healthTipSchedule = [
     {
@@ -152,6 +161,13 @@ let healthTipSchedule = [
 
             <button
                 type="button"
+                class="healthVoiceEditBtn"
+                onclick="startHealthReminderVoiceEdit()">
+                🎙 Edit Time &amp; Message by Voice
+            </button>
+
+            <button
+                type="button"
                 onclick="saveHealthReminder()">
                 💾 Save Changes
             </button>
@@ -163,6 +179,7 @@ let healthTipSchedule = [
             </button>
 
         </div>
+        <p id="healthVoiceEditStatus" role="status" aria-live="polite"></p>
 
     </div>
 

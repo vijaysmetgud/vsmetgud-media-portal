@@ -27,36 +27,236 @@
         🎤 Expense Tracker
     </h1>
 
-    <!-- USER SECTION -->
+    <div class="budgetPanel">
+        <h3>💼 Monthly Budget</h3>
+        <div class="budgetRow">
+            <input type="number" id="monthlyBudgetInput" aria-label="Monthly expense budget" placeholder="Set budget" min="0" step="100">
+            <button onclick="saveMonthlyBudget()">Save</button>
+        </div>
+        <div class="budgetMeta"><span id="budgetUsed">Used: ₹0</span><span id="budgetRemaining">Remaining: ₹0</span></div>
+        <div class="budgetMetric">
+            <div class="budgetProgress"><div id="budgetProgressBar"></div></div>
+            <div id="budgetMetricRing" class="metricRing budgetMetricRing" role="img" aria-label="Set a monthly budget to see usage"><span id="budgetUsagePercent">—</span></div>
+        </div>
+        <small id="budgetStatus" role="status" aria-live="polite">Budget status: not set</small>
+    </div>
 
     <div class="userSection">
-
-        <select
-            id="userSelect"
-            onchange="switchUser()"
-        ></select>
-
-        <button onclick="addNewUser()">
-            + Add User
-        </button>
-
-        <button onclick="deleteUser()">
-            ❌ Delete User
-        </button>
-
+        <select id="userSelect" onchange="switchUser()"></select>
+        <button onclick="addNewUser()">+ Add User</button>
+        <button onclick="deleteUser()">❌ Delete User</button>
     </div>
 
     <div class="topActionGroups">
+        <section class="topActionGroup voiceActionGroup" aria-labelledby="voiceActionsTitle">
+            <h2 id="voiceActionsTitle">🎤 Voice Entry</h2>
+            <div class="topActionButtons">
+                <button onclick="startVoice()">🎤 Speak Expense</button>
+                <button onclick="startSplitVoice()">🎤 Split Voice</button>
+            </div>
+            <p id="voiceStatus" role="status" aria-live="polite"></p>
+        </section>
+    </div>
+
+    <div class="splitContainer">
+        <h2>💰 Split Share History</h2>
+        <div id="splitExpenseList" class="expenseList"></div>
+    </div>
+
+    <div class="topExpensePanels">
+        <div class="expenseFilterCard">
+            <h2>📂 Show Expenses For</h2>
+            <div class="expenseFilterRow" onclick="showTodayExpenses()"><span>Today</span><span>Show today's expenses</span></div>
+            <div class="expenseFilterRow" onclick="showMonthlyExpenses()"><span>Month</span><span>Show monthly expenses</span></div>
+            <div class="expenseFilterRow" onclick="showYearlyExpenses()"><span>Year</span><span>Show yearly expenses</span></div>
+            <div class="expenseFilterRow" onclick="showAllExpenses()"><span>All</span><span>Show all expenses</span></div>
+            <div class="expenseFilterRow" onclick="getExpensesByDate()"><span>📅 Select Date</span><span>Show expenses for date</span></div>
+        </div>
+    </div>
+
+    <div class="topActionGroups graphActionGroups">
         <section class="topActionGroup graphActionGroup" aria-labelledby="graphActionsTitle">
-            <h2 id="graphActionsTitle">📈 Graphs & Trends</h2>
+            <h2 id="graphActionsTitle">📈 Graphs & Analytics</h2>
             <div class="topActionButtons">
                 <button onclick="openBarChartWindow()">📊 Bar Graph</button>
+                <button onclick="openHorizontalBarChartWindow()">↔ Horizontal Bar</button>
                 <button onclick="openPieChartWindow()">🥧 Pie Graph</button>
                 <button onclick="openSplitGraphWindow()">💰 Split Share Graph</button>
-                <button onclick="openLineChartWindow()">📈 Trend Graph</button>
+                <button onclick="openLineChartWindow()">📈 Line Graph by User</button>
             </div>
         </section>
+    </div>
 
+    <div class="graphFilterPanel">
+        <h2>📊 Expense Analytics</h2>
+        <div class="graphTypeRadios" aria-label="Chart type selector">
+            <label class="chartRadio"><input type="radio" name="chartKind" value="bar" checked><span>Bar</span></label>
+            <label class="chartRadio"><input type="radio" name="chartKind" value="horizontalBar"><span>Horizontal Bar</span></label>
+            <label class="chartRadio"><input type="radio" name="chartKind" value="line"><span>Line</span></label>
+            <label class="chartRadio"><input type="radio" name="chartKind" value="pie"><span>Pie</span></label>
+            <label class="chartRadio"><input type="radio" name="chartKind" value="doughnut"><span>Doughnut</span></label>
+        </div>
+        <div class="graphControls">
+            <div class="graphInput">
+                <label for="graphUser">User</label>
+                <select id="graphUser"><option value="all">All Users</option></select>
+            </div>
+            <div class="graphInput">
+                <label for="graphType">Expense Type</label>
+                <select id="graphType">
+                    <option value="normal">Individual Expenses</option>
+                    <option value="split">Split Share Expenses</option>
+                </select>
+            </div>
+            <div class="graphInput">
+                <label for="graphFilter">Period</label>
+                <select id="graphFilter">
+                    <option value="today">Today</option><option value="week">Last 7 Days</option>
+                    <option value="date">Selected Date</option><option value="month">Month</option>
+                    <option value="year">Year</option><option value="overall" selected>Overall</option>
+                </select>
+            </div>
+            <div class="graphInput"><label for="graphDate">Select Date</label><input type="date" id="graphDate"></div>
+            <div class="graphInput"><label for="graphMonth">Month</label><input type="month" id="graphMonth"></div>
+            <div class="graphInput"><label for="graphYear">Year</label><input type="number" id="graphYear" min="2000" max="2100"></div>
+        </div>
+    </div>
+
+    <div class="chartGrid" aria-label="Expense charts">
+        <div class="chartContainer"><div id="chartInsight" class="chartInsight">Top category: -</div><canvas id="expenseChart"></canvas></div>
+        <div class="chartContainer"><div id="pieInsight" class="chartInsight">Top category: -</div><canvas id="expensePieChart"></canvas></div>
+    </div>
+
+    <div class="dashboardStrip">
+        <div class="insightPanel">
+            <h3>📈 Smart Insight</h3>
+            <p id="dashboardInsight">Your expense dashboard is ready.</p>
+        </div>
+    </div>
+
+    <div class="formCard">
+        <h3 id="currentUserName">User : Not Selected</h3>
+        <input type="date" id="date" aria-label="Expense date">
+        <input type="text" id="item" placeholder="Item" aria-label="Expense item">
+        <input type="number" id="price" placeholder="Price" aria-label="Expense amount">
+        <div class="buttonRow">
+            <button onclick="addExpense()">Add Expense</button>
+            <button onclick="downloadTextFile()">📄 Convert To Text</button>
+            <button onclick="splitExpense()">💰 Split Share</button>
+        </div>
+    </div>
+
+    <section class="recurringPanel" aria-labelledby="recurringTitle">
+        <h2 id="recurringTitle">🔁 Recurring Expenses</h2>
+        <p>Save a weekly or monthly expense template. Due entries are only added after you review them.</p>
+        <div class="recurringSetup">
+            <label for="recurringCadence">Repeat</label>
+            <select id="recurringCadence"><option value="monthly">Monthly</option><option value="weekly">Weekly</option></select>
+            <button type="button" onclick="addRecurringExpense()">Save item, amount &amp; date as recurring</button>
+        </div>
+        <small id="recurringStatus" role="status" aria-live="polite"></small>
+        <div id="recurringExpenseList" aria-live="polite"></div>
+    </section>
+
+    <div class="toolRow">
+        <div class="searchBox"><input type="search" id="expenseSearch" placeholder="Search item, user, or date"></div>
+        <div class="selectBox">
+            <select id="expenseSort">
+                <option value="newest">Newest first</option><option value="oldest">Oldest first</option>
+                <option value="highest">Highest amount</option><option value="lowest">Lowest amount</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- SUMMARY -->
+
+    <div class="summary">
+
+        <div class="summaryCard">
+
+            <h3>Today</h3>
+
+            <p class="metricRing summaryMetricRing" data-summary-ring="dailyTotal" role="img" aria-label="Today expenses, share of overall total">
+                <span id="dailyTotal">₹0</span>
+            </p>
+            <small class="metricShare" id="dailyShare">0% of overall</small>
+
+            <small id="dailyInsight" class="insightText">
+                Peak: -
+            </small>
+
+        </div>
+
+        <div class="summaryCard">
+
+            <h3>Week</h3>
+
+            <p class="metricRing summaryMetricRing" data-summary-ring="weeklyTotal" role="img" aria-label="Week expenses, share of overall total">
+                <span id="weeklyTotal">₹0</span>
+            </p>
+            <small class="metricShare" id="weeklyShare">0% of overall</small>
+
+            <small id="weeklyInsight" class="insightText">
+                Peak: -
+            </small>
+
+        </div>
+
+        <div class="summaryCard">
+
+            <h3>Month</h3>
+
+            <p class="metricRing summaryMetricRing" data-summary-ring="monthlyTotal" role="img" aria-label="Month expenses, share of overall total">
+                <span id="monthlyTotal">₹0</span>
+            </p>
+            <small class="metricShare" id="monthlyShare">0% of overall</small>
+
+            <small id="monthlyInsight" class="insightText">
+                Peak: -
+            </small>
+
+        </div>
+
+        <div class="summaryCard">
+
+            <h3>Year</h3>
+
+            <p class="metricRing summaryMetricRing" data-summary-ring="yearlyTotal" role="img" aria-label="Year expenses, share of overall total">
+                <span id="yearlyTotal">₹0</span>
+            </p>
+            <small class="metricShare" id="yearlyShare">0% of overall</small>
+
+            <small id="yearlyInsight" class="insightText">
+                Peak: -
+            </small>
+
+        </div>
+
+        <div class="summaryCard">
+
+            <h3>Overall</h3>
+
+            <p class="metricRing summaryMetricRing" data-summary-ring="overallTotal" role="img" aria-label="Overall expenses, share of overall total">
+                <span id="overallTotal">₹0</span>
+            </p>
+            <small class="metricShare" id="overallShare">100% of overall</small>
+
+            <small id="overallInsight" class="insightText">
+                Peak: -
+            </small>
+
+        </div>
+
+    </div>
+
+    <!-- EXPENSE LIST -->
+
+    <div
+        class="expenseList"
+        id="expenseList"
+    ></div>
+
+    <div class="topActionGroups reportActionGroups">
         <section class="topActionGroup reportActionGroup" aria-labelledby="reportActionsTitle">
             <h2 id="reportActionsTitle">🧾 Reports & Actions</h2>
             <div class="topActionButtons">
@@ -73,376 +273,11 @@
         </section>
     </div>
 
-    <div class="graphFilterPanel">
-        <h2>📊 Expense Analytics</h2>
-
-        <div class="graphTypeRadios" aria-label="Chart type selector">
-            <label class="chartRadio">
-                <input type="radio" name="chartKind" value="bar" checked>
-                <span>Bar</span>
-            </label>
-            <label class="chartRadio">
-                <input type="radio" name="chartKind" value="line">
-                <span>Line</span>
-            </label>
-            <label class="chartRadio">
-                <input type="radio" name="chartKind" value="pie">
-                <span>Pie</span>
-            </label>
-            <label class="chartRadio">
-                <input type="radio" name="chartKind" value="doughnut">
-                <span>Doughnut</span>
-            </label>
-        </div>
-
-        <div class="graphControls">
-            <div class="graphInput">
-                <label for="graphUser">User</label>
-                <select id="graphUser">
-                    <option value="all">All Users</option>
-                </select>
-            </div>
-            <div class="graphInput">
-                <label for="graphType">Expense Type</label>
-                <select id="graphType">
-                    <option value="normal">Individual Expenses</option>
-                    <option value="split">Split Share Expenses</option>
-                </select>
-            </div>
-            <div class="graphInput">
-                <label for="graphFilter">Period</label>
-                <select id="graphFilter">
-                    <option value="today">Today</option>
-                    <option value="week">Last 7 Days</option>
-                    <option value="date">Selected Date</option>
-                    <option value="month">Month</option>
-                    <option value="year">Year</option>
-                    <option value="overall" selected>Overall</option>
-                </select>
-            </div>
-            <div class="graphInput">
-                <label for="graphDate">Select Date</label>
-                <input type="date" id="graphDate">
-            </div>
-            <div class="graphInput">
-                <label for="graphMonth">Month</label>
-                <input type="month" id="graphMonth">
-            </div>
-            <div class="graphInput">
-                <label for="graphYear">Year</label>
-                <input type="number" id="graphYear" min="2000" max="2100">
-            </div>
-        </div>
-    </div>
-
-    <div class="dashboardStrip">
-
-        <div class="budgetPanel">
-            <h3>💼 Monthly Budget</h3>
-            <div class="budgetRow">
-                <input type="number" id="monthlyBudgetInput" aria-label="Monthly expense budget" placeholder="Set budget" min="0" step="100">
-                <button onclick="saveMonthlyBudget()">Save</button>
-            </div>
-            <div class="budgetMeta">
-                <span id="budgetUsed">Used: ₹0</span>
-                <span id="budgetRemaining">Remaining: ₹0</span>
-            </div>
-            <div class="budgetProgress">
-                <div id="budgetProgressBar"></div>
-            </div>
-            <small id="budgetStatus" role="status" aria-live="polite">Budget status: not set</small>
-        </div>
-
-        <div class="insightPanel">
-            <h3>📈 Smart Insight</h3>
-            <p id="dashboardInsight">Your expense dashboard is ready.</p>
-        </div>
-
-    </div>
-
-    <div class="formCard">
-
-        <h3 id="currentUserName">
-            User : Not Selected
-        </h3>
-
-        <input
-            type="date"
-            id="date"
-            aria-label="Expense date"
-        />
-
-        <input
-            type="text"
-            id="item"
-            placeholder="Item"
-            aria-label="Expense item"
-        />
-
-        <input
-            type="number"
-            id="price"
-            placeholder="Price"
-            aria-label="Expense amount"
-        />
-
-        <div class="buttonRow">
-
-            <button onclick="addExpense()">
-                Add Expense
-            </button>
-
-            <button onclick="startVoice()">
-                🎤 Speak
-            </button>
-
-            <button onclick="downloadTextFile()">
-                📄 Convert To Text
-            </button>
-
-            <button onclick="splitExpense()">
-                💰 Split Share
-            </button>
-
-            <button onclick="startSplitVoice()">
-                🎤 Split Voice
-            </button>
-
-        </div>
-
-        <p id="voiceStatus"></p>
-
-    </div>
-
-    <section class="recurringPanel" aria-labelledby="recurringTitle">
-        <h2 id="recurringTitle">🔁 Recurring Expenses</h2>
-        <p>Save a weekly or monthly expense template. Due entries are only added after you review them.</p>
-        <div class="recurringSetup">
-            <label for="recurringCadence">Repeat</label>
-            <select id="recurringCadence">
-                <option value="monthly">Monthly</option>
-                <option value="weekly">Weekly</option>
-            </select>
-            <button type="button" onclick="addRecurringExpense()">Save item, amount &amp; date as recurring</button>
-        </div>
-        <small id="recurringStatus" role="status" aria-live="polite"></small>
-        <div id="recurringExpenseList" aria-live="polite"></div>
-    </section>
-
-    <div class="toolRow">
-        <div class="searchBox">
-            <input type="search" id="expenseSearch" placeholder="Search item, user, or date">
-        </div>
-
-        <div class="selectBox">
-            <select id="expenseSort">
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="highest">Highest amount</option>
-                <option value="lowest">Lowest amount</option>
-            </select>
-        </div>
-    </div>
-    
-    <!-- SUMMARY -->
-
-    <div class="summary">
-
-        <div class="summaryCard">
-
-            <h3>Today</h3>
-
-            <p id="dailyTotal">
-                ₹0
-            </p>
-
-            <small id="dailyInsight" class="insightText">
-                Peak: -
-            </small>
-
-        </div>
-
-        <div class="summaryCard">
-
-            <h3>Week</h3>
-
-            <p id="weeklyTotal">
-                ₹0
-            </p>
-
-            <small id="weeklyInsight" class="insightText">
-                Peak: -
-            </small>
-
-        </div>
-
-        <div class="summaryCard">
-
-            <h3>Month</h3>
-
-            <p id="monthlyTotal">
-                ₹0
-            </p>
-
-            <small id="monthlyInsight" class="insightText">
-                Peak: -
-            </small>
-
-        </div>
-
-        <div class="summaryCard">
-
-            <h3>Year</h3>
-
-            <p id="yearlyTotal">
-                ₹0
-            </p>
-
-            <small id="yearlyInsight" class="insightText">
-                Peak: -
-            </small>
-
-        </div>
-
-        <div class="summaryCard">
-
-            <h3>Overall</h3>
-
-            <p id="overallTotal">
-                ₹0
-            </p>
-
-            <small id="overallInsight" class="insightText">
-                Peak: -
-            </small>
-
-        </div>
-
-    </div>
-
-    <!-- SHOW EXPENSE FOR -->
-
-    <div class="expenseFilterCard">
-
-        <h2>
-            📂 Show Expenses For
-        </h2>
-
-        <div
-            class="expenseFilterRow"
-            onclick="showTodayExpenses()"
-        >
-            <span>Today</span>
-
-            <span>
-                Show today's expenses
-            </span>
-        </div>
-
-        <div
-            class="expenseFilterRow"
-            onclick="showMonthlyExpenses()"
-        >
-            <span>Month</span>
-
-            <span>
-                Show monthly expenses
-            </span>
-        </div>
-
-        <div
-            class="expenseFilterRow"
-            onclick="showYearlyExpenses()"
-        >
-            <span>Year</span>
-
-            <span>
-                Show yearly expenses
-            </span>
-        </div>
-
-        <div
-            class="expenseFilterRow"
-            onclick="showAllExpenses()"
-        >
-            <span>All</span>
-
-            <span>
-                Show all expenses
-            </span>
-        </div>
-
-        <div
-            class="expenseFilterRow"
-            onclick="getExpensesByDate()"
-        >
-            <span>
-                📅 Select Date
-            </span>
-
-            <span>
-                Show expenses for date
-            </span>
-        </div>
-
-    </div>
-
-    <!-- EXPENSE LIST -->
-
-    <div
-        class="expenseList"
-        id="expenseList"
-    ></div>
-
-    <!-- BAR CHART -->
-
-    <div class="chartContainer">
-
-        <div id="chartInsight" class="chartInsight">
-            Top category: -
-        </div>
-
-        <canvas
-            id="expenseChart"
-        ></canvas>
-
-    </div>
-
-    <!-- SPLIT SHARE PANEL -->
-
-    <div class="splitContainer">
-
-        <h2>
-            💰 Split Share History
-        </h2>
-
-        <div
-            id="splitExpenseList"
-            class="expenseList"
-        ></div>
-
-    </div>
-
-    <!-- PIE CHART -->
-
-    <div class="chartContainer">
-
-        <div id="pieInsight" class="chartInsight">
-            Top category: -
-        </div>
-
-        <canvas
-            id="expensePieChart"
-        ></canvas>
-
-    </div>
-
 </div>    
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="js/expense.js"></script>
-<script src="js/backup.js"></script>
 
 </body>
 

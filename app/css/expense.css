@@ -214,6 +214,91 @@ button{
 
 }
 
+.metricRing{
+    --metric-progress:0deg;
+    --ring-color:#facc15;
+    position:relative;
+    display:grid;
+    place-items:center;
+    width:116px;
+    height:116px;
+    margin:12px auto 6px;
+    border-radius:50%;
+    background:conic-gradient(
+        var(--ring-color) 0deg var(--metric-progress),
+        #64748b var(--metric-progress) 360deg
+    );
+}
+
+.metricRing::before{
+    position:absolute;
+    inset:8px;
+    border-radius:50%;
+    background:#1f2937;
+    content:"";
+}
+
+.metricRing span{
+    position:relative;
+    z-index:1;
+    max-width:92px;
+    color:#fff;
+    font-size:16px;
+    font-weight:700;
+    overflow-wrap:anywhere;
+}
+
+.summaryMetricRing{
+    --ring-color:#facc15;
+}
+
+.metricShare{
+    display:block;
+    min-height:1.2em;
+    margin-bottom:8px;
+    color:#cbd5e1;
+}
+
+.budgetMetric{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:8px;
+}
+
+.budgetMetric .budgetProgress{
+    flex:1;
+    margin:0;
+}
+
+.budgetMetricRing{
+    --ring-color:#38bdf8;
+    flex:0 0 76px;
+    width:76px;
+    height:76px;
+    margin:0;
+}
+
+.budgetMetricRing::before{
+    inset:6px;
+}
+
+.budgetMetricRing span{
+    font-size:13px;
+}
+
+body.light-theme .metricRing::before{
+    background:#fff;
+}
+
+body.light-theme .metricRing span{
+    color:#111827;
+}
+
+body.light-theme .metricShare{
+    color:#475569;
+}
+
 .dashboardStrip{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
@@ -523,6 +608,19 @@ input{
     position: relative;
 }
 
+.chartGrid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:16px;
+    margin:20px 0;
+}
+
+.chartGrid .chartContainer{
+    min-width:0;
+    height:340px;
+    margin-top:0;
+}
+
 .graphTypeRadios{
     display:flex;
     flex-wrap:wrap;
@@ -565,7 +663,7 @@ canvas{
 
 .splitContainer{
 
-    margin-top:30px;
+    margin-top:0;
 
     background:#1f2937;
 
@@ -756,7 +854,7 @@ canvas{
 
 .expenseFilterCard{
 
-    margin-top:30px;
+    margin-top:0;
 
     background:#111827;
 
@@ -767,6 +865,18 @@ canvas{
     box-shadow:
         0 0 25px
         rgba(0,0,0,0.3);
+}
+
+.topExpensePanels{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr);
+    align-items:start;
+    gap:18px;
+    margin:20px 0;
+}
+
+.topExpensePanels .expenseFilterCard{
+    min-width:0;
 }
 
 .expenseFilterCard h2{
@@ -1127,6 +1237,9 @@ select{
 /* mobile fix */
 
 @media(max-width:768px){
+    .topExpensePanels{
+        grid-template-columns:1fr;
+    }
 
     .splitContainer{
 
@@ -1375,6 +1488,13 @@ select{
     cursor:pointer;
 }
 
+.voiceActionGroup #voiceStatus{
+    min-height:1.4em;
+    margin:10px 0 0;
+    color:#bfdbfe;
+    text-align:center;
+}
+
 .graphFilterPanel{
     margin-top:0;
 }
@@ -1436,6 +1556,14 @@ select{
 }
 
 @media(max-width:768px){
+    .chartGrid{
+        grid-template-columns:1fr;
+    }
+
+    .chartGrid .chartContainer{
+        height:300px;
+    }
+
     .topActionGroup{
         padding:14px;
     }

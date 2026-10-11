@@ -441,6 +441,122 @@ function closeHealthEditModal() {
 
 }
 
+let healthVoiceEditInProgress = false;
+
+function speakHealthReminderPrompt(message){
+    if(!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined"){
+        return Promise.resolve();
+    }
+
+    return new Promise(resolve => {
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = "en-IN";
+        utterance.onend = resolve;
+        utterance.onerror = resolve;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    });
+}
+
+function listenForHealthReminderVoice(prompt){
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!Recognition){
+        return Promise.reject(new Error("Voice input is not supported in this browser."));
+    }
+
+    return new Promise((resolve, reject) => {
+        const recognition = new Recognition();
+        let receivedResult = false;
+        recognition.lang = "en-IN";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.onresult = event => {
+            const transcript = event.results?.[0]?.[0]?.transcript?.trim();
+            if(!transcript){
+                reject(new Error("No speech was recognized. Please try again."));
+                return;
+            }
+            receivedResult = true;
+            resolve(transcript);
+            recognition.stop();
+        };
+        recognition.onerror = event => {
+            reject(new Error(event.error === "not-allowed"
+                ? "Microphone access is blocked. Allow microphone access and try again."
+                : `Voice input failed: ${event.error || "unknown error"}.`));
+        };
+        recognition.onend = () => {
+            if(!receivedResult){
+                reject(new Error("No speech was recognized. Please try again."));
+            }
+        };
+
+        speakHealthReminderPrompt(prompt).then(() => {
+            try{
+                recognition.start();
+            } catch(error){
+                reject(new Error(`Unable to start voice input: ${error.message}`));
+            }
+        });
+    });
+}
+
+function parseHealthReminderTime(transcript){
+    const value = transcript.toLowerCase().replace(/\./g, "").trim();
+    const match = value.match(/\b(\d{1,2})(?::|\s+)(\d{2})\s*(am|pm)?\b|\b(\d{1,2})\s*(am|pm)\b/);
+    if(!match){
+        throw new Error("I couldn't find a valid time. Say a time such as 5:30 PM or 17:30.");
+    }
+
+    let hours = Number(match[1] || match[4]);
+    const minutes = Number(match[2] || 0);
+    const meridiem = match[3] || match[5];
+    if(minutes > 59 || hours > (meridiem ? 12 : 23) || hours < (meridiem ? 1 : 0)){
+        throw new Error("That time is not valid. Please say it again, for example 5:30 PM.");
+    }
+
+    if(meridiem){
+        hours = hours % 12 + (meridiem === "pm" ? 12 : 0);
+    }
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+async function startHealthReminderVoiceEdit(){
+    const timeInput = document.getElementById("healthEditTime");
+    const messageInput = document.getElementById("healthEditMessage");
+    const status = document.getElementById("healthVoiceEditStatus");
+    const button = document.querySelector(".healthVoiceEditBtn");
+    if(!timeInput || !messageInput || !status || !button){
+        console.error("Health reminder voice edit controls are missing.");
+        return;
+    }
+    if(healthVoiceEditInProgress) return;
+
+    healthVoiceEditInProgress = true;
+    button.disabled = true;
+    status.textContent = "Listening for the new reminder time…";
+    try{
+        const spokenTime = await listenForHealthReminderVoice(
+            "Say the new reminder time, for example, 5:30 PM."
+        );
+        const time = parseHealthReminderTime(spokenTime);
+        status.textContent = "Time captured. Listening for the new reminder message…";
+        const message = await listenForHealthReminderVoice(
+            "Now say the new reminder message."
+        );
+
+        timeInput.value = time;
+        messageInput.value = message;
+        status.textContent = `Voice edits ready to review: ${time}. Select Save Changes to apply them.`;
+    } catch(error){
+        console.error("Unable to edit health reminder by voice:", error);
+        status.textContent = error.message || "Voice editing failed. Please try again.";
+    } finally{
+        healthVoiceEditInProgress = false;
+        button.disabled = false;
+    }
+}
+
 
 // =========================================================
 // SAVE HEALTH REMINDER
