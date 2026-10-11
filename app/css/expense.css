@@ -1647,3 +1647,49 @@ select{
         min-width:700px;
     }
 }
+
+
+/* ================= PAYMENT REMINDERS (moved from main portal) ================= */
+
+.container .payment-reminders{
+    width:100%;
+    max-width:100%;
+    margin:20px 0;
+}
+
+.payment-reminders button{
+    flex:0 0 auto;
+}
+
+.payment-reminder-fields input,
+.payment-reminder-fields select,
+.payment-reminder-fields textarea{
+    margin-bottom:0;
+}
+
+body.light-theme .payment-reminders{
+    background:#fff;
+    color:#111827;
+    box-shadow:0 10px 30px rgba(15,23,42,.08);
+}
+
+body.light-theme .payment-reminders h2,
+body.light-theme .payment-reminder-fields label{
+    color:#111827;
+}
+
+body.light-theme .payment-reminders p,
+body.light-theme .payment-reminder-details span{
+    color:#475569;
+}
+
+body.light-theme .payment-reminder-fields input,
+body.light-theme .payment-reminder-fields select,
+body.light-theme .payment-reminder-fields textarea{
+    background:#f8fafc;
+    color:#111827;
+}
+
+body.light-theme .payment-reminder-item{
+    background:#f8fafc;
+}

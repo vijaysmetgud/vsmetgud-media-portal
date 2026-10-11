@@ -9,7 +9,6 @@
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/payment-reminders.css">
 
 <style>
 
@@ -472,12 +471,16 @@ header {
 /* ================= CHATBOT ================= */
 
 .chatbot {
-    position:relative;
-    inset:auto;
-    width:min(450px, calc(100% - 32px));
+    position:fixed;
+    top:auto;
+    left:auto;
+    right:20px;
+    bottom:20px;
+    z-index:10001;
+    width:min(380px, calc(100vw - 32px));
     max-width:100%;
     box-sizing:border-box;
-    margin:24px auto;
+    margin:0;
     background:#1e293b;
     border-radius:15px;
     box-shadow:0 10px 40px rgba(0,0,0,0.7);
@@ -712,16 +715,27 @@ header {
 }
 
 .chat-toggle {
-    position:relative;
-    inset:auto;
+    position:fixed;
+    top:auto;
+    left:auto;
+    right:20px;
+    bottom:20px;
+    z-index:10001;
     width:max-content;
-    margin:0 auto 20px;
+    margin:0;
     background:#2563eb;
     padding:12px 18px;
     border-radius:50px;
     cursor:pointer;
     display:none;
 }
+@media (max-width: 768px) {
+    .chat-toggle {
+        right:16px;
+        bottom:160px;
+    }
+}
+
 #reminderPopup{
 
     display:none;
@@ -963,7 +977,6 @@ body.light .metric h3 {
     font-weight: bold;
     color: #22c55e;
 }
-
 </style>
 
 </head>
@@ -1610,49 +1623,7 @@ PYTHON PRACTICE
     </button>
 </div>
 
-<section id="paymentReminders" class="payment-reminders" aria-labelledby="paymentRemindersTitle">
-    <div class="payment-reminders-heading">
-        <div>
-            <h2 id="paymentRemindersTitle">🔔 Payment Reminders</h2>
-            <p>Name any payment—rent, hotel, transport, bills, subscriptions, renewals, or anything else.</p>
-        </div>
-        <button type="button" id="paymentReminderNotificationButton" onclick="enablePaymentReminderNotifications()">
-            🔔 Enable Due Notifications
-        </button>
-    </div>
 
-    <div class="payment-reminder-form">
-        <div class="payment-reminder-fields">
-            <label for="paymentReminderName">Payment name
-                <input type="text" id="paymentReminderName" maxlength="100" placeholder="Hotel bill, transportation, rent...">
-            </label>
-            <label for="paymentReminderAmount">Amount (optional)
-                <input type="number" id="paymentReminderAmount" min="0" step="0.01" placeholder="Amount">
-            </label>
-            <label for="paymentReminderDue">Next due date (DD-MM-YYYY)
-                <input type="text" id="paymentReminderDue" inputmode="numeric" placeholder="DD-MM-YYYY" maxlength="10" autocomplete="off">
-            </label>
-            <label for="paymentReminderFrequency">Repeat
-                <select id="paymentReminderFrequency">
-                    <option value="monthly">Monthly</option>
-                    <option value="quarterly">Quarterly</option>
-                    <option value="yearly">Yearly</option>
-                    <option value="once">One time</option>
-                </select>
-            </label>
-            <label class="payment-reminder-notes" for="paymentReminderNotes">Notes (optional)
-                <textarea id="paymentReminderNotes" rows="2" maxlength="500" placeholder="Account details or anything you need to remember"></textarea>
-            </label>
-        </div>
-        <div class="payment-reminder-actions">
-            <button type="button" id="savePaymentReminderButton" onclick="savePortalPaymentReminder()">Add Reminder</button>
-            <button type="button" class="payment-reminder-secondary" onclick="voiceFillPaymentReminder()">🎙️ Fill by Voice</button>
-            <button type="button" class="payment-reminder-secondary" id="cancelPaymentReminderEdit" onclick="cancelPortalPaymentReminderEdit()" hidden>Cancel Edit</button>
-        </div>
-        <small id="paymentReminderStatus" role="status" aria-live="polite"></small>
-    </div>
-    <div id="paymentReminderList" aria-live="polite"></div>
-</section>
 
 <script>
 function openUserDashboard() {

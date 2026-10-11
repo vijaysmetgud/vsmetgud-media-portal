@@ -2,9 +2,18 @@
     let editingReminderId = null;
 
     const element = id => document.getElementById(id);
+    const setStatus = text => {
+        const status = element("paymentReminderStatus");
+        if(status) status.textContent = text;
+    };
 
     function getReminderOwner(){
-        let user = currentUser;
+        let user = null;
+        try{
+            if(typeof currentUser === "object" && currentUser) user = currentUser;
+        } catch(error){
+            user = null;
+        }
         if(!user){
             try{
                 user = JSON.parse(localStorage.getItem("portalUser") || "null");
@@ -38,7 +47,7 @@
             return Array.isArray(reminders) ? reminders : [];
         } catch(error){
             console.error("Unable to load payment reminders:", error);
-            element("paymentReminderStatus").textContent = "Saved reminders could not be read from this browser.";
+            setStatus("Saved reminders could not be read from this browser.");
             return [];
         }
     }
@@ -278,7 +287,7 @@
                 localStorage.setItem(notificationKey, "true");
             } catch(error){
                 console.error("Unable to show payment reminder notification:", error);
-                element("paymentReminderStatus").textContent = "Could not show a browser notification. Check notification permissions.";
+                setStatus("Could not show a browser notification. Check notification permissions.");
             }
         });
     }
@@ -295,7 +304,7 @@
                 status.textContent = "Notifications were not enabled. Due items will still appear in this list.";
                 return;
             }
-            status.textContent = "Due payment notifications enabled while the portal is open.";
+            status.textContent = "Due payment notifications enabled while the portal or this page is open.";
             checkDuePaymentNotifications();
         } catch(error){
             console.error("Unable to request payment reminder notification permission:", error);
@@ -371,12 +380,14 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         const dueInput = element("paymentReminderDue");
-        dueInput.addEventListener("input", () => {
-            const digits = dueInput.value.replace(/\D/g, "");
-            if(digits.length === 8){
-                dueInput.value = `${digits.slice(0, 2)}-${digits.slice(2, 4)}-${digits.slice(4)}`;
-            }
-        });
+        if(dueInput){
+            dueInput.addEventListener("input", () => {
+                const digits = dueInput.value.replace(/\D/g, "");
+                if(digits.length === 8){
+                    dueInput.value = `${digits.slice(0, 2)}-${digits.slice(2, 4)}-${digits.slice(4)}`;
+                }
+            });
+        }
 
         const main = element("mainContent");
         if(main){
@@ -386,6 +397,7 @@
         }
 
         renderPaymentReminders();
+        checkDuePaymentNotifications();
         window.setInterval(checkDuePaymentNotifications, 60000);
     });
 })();

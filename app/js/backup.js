@@ -20,6 +20,7 @@
     const includedPrefixes = [
         "expenses_",
         "expenseRecurring_",
+        "portalPaymentReminders_",
         "mediaPortal"
     ];
 

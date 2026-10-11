@@ -17,6 +17,8 @@
     href="css/expense.css"
 />
 
+<link rel="stylesheet" href="css/payment-reminders.css">
+
 </head>
 
 <body>
@@ -158,6 +160,50 @@
         <div id="recurringExpenseList" aria-live="polite"></div>
     </section>
 
+    <section id="paymentReminders" class="payment-reminders" aria-labelledby="paymentRemindersTitle">
+    <div class="payment-reminders-heading">
+        <div>
+            <h2 id="paymentRemindersTitle">🔔 Payment Reminders</h2>
+            <p>Name any payment—rent, hotel, transport, bills, subscriptions, renewals, or anything else.</p>
+        </div>
+        <button type="button" id="paymentReminderNotificationButton" onclick="enablePaymentReminderNotifications()">
+            🔔 Enable Due Notifications
+        </button>
+    </div>
+
+    <div class="payment-reminder-form">
+        <div class="payment-reminder-fields">
+            <label for="paymentReminderName">Payment name
+                <input type="text" id="paymentReminderName" maxlength="100" placeholder="Hotel bill, transportation, rent...">
+            </label>
+            <label for="paymentReminderAmount">Amount (optional)
+                <input type="number" id="paymentReminderAmount" min="0" step="0.01" placeholder="Amount">
+            </label>
+            <label for="paymentReminderDue">Next due date (DD-MM-YYYY)
+                <input type="text" id="paymentReminderDue" inputmode="numeric" placeholder="DD-MM-YYYY" maxlength="10" autocomplete="off">
+            </label>
+            <label for="paymentReminderFrequency">Repeat
+                <select id="paymentReminderFrequency">
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="once">One time</option>
+                </select>
+            </label>
+            <label class="payment-reminder-notes" for="paymentReminderNotes">Notes (optional)
+                <textarea id="paymentReminderNotes" rows="2" maxlength="500" placeholder="Account details or anything you need to remember"></textarea>
+            </label>
+        </div>
+        <div class="payment-reminder-actions">
+            <button type="button" id="savePaymentReminderButton" onclick="savePortalPaymentReminder()">Add Reminder</button>
+            <button type="button" class="payment-reminder-secondary" onclick="voiceFillPaymentReminder()">🎙️ Fill by Voice</button>
+            <button type="button" class="payment-reminder-secondary" id="cancelPaymentReminderEdit" onclick="cancelPortalPaymentReminderEdit()" hidden>Cancel Edit</button>
+        </div>
+        <small id="paymentReminderStatus" role="status" aria-live="polite"></small>
+    </div>
+    <div id="paymentReminderList" aria-live="polite"></div>
+</section>
+
     <div class="toolRow">
         <div class="searchBox"><input type="search" id="expenseSearch" placeholder="Search item, user, or date"></div>
         <div class="selectBox">
@@ -278,6 +324,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="js/expense.js"></script>
+
+<script src="js/payment-reminders.js"></script>
 
 </body>
 
