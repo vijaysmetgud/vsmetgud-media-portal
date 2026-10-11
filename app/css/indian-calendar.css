@@ -1,0 +1,166 @@
+/* =========================================================
+   INDIAN CALENDAR
+   ========================================================= */
+
+#indianCalendarBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cal-toggle-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #e2e8f0;
+    background: transparent;
+    transition: 0.3s;
+}
+
+#indianCalendarBtn.cal-on {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    box-shadow: 0 0 14px rgba(34, 197, 94, 0.6);
+}
+
+#indianCalendarBtn.cal-on .cal-toggle-dot {
+    background: #fff;
+    border-color: #fff;
+}
+
+#indianCalendarPanel {
+    box-sizing: border-box;
+    width: min(1000px, calc(100% - 40px));
+    margin: 0 auto 24px;
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    color: #e2e8f0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+#indianCalendarPanel[hidden] { display: none; }
+
+.cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.cal-title h3 { margin: 0; font-size: 20px; color: #f8fafc; }
+.cal-title small { color: #94a3b8; }
+.cal-title { text-align: right; }
+
+.cal-nav { display: flex; gap: 8px; }
+
+.cal-nav button,
+.cal-form button,
+.cal-rlist button {
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border-radius: 20px;
+    padding: 7px 16px;
+    font-size: 14px;
+}
+
+.cal-body { display: flex; gap: 16px; align-items: flex-start; }
+.cal-main { flex: 1 1 auto; min-width: 0; }
+.cal-side { flex: 0 0 290px; box-sizing: border-box; padding: 12px; border-radius: 14px; background: rgba(30, 41, 59, 0.7); }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+
+.cal-dow { text-align: center; font-weight: 700; font-size: 13px; padding: 4px 0; color: #93c5fd; }
+.cal-dow.sun { color: #f87171; }
+
+.cal-cell {
+    position: relative;
+    min-height: 66px;
+    padding: 5px 6px;
+    text-align: left;
+    color: #e2e8f0;
+    background: rgba(30, 41, 59, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 10px;
+    cursor: pointer;
+    font: inherit;
+    overflow: hidden;
+    transition: 0.2s;
+}
+
+.cal-cell.empty { background: transparent; border: none; cursor: default; }
+.cal-cell:not(.empty):hover { border-color: #60a5fa; transform: scale(1.03); }
+.cal-cell.sun .cal-num { color: #f87171; }
+.cal-cell.holiday { background: rgba(245, 158, 11, 0.18); border-color: rgba(245, 158, 11, 0.55); }
+.cal-cell.national { background: rgba(34, 197, 94, 0.2); border-color: rgba(34, 197, 94, 0.6); }
+.cal-cell.today { box-shadow: 0 0 0 2px #38bdf8 inset; }
+.cal-cell.selected { outline: 2px solid #fff; outline-offset: -2px; }
+
+.cal-num { font-weight: 700; font-size: 15px; }
+.cal-saka { position: absolute; top: 5px; right: 6px; font-size: 10px; color: #94a3b8; }
+.cal-hname { display: block; margin-top: 3px; font-size: 10.5px; line-height: 1.2; color: #fde68a; }
+.cal-cell.national .cal-hname { color: #bbf7d0; }
+.cal-rdot { position: absolute; bottom: 3px; right: 6px; font-size: 10px; color: #f472b6; }
+
+.cal-month-list { margin-top: 14px; }
+.cal-month-list h4, .cal-side h4, .cal-side h5 { margin: 0 0 8px; color: #f8fafc; }
+.cal-side h5 { margin-top: 14px; font-size: 14px; }
+.cal-month-list ul, .cal-side ul { list-style: none; margin: 0; padding: 0; }
+.cal-month-list li, .cal-up li { padding: 4px 0; font-size: 14px; border-bottom: 1px solid rgba(148, 163, 184, 0.12); }
+.cal-month-list b, .cal-up b { color: #7dd3fc; margin-right: 6px; }
+
+.cal-saka-full { margin: 0 0 8px; color: #cbd5e1; font-size: 14px; }
+.cal-hlist li { padding: 3px 0; font-weight: 600; color: #fde68a; }
+.cal-hlist li.national { color: #bbf7d0; }
+.cal-rlist li { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 4px 0; font-size: 14px; }
+.cal-rlist button { padding: 3px 8px; background: rgba(239, 68, 68, 0.8); }
+
+.cal-muted { margin: 0; font-size: 13px; color: #94a3b8; }
+.cal-note { margin: 12px 0 0; font-size: 11.5px; color: #94a3b8; line-height: 1.4; }
+.cal-month-list em, .cal-hlist em, .cal-rlist em { color: #94a3b8; font-weight: 400; font-size: 12px; }
+
+.cal-form { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.cal-form input[type="text"], .cal-form input[type="time"] {
+    padding: 8px 10px; border-radius: 8px; border: none; font-size: 14px;
+}
+.cal-form label { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+
+.cal-toast {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    z-index: 1000000;
+    max-width: min(360px, calc(100vw - 32px));
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 40px 14px 16px;
+    border-radius: 14px;
+    color: #fff;
+    background: linear-gradient(135deg, #22c55e, #10b981);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+}
+.cal-toast button { position: absolute; top: 8px; right: 10px; border: none; background: transparent; color: #fff; cursor: pointer; font-size: 16px; }
+
+@media (max-width: 768px) {
+    #indianCalendarPanel { width: calc(100% - 20px); padding: 10px; }
+    .cal-body { flex-direction: column; }
+    .cal-side { flex: 1 1 auto; width: 100%; }
+    .cal-cell { min-height: 46px; padding: 3px; }
+    .cal-hname { display: none; }
+    .cal-saka { font-size: 9px; top: 3px; right: 3px; }
+    .cal-cell.holiday::after, .cal-cell.national::after {
+        content: ""; position: absolute; bottom: 4px; left: 5px; width: 6px; height: 6px; border-radius: 50%; background: #fbbf24;
+    }
+}
+
+body.light #indianCalendarPanel { background: rgba(255, 255, 255, 0.92); color: #0f172a; }
+body.light .cal-title h3, body.light .cal-month-list h4, body.light .cal-side h4, body.light .cal-side h5 { color: #0f172a; }
+body.light .cal-cell { background: #f1f5f9; color: #0f172a; }
+body.light .cal-side { background: #e2e8f0; }
+body.light .cal-hname, body.light .cal-hlist li { color: #b45309; }
+body.light .cal-saka-full { color: #334155; }

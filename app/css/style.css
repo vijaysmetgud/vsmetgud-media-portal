@@ -121,7 +121,7 @@ nav button:hover {
     position: relative;
     overflow: hidden;
 
-    padding: 20px 40px;
+    padding: 20px 40px 8px;
     border-radius: 20px;
 
     background: rgba(15, 23, 42, 0.92);
@@ -164,10 +164,10 @@ nav button:hover {
     z-index: 99999;
 
     font-family: "Segoe UI", Arial, sans-serif;
-    font-size: 90px;
+    font-size: 72px;
     font-weight: 800;
 
-    letter-spacing: 10px;
+    letter-spacing: 8px;
 
     margin: 0;
 
@@ -193,6 +193,7 @@ nav button:hover {
 
 .welcome-banner p {
     margin-top: 14px;
+    margin-bottom: 0;
 
     font-size: 24px;
     font-weight: 600;
@@ -501,7 +502,7 @@ nav:hover,
 
     text-align: left;
 
-    min-width: 160px;
+    min-width: 120px;
 }
 
 .time-row,
@@ -511,11 +512,11 @@ nav:hover,
     justify-content: center;
     align-items: center;
 
-    gap: 10px;
+    gap: 8px;
 
     width: 100%;
 
-    margin: 10px 0;
+    margin: 6px 0;
 }
 
 
@@ -525,7 +526,7 @@ nav:hover,
 
 #clock {
     font-family: "Segoe UI", Arial, sans-serif;
-    font-size: 32px;
+    font-size: 22px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     color: #e2e8f0 !important;
@@ -542,7 +543,7 @@ nav:hover,
 
 #date {
     font-family: "Segoe UI", Arial, sans-serif;
-    font-size: 32px;
+    font-size: 22px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0;
@@ -561,7 +562,7 @@ nav:hover,
 .clockLabel,
 .dateLabel {
     font-family: "Segoe UI", Arial, sans-serif;
-    font-size: 32px;
+    font-size: 22px;
     font-weight: 700;
     color: #e2e8f0;
     text-shadow:
@@ -591,9 +592,9 @@ body.light .dateLabel {
 
 .analog-clock {
     position: relative;
-    flex: 0 0 144px;
-    width: 144px;
-    height: 144px;
+    flex: 0 0 176px;
+    width: 176px;
+    height: 176px;
     margin-left: auto;
     border: 3px solid #93c5fd;
     border-radius: 50%;
@@ -610,7 +611,7 @@ body.light .dateLabel {
     position: absolute;
     z-index: 1;
     color: #e2e8f0;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 800;
     line-height: 1;
     text-shadow: 0 1px 3px #020617;
@@ -696,14 +697,14 @@ body.light .analog-clock-number {
 
 @media (max-width: 768px) {
     .analog-clock {
-        flex-basis: 120px;
-        width: 120px;
-        height: 120px;
+        flex-basis: 150px;
+        width: 150px;
+        height: 150px;
         margin: 8px auto 0;
     }
 
     .analog-clock-number {
-        font-size: 12px;
+        font-size: 13px;
     }
 }
 
@@ -798,24 +799,28 @@ body.light .analog-clock-number {
 
 #expenseTrackerBtn,
 #theatrePlayerBtn,
+#indianCalendarBtn,
+#editHealthReminderBtn,
 #dashboardBtn {
-    width: 220px;
-    padding: 12px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 14px;
+    width: auto;
+    padding: 12px 22px;
+    border: none;
+    border-radius: 30px;
     background: linear-gradient(135deg, #2563eb, #1d4ed8);
     color: #fff;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 400;
     cursor: pointer;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: 0.3s;
 }
 
 #expenseTrackerBtn:hover,
 #theatrePlayerBtn:hover,
+#indianCalendarBtn:hover,
+#editHealthReminderBtn:hover,
 #dashboardBtn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35);
+    transform: scale(1.08);
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.8);
 }
 
 #adminQrDisplay[hidden] {
@@ -1381,20 +1386,20 @@ audio {
     }
 
     #clock {
-        font-size: 24px;
+        font-size: 18px;
     }
 
     #date {
-        font-size: 24px;
+        font-size: 18px;
     }
 
     .clockLabel,
     .dateLabel {
-        font-size: 24px;
+        font-size: 18px;
     }
 
     .welcome-banner h1 {
-        font-size: 48px !important;
+        font-size: 40px !important;
     }
 
     .welcome-banner p {
@@ -1417,30 +1422,29 @@ audio {
 
     #expenseTrackerBtn,
     #theatrePlayerBtn,
+    #indianCalendarBtn,
+    #editHealthReminderBtn,
     #dashboardBtn {
-        width: 100%;
+        width: auto;
         min-width: 0;
-        padding: 12px 10px;
-        font-size: 12px;
+        padding: 12px 22px;
+        font-size: 14px;
         letter-spacing: 0;
-        border-radius: 12px;
+        border-radius: 30px;
     }
 
     .portalQuickApps {
         width: min(100% - 24px, 520px);
         margin: 12px auto 18px;
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        align-items: start;
+        display: flex !important;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
         gap: 10px;
     }
 
     .portalQuickApps-left {
         display: contents;
-    }
-
-    #dashboardBtn {
-        grid-column: 1 / -1;
     }
 }
 
@@ -1481,4 +1485,81 @@ audio {
 
         text-align: center;
     }
+}
+
+/* =========================================================
+   MEDIA ACCESS PAYWALL (compact, never overlaps TIME / DATE)
+   ========================================================= */
+
+#mediaPaywallPanel.media-paywall-panel {
+    box-sizing: border-box;
+    width: min(600px, calc(100% - 360px));
+    max-width: 600px !important;
+    margin: 8px auto 8px max(340px, calc(50% - 300px)) !important;
+    padding: 8px 12px !important;
+    border-radius: 12px !important;
+    font-size: 12px;
+}
+
+#mediaPaywallPanel h3 {
+    font-size: 14px;
+}
+
+#mediaPaywallPanel button {
+    padding: 5px 10px !important;
+    font-size: 12px;
+    border-radius: 8px !important;
+}
+
+#mediaPaywallPanel label {
+    font-size: 12px;
+}
+
+#mediaPaywallPanel > div {
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+}
+
+#mediaPaywallStatus {
+    margin-top: 4px !important;
+    min-height: 0 !important;
+    font-size: 12px;
+}
+
+@media (max-width: 768px) {
+    /* TIME / DATE flows below the paywall instead of floating over it */
+    #clockContainer {
+        position: relative;
+        top: auto;
+        left: auto;
+        margin: 8px auto;
+        padding-left: 0;
+        align-items: center;
+        text-align: center;
+    }
+
+    #mediaPaywallPanel.media-paywall-panel {
+        width: auto;
+        margin: 8px 10px !important;
+    }
+}
+
+/* Edit Health Reminder now lives in the quick-apps row: match the other buttons */
+#editHealthReminderBtn {
+    min-width: 0;
+    box-shadow: none;
+}
+
+#editHealthReminderBtn:hover {
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.8);
+}
+
+/* keep each quick-app button on one line */
+#expenseTrackerBtn,
+#theatrePlayerBtn,
+#editHealthReminderBtn,
+#indianCalendarBtn,
+#dashboardBtn {
+    white-space: nowrap;
+    flex-shrink: 0;
 }

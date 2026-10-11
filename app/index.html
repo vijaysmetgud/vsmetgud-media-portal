@@ -9,6 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/indian-calendar.css">
 
 <style>
 
@@ -878,7 +879,7 @@ body::after {
 
 body #metricsWindow{
 
-    position: fixed;
+    position: absolute;
 
     display: flex;
 
@@ -1076,7 +1077,7 @@ body.light .metric h3 {
         <div id="adminUploadStatus" style="margin-top:12px; color:#cbd5e1; min-height:22px;"></div>
     </div>
 
-    <div id="mediaPaywallPanel" style="display:none; margin:20px auto; max-width:1000px; background:rgba(15,23,42,0.88); border:1px solid rgba(148,163,184,0.25); border-radius:18px; padding:18px;">
+    <div id="mediaPaywallPanel" class="media-paywall-panel" style="display:none; margin:20px auto; max-width:1000px; background:rgba(15,23,42,0.88); border:1px solid rgba(148,163,184,0.25); border-radius:18px; padding:18px;">
         <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px;">
             <h3 style="margin:0; color:#f8fafc;">Media Access Paywall</h3>
             <button
@@ -1480,13 +1481,6 @@ function startReminderChecker(){
                 onclick="window.open('/world-time.html', '_blank')">
                 🌍 World Time Zone
             </button>
-
-            <button
-                type="button"
-                class="welcome-side-btn"
-                onclick="window.open('/health-reminder.html?edit=1', '_blank')">
-                ✏️ Edit Health Reminder
-            </button>
         </div>
 
         <header class="welcome-banner">
@@ -1596,7 +1590,7 @@ PYTHON PRACTICE
 <button
     class="nav-btn"
     onclick="loadCategory('SCREENSHOTS-DEVOPS-INFOGRAPHICS', this)">
-    SCREENSHOTS-DEVOPS-INFOGRAPHICS
+    DEVOPS-INFOGRAPHICS
 </button>
 
 </div>    
@@ -1614,6 +1608,22 @@ PYTHON PRACTICE
             onclick="openTheatrePlayer()">
             🎬 Theatre Media Player
         </button>
+
+        <button
+            id="editHealthReminderBtn"
+            type="button"
+            class="welcome-side-btn"
+            onclick="window.open('/health-reminder.html?edit=1', '_blank')">
+            ✏️ Edit Health Reminder
+        </button>
+
+        <button
+            id="indianCalendarBtn"
+            type="button"
+            aria-pressed="false"
+            aria-controls="indianCalendarPanel">
+            <span class="cal-toggle-dot"></span> 📅 Indian Calendar
+        </button>
     </div>
 
     <button
@@ -1622,6 +1632,8 @@ PYTHON PRACTICE
         📊 My Dashboard
     </button>
 </div>
+
+<div id="indianCalendarPanel" hidden></div>
 
 
 
@@ -6248,6 +6260,31 @@ const metricsPane =
 
 let isDragging = false;
 
+let userMovedMetrics = false;
+
+/* Keep the CPU / Memory panel just below the Expense Tracker row */
+function placeMetricsPane() {
+
+    if (userMovedMetrics) return;
+
+    const quickApps = document.querySelector(".portalQuickApps");
+
+    if (!quickApps) return;
+
+    const rect = quickApps.getBoundingClientRect();
+
+    metricsPane.style.top =
+        Math.round(rect.bottom + window.scrollY + 16) + "px";
+}
+
+window.addEventListener("load", () => {
+    placeMetricsPane();
+    setTimeout(placeMetricsPane, 800);
+    setTimeout(placeMetricsPane, 2500);
+});
+
+window.addEventListener("resize", placeMetricsPane);
+
 let offsetX = 0;
 
 let offsetY = 0;
@@ -6256,11 +6293,13 @@ metricsPane.addEventListener("mousedown", (e)=>{
 
     isDragging = true;
 
+    userMovedMetrics = true;
+
     offsetX =
-        e.clientX - metricsPane.offsetLeft;
+        e.pageX - metricsPane.offsetLeft;
 
     offsetY =
-        e.clientY - metricsPane.offsetTop;
+        e.pageY - metricsPane.offsetTop;
 
 });
 
@@ -6269,10 +6308,10 @@ document.addEventListener("mousemove", (e)=>{
     if(!isDragging) return;
 
     metricsPane.style.left =
-        (e.clientX - offsetX) + "px";
+        (e.pageX - offsetX) + "px";
 
     metricsPane.style.top =
-        (e.clientY - offsetY) + "px";
+        (e.pageY - offsetY) + "px";
 
 });
 
@@ -6284,11 +6323,13 @@ metricsPane.addEventListener("touchstart", (e) => {
 
     const touch = e.touches[0];
 
+    userMovedMetrics = true;
+
     offsetX =
-        touch.clientX - metricsPane.offsetLeft;
+        touch.pageX - metricsPane.offsetLeft;
 
     offsetY =
-        touch.clientY - metricsPane.offsetTop;
+        touch.pageY - metricsPane.offsetTop;
 
 }, { passive: false });
 
@@ -6299,10 +6340,10 @@ document.addEventListener("touchmove", (e) => {
     const touch = e.touches[0];
 
     metricsPane.style.left =
-        (touch.clientX - offsetX) + "px";
+        (touch.pageX - offsetX) + "px";
 
     metricsPane.style.top =
-        (touch.clientY - offsetY) + "px";
+        (touch.pageY - offsetY) + "px";
 
     e.preventDefault();
 
@@ -7182,5 +7223,6 @@ function closeAutomaticHealthReminder() {
 
 <script src="js/payment-reminders.js"></script>
 <script src="js/backup.js"></script>
+<script src="js/indian-calendar.js" defer></script>
 </body>
 </html>
