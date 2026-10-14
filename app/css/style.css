@@ -592,9 +592,9 @@ body.light .dateLabel {
 
 .analog-clock {
     position: relative;
-    flex: 0 0 176px;
-    width: 176px;
-    height: 176px;
+    flex: 0 0 178px;
+    width: 178px;
+    height: 178px;
     margin-left: auto;
     border: 3px solid #93c5fd;
     border-radius: 50%;
@@ -653,13 +653,13 @@ body.light .dateLabel {
 .analog-clock-hour {
     width: 4px;
     height: 25%;
-    background: #f8fafc;
+    background: #fbfcf8;
 }
 
 .analog-clock-minute {
     width: 3px;
     height: 36%;
-    background: #60a5fa;
+    background: #fbfcf8;
 }
 
 .analog-clock-second {
