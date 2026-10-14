@@ -18,6 +18,33 @@ const MEDIA_STORE_NAME = "tracks";
 const RECENT_ASSISTANT_TRACKS_KEY = "theatreRecentAssistantTracks";
 const MAX_RECENT_ASSISTANT_TRACKS = 12;
 
+const VIDEO_EXT_PATTERN = /\.(mp4|m4v|mkv|webm|mov|avi)$/i;
+// Same-origin by default. Set window.THEATRE_PORTAL_ORIGIN (or ?portal=https://...)
+// only if Theatre is hosted on a different origin than the portal server.
+// When Theatre runs on theatre.<domain>, the portal (media-index + /stream)
+// lives on <domain>, so that is used automatically.
+const PORTAL_ORIGIN = (
+  new URLSearchParams(window.location.search).get("portal") ||
+  window.THEATRE_PORTAL_ORIGIN ||
+  (/^theatre\./i.test(window.location.hostname)
+    ? `${window.location.protocol}//${window.location.hostname.replace(/^theatre\./i, "")}`
+    : "")
+).replace(/\/$/, "");
+
+function makeServerTrack(relativePath) {
+  const parts = relativePath.split("/");
+  const name = parts[parts.length - 1];
+  return {
+    name,
+    type: VIDEO_EXT_PATTERN.test(name) ? "video/mp4" : "audio/mpeg",
+    size: 0,
+    lastModified: 0,
+    mediaId: `server:${relativePath}`,
+    folder: parts.length > 1 ? parts[0] : "",
+    remoteUrl: `${PORTAL_ORIGIN}/stream/${parts.map(encodeURIComponent).join("/")}`
+  };
+}
+
 const getTrackId = (file) => file.mediaId ||
   `${file.name}:${file.size}:${file.lastModified}`;
 
@@ -147,10 +174,17 @@ function TheatrePlayer() {
   const [mediaLibrary, setMediaLibrary] = useState([]);
   const [libraryLoaded, setLibraryLoaded] = useState(false);
   const [recentAssistantTracks, setRecentAssistantTracks] = useState(readRecentAssistantTracks);
+  const [libraryStatus, setLibraryStatus] = useState("");
   const [favorites, setFavorites] = useState(() => readStoredArray("theatreFavorites"));
   const [savedPlaylists, setSavedPlaylists] = useState(() => readStoredArray("theatreSavedPlaylists"));
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [libraryStatus, setLibraryStatus] = useState("");
+  const [playlistName, setPlaylistName] = useState("");
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
+  const settingsImportRef = useRef(null);
+  const [serverTracks, setServerTracks] = useState([]);
+  const [serverFolder, setServerFolder] = useState("");
+  const playlistRef = useRef([]);
+  const errorSkipRef = useRef(0);
   const [persistMedia, setPersistMedia] = useState(() => {
     try {
       return localStorage.getItem("theatrePersistMedia") === "true";
@@ -159,7 +193,6 @@ function TheatrePlayer() {
       return false;
     }
   });
-  const settingsImportRef = useRef(null);
 
   const [currentIndex,
     setCurrentIndex] =
@@ -221,9 +254,10 @@ function TheatrePlayer() {
 
   const currentFile =
     playlist[currentIndex] || null;
+  playlistRef.current = playlist;
 
   const availableAssistantTracks = new Map(
-    [...mediaLibrary, ...playlist].map(file => [getTrackId(file), file])
+    [...serverTracks, ...mediaLibrary, ...playlist].map(file => [getTrackId(file), file])
   );
 
   const recordAssistantTrack = (file) => {
@@ -259,6 +293,18 @@ function TheatrePlayer() {
     selectPlaylistTrack(updatedPlaylist, updatedPlaylist.length - 1, true);
   };
 
+  // Web Audio only works on cross-origin media when CORS is requested.
+  const crossOriginAttr = (() => {
+    try {
+      return mediaSrc.startsWith("http") &&
+        new URL(mediaSrc).origin !== window.location.origin
+        ? "use-credentials"
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  })();
+
   const isVideo =
     currentFile?.type?.startsWith("video/") ||
     currentFileName.match(
@@ -273,15 +319,15 @@ function TheatrePlayer() {
     resumePositionAppliedRef.current = false;
     setPlaylist(tracks);
     setCurrentIndex(index);
-    setMediaSrc(URL.createObjectURL(selectedTrack));
+    setMediaSrc(selectedTrack.remoteUrl || URL.createObjectURL(selectedTrack));
     setPlaying(false);
     setProgress(0);
     persistPlaybackQueue(tracks, index);
   };
 
+  // Clicking a song in the playlist plays it straight away.
   const handlePlaylistSelection = (index) => {
-    if (index === currentIndex) return;
-    selectPlaylistTrack(playlist, index);
+    playTrackAtIndex(index);
   };
 
   async function resumeAudioContext() {
@@ -304,7 +350,7 @@ function TheatrePlayer() {
   }
 
   const playTrackAtIndex = (index) => {
-    if (!playlist.length) return;
+    if (!playlist.length || index < 0) return;
 
     if (index === currentIndex) {
       resumeAudioContext()
@@ -317,26 +363,30 @@ function TheatrePlayer() {
     selectPlaylistTrack(playlist, index, true);
   };
 
+  // Next/previous follow what the playlist is showing: in "Show favorites"
+  // mode only favorite tracks are played, in order.
+  const getAdjacentIndex = (step) => {
+    if (!playlist.length) return -1;
+    let candidates = playlist.map((_, index) => index);
+    if (showFavoritesOnly) {
+      const favoriteIndexes = candidates.filter(index =>
+        favorites.includes(getTrackId(playlist[index]))
+      );
+      if (favoriteIndexes.length) candidates = favoriteIndexes;
+    }
+    const position = candidates.indexOf(currentIndex);
+    if (position === -1) {
+      return step > 0 ? candidates[0] : candidates[candidates.length - 1];
+    }
+    return candidates[(position + step + candidates.length) % candidates.length];
+  };
+
   const playPrevious = () => {
-    if (playlist.length === 0) return;
-
-    const prevIndex =
-      currentIndex === 0
-        ? playlist.length - 1
-        : currentIndex - 1;
-
-    playTrackAtIndex(prevIndex);
+    playTrackAtIndex(getAdjacentIndex(-1));
   };
 
   const playNext = () => {
-    if (playlist.length === 0) return;
-
-    const nextIndex =
-      currentIndex === playlist.length - 1
-        ? 0
-        : currentIndex + 1;
-
-    playTrackAtIndex(nextIndex);
+    playTrackAtIndex(getAdjacentIndex(1));
   };
 
   const speakAssistantResponse = (message) => {
@@ -402,7 +452,7 @@ function TheatrePlayer() {
         sayStatus("Load songs into the playlist first.");
         return;
       }
-      const nextIndex = (currentIndex + 1) % playlist.length;
+      const nextIndex = getAdjacentIndex(1);
       assistantPlaybackPendingRef.current = getTrackId(playlist[nextIndex]);
       playNext();
       sayStatus("Playing the next song.");
@@ -414,7 +464,7 @@ function TheatrePlayer() {
         sayStatus("Load songs into the playlist first.");
         return;
       }
-      const previousIndex = (currentIndex + playlist.length - 1) % playlist.length;
+      const previousIndex = getAdjacentIndex(-1);
       assistantPlaybackPendingRef.current = getTrackId(playlist[previousIndex]);
       playPrevious();
       sayStatus("Playing the previous song.");
@@ -766,7 +816,7 @@ function TheatrePlayer() {
 
     bass.type = "lowshelf";
     bass.frequency.value = 120;
-    bass.gain.value = 9;
+    bass.gain.value = 4;
 
     // vocal
     const vocal =
@@ -775,7 +825,7 @@ function TheatrePlayer() {
     vocal.type = "peaking";
     vocal.frequency.value = 1800;
     vocal.Q.value = 1;
-    vocal.gain.value = 4;
+    vocal.gain.value = 2;
 
     // treble
     const treble =
@@ -783,7 +833,7 @@ function TheatrePlayer() {
 
     treble.type = "highshelf";
     treble.frequency.value = 4500;
-    treble.gain.value = 8;
+    treble.gain.value = 3;
 
     // analyser
     const analyser =
@@ -792,14 +842,14 @@ function TheatrePlayer() {
     const masterGain =
       audioContext.createGain();
 
-    masterGain.gain.value = 1.5; // existing 30% boost preserved
+    masterGain.gain.value = 0.8; // was 1.5: the boost clipped at high volume
 
     const compressor =
       audioContext.createDynamicsCompressor();
 
-    compressor.threshold.value = -15;
+    compressor.threshold.value = -20;
     compressor.knee.value = 20;
-    compressor.ratio.value = 8;
+    compressor.ratio.value = 4;
     compressor.attack.value = 0.003;
     compressor.release.value = 0.25;
 
@@ -815,8 +865,8 @@ function TheatrePlayer() {
     const rightGain =
       audioContext.createGain();
 
-    leftGain.gain.value = 1.2;
-    rightGain.gain.value = 1.2;
+    leftGain.gain.value = 0.85;
+    rightGain.gain.value = 0.85;
 
     const leftDelay =
       audioContext.createDelay();
@@ -853,8 +903,8 @@ function TheatrePlayer() {
     crossR.connect(merger, 0, 1);
     crossL.connect(merger, 0, 0);
 
-    crossL.gain.value = 0.45;
-    crossR.gain.value = 0.45;
+    crossL.gain.value = 0.25;
+    crossR.gain.value = 0.25;
 
     const leftPanner =
       audioContext.createStereoPanner();
@@ -890,10 +940,11 @@ function TheatrePlayer() {
       const data =
         impulse.getChannelData(channel);
 
+      let lp = 0;
       for (let i = 0; i < length; i++) {
-        data[i] =
-          (Math.random() * 2 - 1) *
-          Math.pow(1 - i / length, 2);
+        // low-passed noise: smooth reverb tail instead of hiss
+        lp += ((Math.random() * 2 - 1) - lp) * 0.3;
+        data[i] = lp * Math.pow(1 - i / length, 3);
       }
     }
 
@@ -905,8 +956,8 @@ function TheatrePlayer() {
     const dryGain =
       audioContext.createGain();
 
-    wetGain.gain.value = 0.25;
-    dryGain.gain.value = 0.85;
+    wetGain.gain.value = 0.15;
+    dryGain.gain.value = 0.9;
 
     analyser.connect(dryGain);
     analyser.connect(convolver);
@@ -923,12 +974,23 @@ function TheatrePlayer() {
      * handles normal/original EQ sound, and its master path handles
      * Surround. This gives us exactly one final destination path.
      */
+    const inputLimiter =
+      audioContext.createDynamicsCompressor();
+
+    inputLimiter.threshold.value = -3;
+    inputLimiter.knee.value = 0;
+    inputLimiter.ratio.value = 20;
+    inputLimiter.attack.value = 0.002;
+    inputLimiter.release.value = 0.1;
+
+    masterGain.connect(inputLimiter);
+
     const engine =
       SurroundEngine.attach(
         media,
         {
           context: audioContext,
-          source: masterGain
+          source: inputLimiter
         }
       );
 
@@ -965,7 +1027,11 @@ function TheatrePlayer() {
 
   const handleUpload =
     async (e) => {
-      const files = Array.from(e.target.files || []).filter(isPlayableTrack);
+      const files = Array.from(e.target.files || [])
+        .filter(isPlayableTrack)
+        .sort((a, b) => (a.webkitRelativePath || a.name).localeCompare(
+          b.webkitRelativePath || b.name, undefined, { numeric: true, sensitivity: "base" }
+        ));
       if (!files.length) {
         setLibraryStatus("Select at least one supported audio or video file.");
         return;
@@ -1001,9 +1067,161 @@ function TheatrePlayer() {
     }
   };
 
+  useEffect(() => {
+    if (isAssistantWindow) return undefined;
+    let active = true;
+    readMediaFiles()
+      .then(files => {
+        if (!active) return;
+        setMediaLibrary(files);
+        const savedIds = readStoredArray("theatreLastPlaylist");
+        const byId = new Map(files.map(file => [getTrackId(file), file]));
+        const restored = savedIds.map(id => byId.get(id)).filter(Boolean);
+        if (restored.length) {
+          const rawIndex = Number(localStorage.getItem("theatreCurrentTrack") || 0);
+          const index = Number.isInteger(rawIndex) && rawIndex >= 0 && rawIndex < restored.length
+            ? rawIndex
+            : 0;
+          setPlaylist(restored);
+          setCurrentIndex(index);
+          setMediaSrc(restored[index].remoteUrl || URL.createObjectURL(restored[index]));
+          try {
+            localStorage.setItem("theatreLastPlaylist", JSON.stringify(restored.map(getTrackId)));
+            localStorage.setItem("theatreCurrentTrack", String(index));
+          } catch (storageError) {
+            console.error("Unable to save restored Theatre playback queue:", storageError);
+            setLibraryStatus("Playlist restored, but this browser could not save the current queue.");
+          }
+          if (restored.length !== savedIds.length) {
+            setLibraryStatus("Some files from the previous playlist are no longer available.");
+          } else {
+            setLibraryStatus("Previous playlist restored. Select Play to continue.");
+          }
+        }
+        setLibraryLoaded(true);
+      })
+      .catch(error => {
+        console.error("Unable to restore Theatre media library:", error);
+        if (active) {
+          setLibraryStatus(`Unable to restore saved media: ${error.message}`);
+          setLibraryLoaded(true);
+        }
+      });
+    return () => { active = false; };
+  }, [isAssistantWindow]);
+
+  // ---------- Favorites, saved playlists, backup / restore ----------
+
+  // A saved track id can be rebuilt from the portal (server:...) or found in the
+  // browser library / current playlist (local files).
+  const resolveTrackById = (id) => {
+    const known = availableAssistantTracks.get(id);
+    if (known) return known;
+    if (typeof id === "string" && id.startsWith("server:")) {
+      return makeServerTrack(id.slice("server:".length));
+    }
+    return null;
+  };
+
+  const toggleFavorite = (file) => {
+    const id = getTrackId(file);
+    const updated = favorites.includes(id)
+      ? favorites.filter(favoriteId => favoriteId !== id)
+      : [...favorites, id];
+    try {
+      localStorage.setItem("theatreFavorites", JSON.stringify(updated));
+      setFavorites(updated);
+    } catch (error) {
+      console.error("Unable to save Theatre favorites:", error);
+      setLibraryStatus("Could not save favorite. Check browser storage.");
+    }
+  };
+
+  const saveCurrentPlaylist = async () => {
+    if (!playlist.length) {
+      setLibraryStatus("Load some songs before saving a playlist.");
+      return;
+    }
+    const name = playlistName.trim();
+    if (!name) {
+      setLibraryStatus("Type a name for the playlist, then press Save Playlist.");
+      return;
+    }
+
+    // Local files only exist in this tab, so keep them in the browser library
+    // to let the playlist be reopened after a refresh. Portal songs need no storage.
+    const localFiles = playlist.filter(file => !file.remoteUrl);
+    let note = "";
+    if (localFiles.length) {
+      try {
+        await storeMediaFiles(localFiles);
+        const byId = new Map(mediaLibrary.map(file => [getTrackId(file), file]));
+        localFiles.forEach(file => byId.set(getTrackId(file), file));
+        setMediaLibrary(Array.from(byId.values()));
+        note = ` ${localFiles.length} local file${localFiles.length === 1 ? " was" : "s were"} stored in this browser so it can be reopened later.`;
+      } catch (error) {
+        console.error("Unable to store playlist media:", error);
+        note = " Local files could not be stored in the browser, so add them again before loading this playlist.";
+      }
+    }
+
+    const entry = { id: `${Date.now()}`, name, trackIds: playlist.map(getTrackId) };
+    const updated = [
+      ...savedPlaylists.filter(saved => saved.name.toLowerCase() !== name.toLowerCase()),
+      entry
+    ];
+    try {
+      localStorage.setItem("theatreSavedPlaylists", JSON.stringify(updated));
+      setSavedPlaylists(updated);
+      setSelectedPlaylistId(entry.id);
+      setPlaylistName("");
+      setLibraryStatus(`Playlist "${name}" saved (${entry.trackIds.length} song${entry.trackIds.length === 1 ? "" : "s"}).${note}`);
+    } catch (error) {
+      console.error("Unable to save Theatre playlist:", error);
+      setLibraryStatus("Could not save playlist. Check browser storage.");
+    }
+  };
+
+  const loadSavedPlaylist = (playlistId = selectedPlaylistId) => {
+    const saved = savedPlaylists.find(entry => entry.id === playlistId);
+    if (!saved) {
+      setLibraryStatus("Choose a saved playlist first.");
+      return;
+    }
+    const tracks = saved.trackIds.map(resolveTrackById).filter(Boolean);
+    if (!tracks.length) {
+      setLibraryStatus(`None of the files in "${saved.name}" are available. Add the files again, then load it.`);
+      return;
+    }
+    const missing = saved.trackIds.length - tracks.length;
+    setShowFavoritesOnly(false);
+    selectPlaylistTrack(tracks, 0, true);
+    setLibraryStatus(missing
+      ? `Loaded "${saved.name}" - ${missing} file${missing === 1 ? " is" : "s are"} missing and were skipped.`
+      : `Loaded playlist "${saved.name}".`);
+  };
+
+  const deleteSavedPlaylist = () => {
+    const saved = savedPlaylists.find(entry => entry.id === selectedPlaylistId);
+    if (!saved) {
+      setLibraryStatus("Choose a saved playlist first.");
+      return;
+    }
+    const updated = savedPlaylists.filter(entry => entry.id !== saved.id);
+    try {
+      localStorage.setItem("theatreSavedPlaylists", JSON.stringify(updated));
+      setSavedPlaylists(updated);
+      setSelectedPlaylistId("");
+      setLibraryStatus(`Playlist "${saved.name}" deleted.`);
+    } catch (error) {
+      console.error("Unable to delete Theatre playlist:", error);
+      setLibraryStatus("Could not delete playlist. Check browser storage.");
+    }
+  };
+
   const clearSavedMediaLibrary = async () => {
     if (!window.confirm(
-      "Delete the saved Theatre media files and playlists from this browser? This does not delete your original files."
+      "Delete the saved Theatre media files, playlists and favorites from this browser? This does not delete your original files."
     )) return;
 
     try {
@@ -1029,71 +1247,24 @@ function TheatrePlayer() {
       ].forEach(key => localStorage.removeItem(key));
       setFavorites([]);
       setSavedPlaylists([]);
+      setSelectedPlaylistId("");
+      setShowFavoritesOnly(false);
       setRecentAssistantTracks([]);
       setMediaLibrary([]);
-      setPlaylist([]);
-      setCurrentIndex(0);
-      setMediaSrc("");
-      persistPlaybackQueue([], 0);
       mediaRef.current?.pause();
       setPlaying(false);
-      setLibraryStatus("Saved Theatre media and playlists were removed from this browser.");
+      if (serverTracks.length) {
+        selectPlaylistTrack(serverTracks, 0);
+      } else {
+        setPlaylist([]);
+        setCurrentIndex(0);
+        setMediaSrc("");
+      }
+      setLibraryStatus("Saved media, playlists and favorites were removed from this browser.");
     } catch (error) {
       console.error("Unable to clear Theatre media library:", error);
       setLibraryStatus(`Could not clear the saved media library: ${error.message}`);
     }
-  };
-
-  const toggleFavorite = (file) => {
-    const id = getTrackId(file);
-    const updated = favorites.includes(id)
-      ? favorites.filter(favoriteId => favoriteId !== id)
-      : [...favorites, id];
-    try {
-      localStorage.setItem("theatreFavorites", JSON.stringify(updated));
-      setFavorites(updated);
-    } catch (error) {
-      console.error("Unable to save Theatre favorites:", error);
-      setLibraryStatus("Could not save favorite. Check browser storage.");
-    }
-  };
-
-  const saveCurrentPlaylist = () => {
-    if (!playlist.length) {
-      setLibraryStatus("Load media before saving a playlist.");
-      return;
-    }
-    const name = window.prompt("Name this playlist");
-    if (!name?.trim()) return;
-    const updated = [
-      ...savedPlaylists.filter(saved => saved.name.toLowerCase() !== name.trim().toLowerCase()),
-      { id: `${Date.now()}`, name: name.trim(), trackIds: playlist.map(getTrackId) }
-    ];
-    try {
-      localStorage.setItem("theatreSavedPlaylists", JSON.stringify(updated));
-      setSavedPlaylists(updated);
-      setLibraryStatus(`Playlist "${name.trim()}" saved.`);
-    } catch (error) {
-      console.error("Unable to save Theatre playlist:", error);
-      setLibraryStatus("Could not save playlist. Check browser storage.");
-    }
-  };
-
-  const loadSavedPlaylist = (playlistId) => {
-    const saved = savedPlaylists.find(entry => entry.id === playlistId);
-    if (!saved) return;
-    const tracksById = new Map(mediaLibrary.map(file => [getTrackId(file), file]));
-    const tracks = saved.trackIds.map(id => tracksById.get(id)).filter(Boolean);
-    if (!tracks.length) {
-      setLibraryStatus("No files from this playlist are available in the saved media library.");
-      return;
-    }
-    if (tracks.length !== saved.trackIds.length) {
-      setLibraryStatus(`${saved.trackIds.length - tracks.length} saved playlist file(s) are missing from the library.`);
-    } else {
-      setLibraryStatus(`Loaded playlist "${saved.name}".`);
-    }
-    selectPlaylistTrack(tracks, 0);
   };
 
   const exportLibrarySettings = () => {
@@ -1111,9 +1282,11 @@ function TheatrePlayer() {
       const link = document.createElement("a");
       link.href = url;
       link.download = `theatre-settings-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
       link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 0);
-      setLibraryStatus("Theatre settings exported. Media files are not included in this settings backup.");
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setLibraryStatus(`Settings exported (${favorites.length} favorite${favorites.length === 1 ? "" : "s"}, ${savedPlaylists.length} playlist${savedPlaylists.length === 1 ? "" : "s"}). Media files are not included.`);
     } catch (error) {
       console.error("Unable to export Theatre settings:", error);
       setLibraryStatus("Could not export Theatre settings.");
@@ -1128,85 +1301,97 @@ function TheatrePlayer() {
     }
     try {
       const backup = JSON.parse(await file.text());
+      const isText = id => typeof id === "string";
       const validPlaylists = Array.isArray(backup.savedPlaylists) &&
         backup.savedPlaylists.every(entry =>
-          entry &&
-          typeof entry.id === "string" &&
-          typeof entry.name === "string" &&
-          Array.isArray(entry.trackIds) &&
-          entry.trackIds.every(id => typeof id === "string")
+          entry && isText(entry.id) && isText(entry.name) &&
+          Array.isArray(entry.trackIds) && entry.trackIds.every(isText)
         );
-      const validPositions = backup.resumePositions &&
-        typeof backup.resumePositions === "object" &&
-        !Array.isArray(backup.resumePositions) &&
-        Object.values(backup.resumePositions).every(value =>
-          Number.isFinite(Number(value)) && Number(value) >= 0
-        );
+      const positions = backup.resumePositions || {};
+      const validPositions = typeof positions === "object" && !Array.isArray(positions) &&
+        Object.values(positions).every(value => Number.isFinite(Number(value)) && Number(value) >= 0);
       if (
         backup.format !== "theatre-library-settings" ||
         backup.version !== 1 ||
-        !Array.isArray(backup.favorites) ||
-        !backup.favorites.every(id => typeof id === "string") ||
-        !validPlaylists ||
-        !validPositions
+        !Array.isArray(backup.favorites) || !backup.favorites.every(isText) ||
+        !validPlaylists || !validPositions
       ) {
         throw new Error("This is not a valid Theatre settings backup.");
       }
 
-      localStorage.setItem("theatreFavorites", JSON.stringify(backup.favorites));
-      localStorage.setItem("theatreSavedPlaylists", JSON.stringify(backup.savedPlaylists));
-      localStorage.setItem("theatreResumePositions", JSON.stringify(backup.resumePositions));
-      setFavorites(backup.favorites);
-      setSavedPlaylists(backup.savedPlaylists);
-      setLibraryStatus("Theatre settings restored. Your original media files must also be available in this browser.");
+      // Merge with what is already here so nothing is lost.
+      const mergedFavorites = [...new Set([...favorites, ...backup.favorites])];
+      const importedNames = new Set(backup.savedPlaylists.map(entry => entry.name.toLowerCase()));
+      const mergedPlaylists = [
+        ...savedPlaylists.filter(entry => !importedNames.has(entry.name.toLowerCase())),
+        ...backup.savedPlaylists
+      ];
+      const mergedPositions = {
+        ...JSON.parse(localStorage.getItem("theatreResumePositions") || "{}"),
+        ...positions
+      };
+
+      localStorage.setItem("theatreFavorites", JSON.stringify(mergedFavorites));
+      localStorage.setItem("theatreSavedPlaylists", JSON.stringify(mergedPlaylists));
+      localStorage.setItem("theatreResumePositions", JSON.stringify(mergedPositions));
+      setFavorites(mergedFavorites);
+      setSavedPlaylists(mergedPlaylists);
+      setLibraryStatus(`Settings imported: ${backup.favorites.length} favorite${backup.favorites.length === 1 ? "" : "s"} and ${backup.savedPlaylists.length} playlist${backup.savedPlaylists.length === 1 ? "" : "s"} merged. Local files must also be available in this browser.`);
     } catch (error) {
       console.error("Unable to import Theatre settings:", error);
       setLibraryStatus(error.message || "Could not read Theatre settings backup.");
     }
   };
 
+  // Auto-load songs from the portal's media folders when nothing was restored.
   useEffect(() => {
-    if (isAssistantWindow) return undefined;
+    if (isAssistantWindow || !libraryLoaded) return undefined;
     let active = true;
-    readMediaFiles()
-      .then(files => {
-        if (!active) return;
-        setMediaLibrary(files);
-        const savedIds = readStoredArray("theatreLastPlaylist");
-        const byId = new Map(files.map(file => [getTrackId(file), file]));
-        const restored = savedIds.map(id => byId.get(id)).filter(Boolean);
-        if (restored.length) {
-          const rawIndex = Number(localStorage.getItem("theatreCurrentTrack") || 0);
-          const index = Number.isInteger(rawIndex) && rawIndex >= 0 && rawIndex < restored.length
-            ? rawIndex
-            : 0;
-          setPlaylist(restored);
-          setCurrentIndex(index);
-          setMediaSrc(URL.createObjectURL(restored[index]));
-          try {
-            localStorage.setItem("theatreLastPlaylist", JSON.stringify(restored.map(getTrackId)));
-            localStorage.setItem("theatreCurrentTrack", String(index));
-          } catch (storageError) {
-            console.error("Unable to save restored Theatre playback queue:", storageError);
-            setLibraryStatus("Playlist restored, but this browser could not save the current queue.");
-          }
-          if (restored.length !== savedIds.length) {
-            setLibraryStatus("Some files from the previous playlist are no longer available.");
-          } else {
-            setLibraryStatus("Previous playlist restored. Select Play to continue.");
-          }
+    const loadIndex = (credentials) =>
+      fetch(`${PORTAL_ORIGIN}/media-index.json`, { credentials, cache: "no-store" });
+    // The index is public; if the credentialed request is refused by CORS, retry without cookies.
+    loadIndex("include")
+      .catch(() => loadIndex("omit"))
+      .then(response => {
+        if (!response.ok) throw new Error(`Media index returned ${response.status}`);
+        return response.json();
+      })
+      .then(paths => {
+        if (!active || !Array.isArray(paths)) return;
+        const tracks = paths
+          .filter(path => typeof path === "string" && PLAYABLE_TRACK_PATTERN.test(path))
+          .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }))
+          .map(makeServerTrack);
+        setServerTracks(tracks);
+        if (tracks.length && playlistRef.current.length === 0) {
+          selectPlaylistTrack(tracks, 0);
+          setLibraryStatus(`${tracks.length} song${tracks.length === 1 ? "" : "s"} loaded from the media folders.`);
         }
-        setLibraryLoaded(true);
       })
       .catch(error => {
-        console.error("Unable to restore Theatre media library:", error);
-        if (active) {
-          setLibraryStatus(`Unable to restore saved media: ${error.message}`);
-          setLibraryLoaded(true);
-        }
+        console.error("Unable to auto-load media folders:", error);
+        if (active) setLibraryStatus("Could not auto-load the media folders. You can still pick files or a folder.");
       });
     return () => { active = false; };
-  }, [isAssistantWindow]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAssistantWindow, libraryLoaded]);
+
+  const serverFolders = [...new Set(serverTracks.map(track => track.folder).filter(Boolean))];
+
+  const handleServerFolderChange = (folder) => {
+    setServerFolder(folder);
+    const tracks = folder ? serverTracks.filter(track => track.folder === folder) : serverTracks;
+    if (tracks.length) selectPlaylistTrack(tracks, 0, true);
+  };
+
+  const handleMediaError = () => {
+    // Skip a song the browser cannot play instead of stalling the queue.
+    if (playlist.length > 1 && errorSkipRef.current < playlist.length) {
+      errorSkipRef.current += 1;
+      setLibraryStatus(`Could not play ${currentFile?.name || "this file"}; skipping to the next song.`);
+      playNext();
+    }
+  };
 
   const handleMediaCanPlay = async () => {
     if (!resumePositionAppliedRef.current) {
@@ -1360,6 +1545,7 @@ function TheatrePlayer() {
   };
 
   const handleNativePlay = () => {
+    errorSkipRef.current = 0;
     setPlaying(true);
     if (
       currentFile &&
@@ -1555,6 +1741,31 @@ function TheatrePlayer() {
             handleUpload
           }
         />
+        <label className="media-folder-picker">
+          📁 Choose a folder
+          <input
+            type="file"
+            webkitdirectory=""
+            directory=""
+            multiple
+            hidden
+            onChange={handleUpload}
+          />
+        </label>
+        {serverFolders.length > 0 && (
+          <label className="media-folder-picker">
+            Portal folder
+            <select
+              value={serverFolder}
+              onChange={event => handleServerFolderChange(event.target.value)}
+            >
+              <option value="">All media ({serverTracks.length})</option>
+              {serverFolders.map(folder => (
+                <option key={folder} value={folder}>{folder}</option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="media-library-toggle">
           <input
             type="checkbox"
@@ -1607,6 +1818,7 @@ function TheatrePlayer() {
               ref={mediaRef}
               src={mediaSrc}
               className="media-player"
+              crossOrigin={crossOriginAttr}
               controls
               playsInline
               onPlay={handleNativePlay}
@@ -1614,6 +1826,7 @@ function TheatrePlayer() {
               onCanPlay={handleMediaCanPlay}
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleMediaEnded}
+              onError={handleMediaError}
             />
           </div>
         )}
@@ -1623,10 +1836,13 @@ function TheatrePlayer() {
           <audio
             ref={mediaRef}
             src={mediaSrc}
+            crossOrigin={crossOriginAttr}
             onPlay={handleNativePlay}
             onPause={handleNativePause}
+            onCanPlay={handleMediaCanPlay}
             onTimeUpdate={handleTimeUpdate}
             onEnded={handleMediaEnded}
+            onError={handleMediaError}
           />
         )}
 
@@ -1659,6 +1875,64 @@ function TheatrePlayer() {
             engine={surroundEngine}
           />
         )}
+
+        {/* LIBRARY CONTROLS - always visible, even before any song is loaded */}
+        <div className="library-controls" aria-label="Saved playlists and favorites">
+          <input
+            type="text"
+            value={playlistName}
+            onChange={event => setPlaylistName(event.target.value)}
+            onKeyDown={event => { if (event.key === "Enter") saveCurrentPlaylist(); }}
+            placeholder="Playlist name"
+            aria-label="Playlist name"
+          />
+          <button type="button" onClick={saveCurrentPlaylist}>Save Playlist</button>
+          <label>
+            Choose a playlist
+            <select
+              value={selectedPlaylistId}
+              onChange={event => setSelectedPlaylistId(event.target.value)}
+            >
+              <option value="">
+                {savedPlaylists.length ? "Choose a playlist" : "No saved playlists yet"}
+              </option>
+              {savedPlaylists.map(saved => (
+                <option key={saved.id} value={saved.id}>
+                  {saved.name} ({saved.trackIds.length})
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="button" disabled={!selectedPlaylistId} onClick={() => loadSavedPlaylist()}>
+            Load playlist
+          </button>
+          <button type="button" disabled={!selectedPlaylistId} onClick={deleteSavedPlaylist}>
+            Delete playlist
+          </button>
+          <button
+            type="button"
+            aria-pressed={showFavoritesOnly}
+            onClick={() => setShowFavoritesOnly(value => !value)}
+          >
+            {showFavoritesOnly ? "Show all tracks" : `Show favorites (${favorites.length})`}
+          </button>
+          <button type="button" onClick={exportLibrarySettings}>Export Settings</button>
+          <button type="button" onClick={() => settingsImportRef.current?.click()}>Import Settings</button>
+          <input
+            ref={settingsImportRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={event => {
+              importLibrarySettings(event.target.files?.[0]);
+              event.target.value = "";
+            }}
+          />
+          <button type="button" className="clear-library-button" onClick={clearSavedMediaLibrary}>
+            Clear saved media
+          </button>
+        </div>
+        <p className="library-status" role="status" aria-live="polite">{libraryStatus}</p>
 
         {/* PLAYLIST */}
         {(playlist.length > 0 || recentAssistantTracks.length > 0) && (
@@ -1696,51 +1970,10 @@ function TheatrePlayer() {
             )}
             {playlist.length > 0 && (
               <>
-                <div className="library-controls" aria-label="Saved playlists and favorites">
-                  <button type="button" onClick={saveCurrentPlaylist}>Save Playlist</button>
-                  <button type="button" className="clear-library-button" onClick={clearSavedMediaLibrary}>
-                    Clear saved media
-                  </button>
-                  <button type="button" onClick={exportLibrarySettings}>Export Settings</button>
-                  <button type="button" onClick={() => settingsImportRef.current?.click()}>Import Settings</button>
-                  <input
-                    ref={settingsImportRef}
-                    type="file"
-                    accept="application/json,.json"
-                    hidden
-                    onChange={event => {
-                      importLibrarySettings(event.target.files?.[0]);
-                      event.target.value = "";
-                    }}
-                  />
-                  <label>
-                    Load saved playlist
-                    <select
-                      defaultValue=""
-                      onChange={event => {
-                        loadSavedPlaylist(event.target.value);
-                        event.target.value = "";
-                      }}
-                    >
-                      <option value="">Choose a playlist</option>
-                      {savedPlaylists.map(saved => (
-                        <option key={saved.id} value={saved.id}>{saved.name}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <button
-                    type="button"
-                    aria-pressed={showFavoritesOnly}
-                    onClick={() => setShowFavoritesOnly(value => !value)}
-                  >
-                    {showFavoritesOnly ? "Show all tracks" : `Show favorites (${favorites.length})`}
-                  </button>
-                </div>
-                <p className="library-status" role="status" aria-live="polite">{libraryStatus}</p>
                 <Playlist
                   playlist={playlist}
                   currentIndex={currentIndex}
-                  setCurrentIndex={handlePlaylistSelection}
+                  onSelect={handlePlaylistSelection}
                   favorites={favorites}
                   showFavoritesOnly={showFavoritesOnly}
                   onToggleFavorite={toggleFavorite}

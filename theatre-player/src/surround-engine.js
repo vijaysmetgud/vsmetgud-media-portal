@@ -130,7 +130,7 @@ const HRTF_POSITIONS = {
 };
 
 
-const MASTER_LEVEL = 0.75;
+const MASTER_LEVEL = 0.55; // headroom: summed surround buses were clipping at high volume
 
 
 /* -------------------------------------------------------------------------- */
@@ -622,6 +622,16 @@ export class SurroundEngine {
     this.comp =
       ctx.createDynamicsCompressor();
 
+    // Final safety limiter: stops clipping/crackle at high volume.
+    this.limiter =
+      ctx.createDynamicsCompressor();
+
+    this.limiter.threshold.value = -3;
+    this.limiter.knee.value = 0;
+    this.limiter.ratio.value = 20;
+    this.limiter.attack.value = 0.002;
+    this.limiter.release.value = 0.12;
+
 
     this.stereoOut = g(1);
 
@@ -639,6 +649,10 @@ export class SurroundEngine {
     );
 
     this.comp.connect(
+      this.limiter
+    );
+
+    this.limiter.connect(
       this.master
     );
 
@@ -1339,6 +1353,8 @@ export class SurroundEngine {
       const d =
         buf.getChannelData(c);
 
+      let lp = 0;
+
 
       for (
         let i = pre;
@@ -1351,8 +1367,11 @@ export class SurroundEngine {
           (len - pre);
 
 
+        // low-passed noise -> smooth tail, no hiss
+        lp += ((Math.random() * 2 - 1) - lp) * 0.3;
+
         d[i] =
-          (Math.random() * 2 - 1) *
+          lp *
           Math.pow(
             1 - t,
             3.2
@@ -2105,19 +2124,19 @@ export class SurroundEngine {
 
     set(
       this.shelfL.gain,
-      bass * 6
+      bass * 3.5
     );
 
 
     set(
       this.shelfR.gain,
-      bass * 6
+      bass * 3.5
     );
 
 
     set(
       this.busLFE.gain,
-      0.3 + 1.4 * bass
+      0.25 + 0.85 * bass
     );
 
 
@@ -2131,13 +2150,13 @@ export class SurroundEngine {
 
     set(
       this.cReal.gain,
-      1 + 0.5 * dialogue
+      0.9 + 0.3 * dialogue
     );
 
 
     set(
       this.cDerive.gain,
-      0.65 *
+      0.5 *
       dialogue *
       derive
     );
@@ -2145,7 +2164,7 @@ export class SurroundEngine {
 
     set(
       this.presence.gain,
-      dialogue * 3
+      dialogue * 2
     );
 
 
@@ -2153,14 +2172,14 @@ export class SurroundEngine {
 
     set(
       this.slDerive.gain,
-      (0.2 + 0.9 * space) *
+      (0.2 + 0.6 * space) *
       derive
     );
 
 
     set(
       this.srDerive.gain,
-      (0.2 + 0.9 * space) *
+      (0.2 + 0.6 * space) *
       derive
     );
 
@@ -2169,7 +2188,7 @@ export class SurroundEngine {
 
     set(
       this.reverbWet.gain,
-      0.05 + 0.3 * space
+      0.03 + 0.16 * space
     );
 
 
@@ -2177,13 +2196,13 @@ export class SurroundEngine {
 
     set(
       this.busTL.gain,
-      height * 0.9
+      height * 0.6
     );
 
 
     set(
       this.busTR.gain,
-      height * 0.9
+      height * 0.6
     );
 
 
@@ -2192,13 +2211,13 @@ export class SurroundEngine {
     this.comp.threshold.value =
       night
         ? -32
-        : -16;
+        : -22;
 
 
     this.comp.ratio.value =
       night
         ? 8
-        : 2.5;
+        : 3.5;
 
 
     this.comp.knee.value = 20;

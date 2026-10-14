@@ -12,61 +12,60 @@ function applyEqualizerPreset(mode, { bass, vocal, treble, delay, feedback, left
 
   switch (mode) {
     case "surround":
-      bass.gain.value = 9;
-      vocal.gain.value = 4;
-      treble.gain.value = 8;
+      bass.gain.value = 4;
+      vocal.gain.value = 2;
+      treble.gain.value = 3;
       if (leftDelay) leftDelay.delayTime.value = 0.020;
       if (rightDelay) rightDelay.delayTime.value = 0.040;
       break;
     case "theatre":
-      bass.gain.value = 2.5;
-      vocal.gain.value = 7;
-      treble.gain.value = 4;
+      bass.gain.value = 2;
+      vocal.gain.value = 3;
+      treble.gain.value = 2;
       if (leftDelay) leftDelay.delayTime.value = 0.025;
       if (rightDelay) rightDelay.delayTime.value = 0.050;
       break;
     case "cinema":
       bass.gain.value = 2;
-      vocal.gain.value = 8;
-      treble.gain.value = 5;
+      vocal.gain.value = 3;
+      treble.gain.value = 2;
       if (leftDelay) leftDelay.delayTime.value = 0.035;
       if (rightDelay) rightDelay.delayTime.value = 0.070;
       break;
     case "music":
-      bass.gain.value = 2.2;
-      vocal.gain.value = 8;
-      treble.gain.value = 4;
-      break;
-    case "night":
       bass.gain.value = 2;
-      vocal.gain.value = 8;
+      vocal.gain.value = 2;
       treble.gain.value = 2;
       break;
+    case "night":
+      bass.gain.value = 1;
+      vocal.gain.value = 3;
+      treble.gain.value = 0;
+      break;
     case "vocal":
-      bass.gain.value = -2;
-      vocal.gain.value = 8;
-      treble.gain.value = 4;
+      bass.gain.value = -1;
+      vocal.gain.value = 3;
+      treble.gain.value = 2;
       break;
     case "party":
       bass.gain.value = 4;
-      vocal.gain.value = 3;
-      treble.gain.value = 9;
+      vocal.gain.value = 1;
+      treble.gain.value = 3;
       break;
     case "podcast":
-      bass.gain.value = 1;
-      vocal.gain.value = 8;
-      treble.gain.value = 2;
+      bass.gain.value = 0;
+      vocal.gain.value = 3;
+      treble.gain.value = 1;
       break;
     case "bass-boost":
-      bass.gain.value = 7;
+      bass.gain.value = 5;
       vocal.gain.value = -1;
-      treble.gain.value = 1;
+      treble.gain.value = 0;
       break;
     default:
       return;
   }
 
-  console.log("Preset:", mode, "Bass:", bass.gain.value, "Vocal:", vocal.gain.value, "Treble:", treble.gain.value);
 }
 
 function configureAnalyser(analyser) {

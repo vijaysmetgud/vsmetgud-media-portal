@@ -24,7 +24,27 @@ const { spawn } = require("child_process");
 
 const cors = require("cors");
 
-app.use(cors());
+// Theatre runs on theatre.<domain>; allow it (and the portal itself) to call the
+// API and /stream with the login cookie. Extra origins: CORS_ORIGINS=a,b (comma list).
+const allowedCorsOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    let host = '';
+    try { host = new URL(origin).hostname; } catch (e) { /* ignore */ }
+    const ok =
+      allowedCorsOrigins.includes(origin) ||
+      host === 'vsmetgud.online' ||
+      host.endsWith('.vsmetgud.online');
+    // Unknown origins keep the previous open behaviour but without cookies.
+    return callback(null, ok ? origin : '*');
+  },
+  credentials: true
+}));
 
 app.use(express.json());
 
@@ -170,6 +190,11 @@ app.use(
             httpOnly: false,
             secure: true,
             sameSite: 'lax',
+            // Set SESSION_COOKIE_DOMAIN=.vsmetgud.online so theatre.vsmetgud.online
+            // can stream with the same login. Unset = unchanged behaviour.
+            ...(process.env.SESSION_COOKIE_DOMAIN
+              ? { domain: process.env.SESSION_COOKIE_DOMAIN }
+              : {}),
             maxAge:
                 24 * 60 * 60 * 1000
         }

@@ -17,11 +17,7 @@ const PRESETS = [
   ['cinema', '🎬 Cinema'],
   ['music', '🎵 Music'],
   ['dialogue', '🗣 Dialogue'],
-  ['night', '🌙 Night'],
-  ['action', '💥 Action'],
-  ['stadium', '🏟 Stadium'],
-  ['acoustic', '🎸 Acoustic'],
-  ['gaming', '🎮 Gaming']
+  ['night', '🌙 Night']
 ];
 
 const SLIDERS = [
@@ -168,7 +164,7 @@ export default function SurroundPanel({
         <div style={css.panel}>
           <h3 style={css.title}>🔊 Surround Sound</h3>
 
-          {!engine && <p style={css.status}>Waiting for the media player…</p>}
+          {!engine && <p style={css.status}>Waiting for the video player…</p>}
 
           {engine && state && (
             <>
@@ -185,8 +181,8 @@ export default function SurroundPanel({
 
               {corsOrigin && (
                 <p style={css.warn}>
-                  ⚠ This media file comes from {corsOrigin}. Enable cross-origin access on that server,
-                  otherwise the browser may play it silently while
+                  ⚠ This video comes from {corsOrigin}. Add crossOrigin="anonymous" to the &lt;video&gt;
+                  and enable CORS on that server, otherwise the browser will play it silent while
                   Surround is on.
                 </p>
               )}
